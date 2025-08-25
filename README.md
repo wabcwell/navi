@@ -1,151 +1,120 @@
-# 导航网站 (纯PHP版本)
+# 🌐 导航网站 - 纯PHP版本
 
-一个简洁的网址导航网站，使用PHP + MySQL开发，无需Node.js环境，开箱即用。
+一个简洁高效的网址导航网站，使用纯PHP + MySQL开发，无需复杂环境，开箱即用。
 
-## 🚀 快速开始
+## ✨ 核心功能
 
-### 环境要求
-- PHP 7.4 或更高版本
-- MySQL 5.7+ 或 MariaDB 10.2+
-- pdo_mysql PHP扩展
+### 📊 分类管理
+- ✅ 无限级分类支持
+- ✅ 分类图标自定义
+- ✅ 分类排序和显示控制
+- ✅ 分类统计和计数
 
-### 一键启动
-1. **初始化数据库**
-   ```bash
-   D:\php\php.exe db-init.php
-   ```
+### 🔗 链接管理
+- ✅ 批量添加/编辑链接
+- ✅ 链接图标和描述
+- ✅ 链接访问统计
+- ✅ 链接排序和分组
+- ✅ 链接状态管理
 
-2. **启动服务器**
-   ```bash
-   # 双击运行 start-smart.bat
-   # 或手动启动:
-   D:\php\php.exe -S localhost:8000 -t .
-   ```
+### 🎨 个性化定制
+- ✅ 网站标题和LOGO自定义
+- ✅ 背景图片上传
+- ✅ 主题颜色切换
+- ✅ 首页模块透明度调整（标题栏、分类区、链接区、卡片）
+- ✅ 响应式设计（手机/平板/电脑）
 
-3. **访问网站**
-   打开浏览器访问: http://localhost:8000
+### 🔐 管理后台
+- ✅ 安全的登录认证
+- ✅ 分类和链接的CRUD操作
+- ✅ 系统设置管理
+- ✅ 操作日志记录
+
+### 🚀 性能优化
+- ✅ 数据库索引优化
+- ✅ 静态资源缓存
+- ✅ API响应优化
+- ✅ 图片懒加载
+
+## 🚀 快速部署
+
+### 1️⃣ 环境要求
+- **PHP**: 7.4+
+- **MySQL**: 5.7+ 或 MariaDB 10.2+
+- **扩展**: pdo_mysql
+
+### 2️⃣ 一键安装
+1. **上传文件**到网站根目录
+2. **访问安装向导**: `http://yourdomain.com/install.php`
+3. **填写数据库信息**完成安装
+4. **访问后台**: `http://yourdomain.com/admin/`
+
+### 3️⃣ 默认账号
+- **用户名**: admin
+- **密码**: admin123
 
 ## 📁 项目结构
 
 ```
 navi/
-├── index.php              # 主页入口 (MySQL版本)
-├── config.php             # MySQL数据库配置
-├── server.php             # PHP内置服务器启动脚本
-├── db-init.php            # MySQL数据库初始化
-├── db-test.php            # 数据库连接测试
-├── api.php                # RESTful API接口
-├── views/
-│   └── home.php           # 主页视图
-├── css/
-│   └── style.css          # 样式文件
-├── js/
-│   └── script.js          # JavaScript文件
-├── img/                   # 图片资源
-├── nginx-conf/            # Nginx配置
-├── start-*.bat            # 各种启动脚本
-└── README.md              # 项目说明
-```
-
-## 🛠️ 配置说明
-
-### 数据库配置
-编辑 `config.php` 文件修改数据库连接信息：
-```php
-<?php
-// 数据库配置
-return [
-    'host' => 'localhost',      // 数据库主机
-    'username' => 'navi',       // 数据库用户名
-    'password' => 'qwer123',    // 数据库密码
-    'database' => 'navi',       // 数据库名称
-    'port' => 3306              // 数据库端口
-];
-?>
-```
-
-### 环境配置
-支持多环境配置，通过修改 `config.php` 适配不同环境：
-- **开发环境**：本地MySQL
-- **测试环境**：测试服务器
-- **生产环境**：生产服务器
-
-### 配置文件结构
-```
-config.php              # 主配置文件
-db-init.php             # 数据库初始化
-├── 创建分类表
-├── 创建导航链接表
-├── 创建用户偏好表
-└── 插入示例数据
-```
-
-## 🎯 使用命令
-
-### 基础命令
-```bash
-# 测试数据库连接
-php db-test.php
-
-# 初始化数据库
-php db-init.php
-
-# 重置数据库（谨慎使用）
-php db-init.php --reset
-
-# 检查数据库状态
-php db-init.php --status
-```
-
-### 高级命令
-```bash
-# 显示配置摘要
-php db-test.php --summary
-
-# 显示表结构
-php db-test.php --schema
-
-# 显示初始化SQL
-php db-test.php --sql
-
-# 显示帮助信息
-php db-test.php --help
-```
-
-### 使用示例
-```bash
-# 完整流程
-php db-test.php          # 检查连接
-php db-init.php          # 初始化数据库
-php db-test.php --summary # 验证数据
+├── index.php          # 网站首页
+├── install.php        # 一键安装向导
+├── api.php            # RESTful API接口
+├── admin/             # 管理后台
+│   ├── index.php      # 后台入口
+│   ├── dashboard.php  # 仪表盘
+│   ├── categories/    # 分类管理
+│   ├── links/         # 链接管理
+│   └── settings/      # 系统设置
+├── uploads/           # 上传文件
+├── assets/            # 静态资源
+├── css/               # 样式文件
+├── js/                # JavaScript
+└── views/             # 页面模板
 ```
 
 ## 🔌 API接口
 
-### 获取所有数据
+### 获取网站数据
 ```
 GET /api.php
 ```
 
-### 获取分类列表
+### 按分类获取链接
 ```
-GET /api.php?action=categories
-```
-
-### 获取链接列表
-```
-GET /api.php?action=links
-GET /api.php?action=links&category_id=1
+GET /api.php?category=技术
 ```
 
 ### 搜索链接
 ```
-POST /api.php?action=search
+POST /api.php
 Content-Type: application/json
 
-{"query": "搜索关键词"}
+{"action": "search", "keyword": "设计"}
 ```
 
-## 🌐 Nginx部署
+## 🎯 使用场景
 
-如果使用Nginx，请参考 `nginx-conf/` 目录中的配置示例。
+- **个人导航站**: 收藏常用网站
+- **团队工具箱**: 团队共享工具链接
+- **公司内网**: 企业内部资源导航
+- **垂直导航**: 特定领域网站聚合
+
+## 🛠️ 技术特色
+
+- **零依赖**: 纯PHP开发，无需Node.js
+- **轻量级**: 核心代码简洁高效
+- **易扩展**: 模块化设计，方便二次开发
+- **响应式**: 完美适配各种设备
+- **安全**: 防SQL注入，XSS防护
+
+## 📞 技术支持
+
+如有问题，请检查：
+- 数据库连接配置
+- PHP错误日志
+- 浏览器控制台信息
+
+---
+
+**🌟 立即开始您的导航网站之旅！**
