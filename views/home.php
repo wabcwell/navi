@@ -241,7 +241,6 @@ try {
                 <?php echo $footer_content; ?>
             </div>
             <div class="footer-links">
-                <a href="?page=api">API</a>
                 <a href="?page=admin">管理</a>
             </div>
         </div>
