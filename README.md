@@ -67,15 +67,14 @@
 navi/
 ├── index.php          # 网站首页
 ├── install.php        # 一键安装向导
-├── api.php            # RESTful API接口
 ├── admin/             # 管理后台
 │   ├── index.php      # 后台入口
 │   ├── dashboard.php  # 仪表盘
 │   ├── categories/    # 分类管理
 │   ├── links/         # 链接管理
 │   └── settings/      # 系统设置
-├── uploads/           # 上传文件
-├── assets/            # 静态资源
+├── uploads/           # 上传文件（背景、分类、链接图标）
+├── assets/            # 静态资源（Font Awesome等）
 ├── css/               # 样式文件
 ├── js/                # JavaScript
 └── views/             # 页面模板
