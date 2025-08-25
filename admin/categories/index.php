@@ -204,16 +204,16 @@ include '../templates/header.php';
                                                 $displayIcon = 'fas ' . $icon;
                                             }
                                         ?>
-                                            <i class="<?php echo htmlspecialchars($displayIcon); ?>" style="font-size: 1.5rem; color: <?php echo htmlspecialchars($category['color']); ?>;"></i>
+                                            <i class="<?php echo htmlspecialchars($displayIcon ?? ''); ?>" style="font-size: 1.5rem; color: <?php echo htmlspecialchars($category['color'] ?? '#007bff'); ?>;"></i>
                                         <?php 
                                         // 检查是否为Bootstrap图标类名
                                         elseif (strpos($icon, 'bi-') === 0): ?>
-                                            <i class="<?php echo htmlspecialchars($icon); ?>" style="font-size: 1.5rem; color: <?php echo htmlspecialchars($category['color']); ?>;"></i>
+                                            <i class="<?php echo htmlspecialchars($icon ?? ''); ?>" style="font-size: 1.5rem; color: <?php echo htmlspecialchars($category['color'] ?? '#007bff'); ?>;"></i>
                                         <?php 
                                         // 否则当作图片文件处理
                                         else: ?>
                                             <img src="/uploads/categories/<?php echo $category['icon']; ?>" 
-                                                 alt="<?php echo htmlspecialchars($category['name']); ?>" 
+                                                 alt="<?php echo htmlspecialchars($category['name'] ?? ''); ?>" 
                                                  class="image-preview" style="width: 40px; height: 40px; border-radius: 4px;">
                                         <?php endif; ?>
                                     <?php else: ?>
@@ -224,13 +224,13 @@ include '../templates/header.php';
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <strong><?php echo htmlspecialchars($category['name']); ?></strong>
+                                    <strong><?php echo htmlspecialchars($category['name'] ?? ''); ?></strong>
                                     <br>
-                                    <small class="text-muted">别名: <?php echo htmlspecialchars($category['slug'] ?? $category['name']); ?></small>
+                                    <small class="text-muted">别名: <?php echo htmlspecialchars($category['slug'] ?? $category['name'] ?? ''); ?></small>
                                 </td>
                                 <td>
-                                    <?php echo htmlspecialchars(mb_substr($category['description'], 0, 50)); ?>
-                                    <?php echo mb_strlen($category['description']) > 50 ? '...' : ''; ?>
+                                    <?php echo htmlspecialchars(mb_substr($category['description'] ?? '', 0, 50)); ?>
+                                    <?php echo mb_strlen($category['description'] ?? '') > 50 ? '...' : ''; ?>
                                 </td>
                                 <td>
                                     <span class="badge bg-info"><?php echo $category['link_count']; ?></span>
@@ -249,7 +249,7 @@ include '../templates/header.php';
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <button type="button" class="btn btn-outline-danger" 
-                                                onclick="deleteCategory(<?php echo $category['id']; ?>, '<?php echo htmlspecialchars($category['name']); ?>')" 
+                                                onclick="deleteCategory(<?php echo $category['id']; ?>, '<?php echo htmlspecialchars($category['name'] ?? '') ?>')" 
                                                 title="删除">
                                             <i class="bi bi-trash"></i>
                                         </button>

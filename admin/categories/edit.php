@@ -126,19 +126,19 @@ include '../templates/header.php';
                     <div class="mb-3">
                         <label for="name" class="form-label">分类名称 <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="name" name="name" 
-                               value="<?php echo htmlspecialchars($category['name']); ?>" required>
+                               value="<?php echo htmlspecialchars($category['name'] ?? ''); ?>" required>
                     </div>
                     
                     <div class="mb-3" style="display: none;">
                         <label for="slug" class="form-label">别名</label>
                         <input type="hidden" class="form-control" id="slug" name="slug" 
-                               value="<?php echo htmlspecialchars($category['slug']); ?>">
+                               value="<?php echo htmlspecialchars($category['slug'] ?? ''); ?>">
                     </div>
                     
                     <div class="mb-3">
                         <label for="description" class="form-label">描述</label>
                         <textarea class="form-control" id="description" name="description" 
-                                  rows="3"><?php echo htmlspecialchars($category['description']); ?></textarea>
+                                  rows="3"><?php echo htmlspecialchars($category['description'] ?? ''); ?></textarea>
                     </div>
                     
                     <!-- 图标设置模块下移到这里 -->
@@ -147,13 +147,13 @@ include '../templates/header.php';
                         
                         <!-- 图标类型选择 -->
                         <div class="btn-group w-100 mb-3" role="group">
-                            <input type="radio" class="btn-check" name="icon_type" id="icon_type_fontawesome" value="fontawesome" <?php echo strpos($category['icon'], 'fa-') === 0 ? 'checked' : ''; ?>>
+                            <input type="radio" class="btn-check" name="icon_type" id="icon_type_fontawesome" value="fontawesome" <?php echo strpos($category['icon'] ?? '', 'fa-') === 0 ? 'checked' : ''; ?>>
                             <label class="btn btn-outline-primary" for="icon_type_fontawesome">Font Awesome</label>
                             
-                            <input type="radio" class="btn-check" name="icon_type" id="icon_type_upload" value="upload" <?php echo (!empty($category['icon']) && strpos($category['icon'], 'fa-') !== 0 && strpos($category['icon'], 'http') !== 0) ? 'checked' : ''; ?>>
+                            <input type="radio" class="btn-check" name="icon_type" id="icon_type_upload" value="upload" <?php echo (!empty($category['icon']) && strpos($category['icon'] ?? '', 'fa-') !== 0 && strpos($category['icon'] ?? '', 'http') !== 0) ? 'checked' : ''; ?>>
                             <label class="btn btn-outline-primary" for="icon_type_upload">上传图片</label>
                             
-                            <input type="radio" class="btn-check" name="icon_type" id="icon_type_url" value="url" <?php echo strpos($category['icon'], 'http') === 0 ? 'checked' : ''; ?>>
+                            <input type="radio" class="btn-check" name="icon_type" id="icon_type_url" value="url" <?php echo strpos($category['icon'] ?? '', 'http') === 0 ? 'checked' : ''; ?>>
                             <label class="btn btn-outline-primary" for="icon_type_url">填写URL</label>
                         </div>
                         
@@ -165,12 +165,12 @@ include '../templates/header.php';
                             <div class="card-body icon-preview-container">
                                 <div id="iconPreview">
                                     <?php if (!empty($category['icon'])): ?>
-                                        <?php if (strpos($category['icon'], 'fa-') === 0): ?>
-                                            <i class="fas <?php echo $category['icon']; ?>" style="font-size: 3rem; color: <?php echo htmlspecialchars($category['color']); ?>"></i>
-                                        <?php elseif (strpos($category['icon'], 'http') === 0): ?>
-                                            <img src="<?php echo htmlspecialchars($category['icon']); ?>" class="image-preview" style="max-width: 100px; max-height: 100px;">
+                                        <?php if (strpos($category['icon'] ?? '', 'fa-') === 0): ?>
+                                            <i class="fas <?php echo $category['icon'] ?? ''; ?>" style="font-size: 3rem; color: <?php echo htmlspecialchars($category['color'] ?? '#007bff'); ?>"></i>
+                                        <?php elseif (strpos($category['icon'] ?? '', 'http') === 0): ?>
+                                            <img src="<?php echo htmlspecialchars($category['icon'] ?? ''); ?>" class="image-preview" style="max-width: 100px; max-height: 100px;">
                                         <?php else: ?>
-                                            <img src="../uploads/categories/<?php echo $category['icon']; ?>" class="image-preview" style="max-width: 100px; max-height: 100px;">
+                                            <img src="../uploads/categories/<?php echo $category['icon'] ?? ''; ?>" class="image-preview" style="max-width: 100px; max-height: 100px;">
                                         <?php endif; ?>
                                     <?php else: ?>
                                         <div class="text-muted">
@@ -208,7 +208,7 @@ include '../templates/header.php';
                                 <div class="col-md-4">
                                     <label for="icon_color" class="form-label">图标颜色</label>
                                     <input type="color" class="form-control form-control-color w-100" id="icon_color" name="icon_color" 
-                                           value="<?php echo htmlspecialchars($category['icon_color'] ?? $category['color']); ?>" style="height: 38px;">
+                                           value="<?php echo htmlspecialchars($category['icon_color'] ?? $category['color'] ?? '#007bff'); ?>" style="height: 38px;">
                                 </div>
                             </div>
                         </div>
@@ -225,11 +225,11 @@ include '../templates/header.php';
                             <label for="icon_url" class="form-label">图标URL</label>
                             <input type="url" class="form-control" id="icon_url" name="icon_url" 
                                    placeholder="https://example.com/icon.png"
-                                   value="<?php echo strpos($category['icon'], 'http') === 0 ? htmlspecialchars($category['icon']) : ''; ?>">
+                                   value="<?php echo strpos($category['icon'] ?? '', 'http') === 0 ? htmlspecialchars($category['icon'] ?? '') : ''; ?>">
                         </div>
                         
                         <!-- 隐藏字段 -->
-                        <input type="hidden" name="current_icon" value="<?php echo htmlspecialchars($category['icon']); ?>">
+                        <input type="hidden" name="current_icon" value="<?php echo htmlspecialchars($category['icon'] ?? ''); ?>">
                         <input type="hidden" name="remove_icon" value="0">
                     </div>
                     
@@ -237,7 +237,7 @@ include '../templates/header.php';
                     <div class="mb-3">
                         <label for="color" class="form-label">分类颜色</label>
                         <input type="color" class="form-control form-control-color w-50" id="color" name="color" 
-                               value="<?php echo htmlspecialchars($category['color']); ?>">
+                               value="<?php echo htmlspecialchars($category['color'] ?? '#007bff'); ?>">
                         <small class="form-text text-muted">用于分类边框和主题色</small>
                     </div>
                     

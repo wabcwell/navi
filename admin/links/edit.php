@@ -290,16 +290,16 @@ include '../templates/header.php';
                             <div class="mb-3">
                                 <label class="form-label">图标类型</label>
                                 <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check" name="icon_type" id="icon_fontawesome" value="fontawesome" <?php echo !empty($link['icon_url']) && strpos($link['icon_url'], '|') !== false ? 'checked' : ''; ?>>
+                                    <input type="radio" class="btn-check" name="icon_type" id="icon_fontawesome" value="fontawesome" <?php echo !empty($link['icon_url']) && strpos($link['icon_url'] ?? '', '|') !== false ? 'checked' : ''; ?>>
                                     <label class="btn btn-outline-primary" for="icon_fontawesome">Font Awesome</label>
                                     
-                                    <input type="radio" class="btn-check" name="icon_type" id="icon_upload" value="upload" <?php echo !empty($link['icon_url']) && strpos($link['icon_url'], '|') === false && !filter_var($link['icon_url'], FILTER_VALIDATE_URL) ? 'checked' : ''; ?>>
+                                    <input type="radio" class="btn-check" name="icon_type" id="icon_upload" value="upload" <?php echo !empty($link['icon_url']) && strpos($link['icon_url'] ?? '', '|') === false && !filter_var($link['icon_url'], FILTER_VALIDATE_URL) ? 'checked' : ''; ?>>
                                     <label class="btn btn-outline-primary" for="icon_upload">上传图片</label>
                                     
-                                    <input type="radio" class="btn-check" name="icon_type" id="icon_url" value="url" <?php echo !empty($link['icon_url']) && filter_var($link['icon_url'], FILTER_VALIDATE_URL) ? 'checked' : ''; ?>>
+                                    <input type="radio" class="btn-check" name="icon_type" id="icon_url" value="url" <?php echo !empty($link['icon_url']) && filter_var($link['icon_url'] ?? '', FILTER_VALIDATE_URL) ? 'checked' : ''; ?>>
                                     <label class="btn btn-outline-primary" for="icon_url">URL地址</label>
                                     
-                                    <input type="radio" class="btn-check" name="icon_type" id="icon_none" value="none" <?php echo empty($link['icon_url']) ? 'checked' : ''; ?>>
+                                    <input type="radio" class="btn-check" name="icon_type" id="icon_none" value="none" <?php echo empty($link['icon_url'] ?? '') ? 'checked' : ''; ?>>
                                     <label class="btn btn-outline-primary" for="icon_none">无图标</label>
                                 </div>
                             </div>
@@ -312,7 +312,7 @@ include '../templates/header.php';
                                         <div class="input-group">
                                             <input type="text" class="form-control" id="icon_fontawesome_class" name="icon_fontawesome_class" 
                                                    placeholder="例如：fa-home" 
-                                                   value="<?php echo !empty($link['icon_url']) && strpos($link['icon_url'], '|') !== false ? explode('|', $link['icon_url'])[0] : ''; ?>">
+                                                   value="<?php echo !empty($link['icon_url']) && strpos($link['icon_url'] ?? '', '|') !== false ? explode('|', $link['icon_url'] ?? '')[0] : ''; ?>">
                                             <button type="button" class="btn btn-outline-secondary" id="openIconPicker">
                                                 <i class="fas fa-icons"></i>
                                             </button>
@@ -321,7 +321,7 @@ include '../templates/header.php';
                                     <div class="col-4">
                                         <label for="icon_color" class="form-label">图标颜色</label>
                                         <input type="color" class="form-control form-control-color w-100" id="icon_color" 
-                                               name="icon_color" value="<?php echo !empty($link['icon_url']) && strpos($link['icon_url'], '|') !== false ? (@explode('|', $link['icon_url'])[1] ?: '#007bff') : '#007bff'; ?>">
+                                               name="icon_color" value="<?php echo !empty($link['icon_url']) && strpos($link['icon_url'] ?? '', '|') !== false ? (@explode('|', $link['icon_url'] ?? '')[1] ?: '#007bff') : '#007bff'; ?>">
                                     </div>
                                 </div>
                             </div>
@@ -332,7 +332,7 @@ include '../templates/header.php';
                                 <input type="file" class="form-control" id="icon_upload_file" name="icon_upload" 
                                        accept="image/*">
                                 <div class="form-text">支持 JPG、PNG、GIF、SVG 格式，建议尺寸 64x64 像素</div>
-                                <?php if (!empty($link['icon_url']) && strpos($link['icon_url'], '|') === false && !filter_var($link['icon_url'], FILTER_VALIDATE_URL)): ?>
+                                <?php if (!empty($link['icon_url']) && strpos($link['icon_url'] ?? '', '|') === false && !filter_var($link['icon_url'] ?? '', FILTER_VALIDATE_URL)): ?>
                                     <div class="mt-2">
                                         <img src="../uploads/links/<?php echo htmlspecialchars($link['icon_url']); ?>" 
                                              style="max-width: 50px; max-height: 50px; border: 1px solid #ddd; border-radius: 4px;">
@@ -346,7 +346,7 @@ include '../templates/header.php';
                                 <label for="icon_url_input" class="form-label">图标URL</label>
                                 <input type="url" class="form-control" id="icon_url_input" name="icon_url" 
                                        placeholder="https://example.com/icon.png" 
-                                       value="<?php echo !empty($link['icon_url']) && filter_var($link['icon_url'], FILTER_VALIDATE_URL) ? htmlspecialchars($link['icon_url']) : ''; ?>">
+                                       value="<?php echo !empty($link['icon_url']) && filter_var($link['icon_url'] ?? '', FILTER_VALIDATE_URL) ? htmlspecialchars($link['icon_url'] ?? '') : ''; ?>">
                                 <div class="form-text">请输入有效的图片URL地址</div>
                             </div>
                         </div>
@@ -356,18 +356,18 @@ include '../templates/header.php';
                             <label class="form-label">图标预览</label>
                             <div class="icon-preview-container text-center">
                                 <div id="iconPreview" class="mb-2">
-                                    <?php if ($link['icon_url']): ?>
-                                        <?php if (strpos($link['icon_url'], '|') !== false): ?>
+                                    <?php if ($link['icon_url'] ?? ''): ?>
+                                    <?php if (strpos($link['icon_url'] ?? '', '|') !== false): ?>
                                             <?php 
-                                                $iconInfo = explode('|', $link['icon_url']);
+                                                $iconInfo = explode('|', $link['icon_url'] ?? '');
                                                 $iconClass = $iconInfo[0] ?? 'fa-link';
                                                 $iconColor = $iconInfo[1] ?? '#007bff';
                                             ?>
                                             <i class="fas <?php echo htmlspecialchars($iconClass); ?>" style="font-size: 3rem; color: <?php echo htmlspecialchars($iconColor); ?>"></i>
-                                        <?php elseif (filter_var($link['icon_url'], FILTER_VALIDATE_URL)): ?>
-                                            <img src="<?php echo htmlspecialchars($link['icon_url']); ?>" class="image-preview" style="max-width: 100px; max-height: 100px;">
+                                        <?php elseif (filter_var($link['icon_url'] ?? '', FILTER_VALIDATE_URL)): ?>
+                                            <img src="<?php echo htmlspecialchars($link['icon_url'] ?? ''); ?>" class="image-preview" style="max-width: 100px; max-height: 100px;">
                                         <?php else: ?>
-                                            <img src="../uploads/links/<?php echo htmlspecialchars($link['icon_url']); ?>" class="image-preview" style="max-width: 100px; max-height: 100px;">
+                                            <img src="../uploads/links/<?php echo htmlspecialchars($link['icon_url'] ?? ''); ?>" class="image-preview" style="max-width: 100px; max-height: 100px;">
                                         <?php endif; ?>
                                     <?php else: ?>
                                         <div class="text-muted">

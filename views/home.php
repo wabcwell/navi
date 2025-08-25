@@ -1,96 +1,72 @@
 <?php
-// PHP版本的主页视图
-require_once 'config.php';
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../admin/includes/init.php';
 
-// 获取背景设置（从index.php传递过来）
-    $background_type = isset($background_type) ? $background_type : 'color';
-    $background_color = isset($background_color) ? $background_color : '#f3f4f6';
-    $background_image = isset($background_image) ? $background_image : '';
-    $background_api = isset($background_api) ? $background_api : 'https://picsum.photos/1920/1080';
-    $background_opacity = isset($background_opacity) ? $background_opacity : '1';
-    
-    // 获取Logo设置
-    try {
-        $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('site_logo_type', 'site_logo', 'site_logo_color')");
-        $stmt->execute();
-        $logo_settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-        
-        $site_logo_type = $logo_settings['site_logo_type'] ?? 'image';
-        $site_logo = $logo_settings['site_logo'] ?? '';
-        $site_logo_color = $logo_settings['site_logo_color'] ?? '#007bff';
-        
-    } catch (Exception $e) {
-        $site_logo_type = 'image';
-        $site_logo = '';
-        $site_logo_color = '#007bff';
-    }
-    
-    // 获取页脚设置
-    try {
-        $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('footer_content', 'show_footer')");
-        $stmt->execute();
-        $footer_settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-        
-        $footer_content = $footer_settings['footer_content'] ?? '© 2024 导航站. All rights reserved.';
-        $show_footer = $footer_settings['show_footer'] ?? 1;
-        
-    } catch (Exception $e) {
-        $footer_content = '© 2024 导航站. All rights reserved.';
-        $show_footer = 1;
-    }
-    
-    // 获取透明度设置并转换为不透明度值
-    try {
-        $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key LIKE '%opacity%'");
-        $stmt->execute();
-        $opacity_settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-        
-        // 将用户设置的透明度值转换为CSS使用的不透明度值
-        $header_bg_opacity = 1 - floatval($opacity_settings['header_bg_opacity'] ?? '0.15');
-        $category_bg_opacity = 1 - floatval($opacity_settings['category_bg_opacity'] ?? '0.15');
-        $links_area_opacity = 1 - floatval($opacity_settings['links_area_opacity'] ?? '0.15');
-        $link_card_opacity = 1 - floatval($opacity_settings['link_card_opacity'] ?? '0.15');
-        
-    } catch (Exception $e) {
-        // 默认情况下，使用85%的不透明度（即15%透明度）
-        $header_bg_opacity = 0.85;
-        $category_bg_opacity = 0.85;
-        $links_area_opacity = 0.85;
-        $link_card_opacity = 0.85;
-    }
+// 获取设置
+$site_name = get_site_setting('site_name', '导航');
+$site_description = get_site_setting('site_description', '我的导航网站');
+$site_logo_type = get_site_setting('site_logo_type', 'icon');
+$site_logo = get_site_setting('site_logo', 'fas fa-compass');
+$site_logo_color = get_site_setting('site_logo_color', '#007bff');
+
+// 背景设置
+$background_type = get_site_setting('background_type', 'color');
+$background_color = get_site_setting('background_color', '#f8fafc');
+$background_image = get_site_setting('background_image', '');
+$background_api = get_site_setting('background_api', 'https://picsum.photos/1920/1080');
+$background_opacity = get_site_setting('background_opacity', '1');
+
+// 透明度设置
+$header_bg_opacity = get_site_setting('header_bg_opacity', '0.9');
+$category_bg_opacity = get_site_setting('category_bg_opacity', '0.8');
+$links_area_opacity = get_site_setting('links_area_opacity', '0.7');
+$link_card_opacity = get_site_setting('link_card_opacity', '0.8');
+
+// 页脚设置
+$show_footer = get_site_setting('show_footer', '1') == '1';
+$footer_content = get_site_setting('footer_content', '&copy; 2024 导航网站. All rights reserved.');
 
 // 获取数据库连接
+$pdo = get_db_connection();
+
+// 获取分类和链接
+$categories = [];
+$linksByCategory = [];
+
 try {
-    $db = Database::getInstance();
-    $pdo = $db->getConnection();
+    // 使用install.php中的正确表名和列名
+    // 获取启用的分类
+    $stmt = $pdo->query("SELECT * FROM categories WHERE is_active = 1 ORDER BY order_index ASC, id ASC");
+    $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // 获取所有分类和链接
-    $stmt = $pdo->query("
-        SELECT c.*, COUNT(l.id) as link_count 
-        FROM categories c 
-        LEFT JOIN navigation_links l ON c.id = l.category_id AND l.is_active = 1 
-        WHERE c.is_active = 1 
-        GROUP BY c.id 
-        ORDER BY c.order_index ASC
-    ");
-    $categories = $stmt->fetchAll();
-    
-    // 获取所有链接
-    $stmt = $pdo->query("
-        SELECT l.*, c.name as category_name, c.color as category_color 
-        FROM navigation_links l 
-        JOIN categories c ON l.category_id = c.id 
-        WHERE l.is_active = 1 
-        ORDER BY c.order_index ASC, l.order_index ASC
-    ");
-    $links = $stmt->fetchAll();
-    
-    // 按分类分组链接
-    $linksByCategory = [];
-    foreach ($links as $link) {
-        $linksByCategory[$link['category_id']][] = $link;
+    if (!empty($categories)) {
+        // 获取每个分类的链接数量 (使用navigation_links表)
+        $stmt = $pdo->prepare("SELECT category_id, COUNT(*) as link_count FROM navigation_links WHERE is_active = 1 AND category_id IN (" . implode(',', array_fill(0, count($categories), '?')) . ") GROUP BY category_id");
+        $stmt->execute(array_column($categories, 'id'));
+        $linkCounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $linkCountMap = [];
+        foreach ($linkCounts as $count) {
+            $linkCountMap[$count['category_id']] = $count['link_count'];
+        }
+        
+        foreach ($categories as &$category) {
+            $category['link_count'] = $linkCountMap[$category['id']] ?? 0;
+        }
+        unset($category);
+        
+        // 获取启用的链接 (使用navigation_links表)
+        $stmt = $pdo->query("SELECT * FROM navigation_links WHERE is_active = 1 ORDER BY order_index ASC, id ASC");
+        $links = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // 按分类分组链接
+        foreach ($links as $link) {
+            if (!isset($linksByCategory[$link['category_id']])) {
+                $linksByCategory[$link['category_id']] = [];
+            }
+            $linksByCategory[$link['category_id']][] = $link;
+        }
     }
-    
 } catch (Exception $e) {
     $categories = [];
     $linksByCategory = [];
@@ -106,10 +82,10 @@ try {
     <link rel="stylesheet" href="admin/assets/fontawesome/css/all.min.css">
     <style>
         :root {
-            --header-bg-opacity: <?php echo htmlspecialchars($header_bg_opacity); ?>;
-            --category-bg-opacity: <?php echo htmlspecialchars($category_bg_opacity); ?>;
-            --links-area-opacity: <?php echo htmlspecialchars($links_area_opacity); ?>;
-            --link-card-opacity: <?php echo htmlspecialchars($link_card_opacity); ?>;
+            --header-bg-opacity: <?php echo htmlspecialchars(1 - floatval($header_bg_opacity)); ?>;
+            --category-bg-opacity: <?php echo htmlspecialchars(1 - floatval($category_bg_opacity)); ?>;
+            --links-area-opacity: <?php echo htmlspecialchars(1 - floatval($links_area_opacity)); ?>;
+            --link-card-opacity: <?php echo htmlspecialchars(1 - floatval($link_card_opacity)); ?>;
         }
     </style>
 </head>
@@ -260,7 +236,7 @@ try {
             
             // 设置背景透明度
             if (backgroundOpacity && backgroundOpacity !== '1') {
-                document.documentElement.style.setProperty('--bg-overlay', `rgba(255, 255, 255, ${backgroundOpacity})`);
+                document.documentElement.style.setProperty('--bg-overlay', 'rgba(255, 255, 255, ' + backgroundOpacity + ')');
             }
             
             switch(backgroundType) {
@@ -272,13 +248,13 @@ try {
                 case 'image':
                     if (backgroundImage) {
                         body.className = 'has-bg-image';
-                        body.style.backgroundImage = `url('${backgroundImage}')`;
+                        body.style.backgroundImage = "url('" + backgroundImage + "')";
                     }
                     break;
                     
                 case 'api':
                     body.className = 'has-bg-image';
-                    body.style.backgroundImage = `url('${backgroundApi}')`;
+                    body.style.backgroundImage = "url('" + backgroundApi + "')";
                     break;
                     
                 case 'gradient':

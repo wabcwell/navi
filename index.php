@@ -4,17 +4,21 @@
 // 加载配置文件
 require_once 'config.php';
 
+// 引入后台数据库连接函数
+require_once 'admin/includes/init.php';
+
 // 设置错误报告
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 // 启动会话
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // 加载背景设置和网站信息
 try {
-    $database = Database::getInstance();
-    $pdo = $database->getConnection();
+    $pdo = get_db_connection();
     
     // 加载背景设置
     $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key LIKE 'background_%'");

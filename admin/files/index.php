@@ -2,6 +2,7 @@
 session_start();
 require_once '../../config.php';
 require_once '../includes/auth.php';
+require_once '../includes/init.php';
 
 // 检查登录
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {

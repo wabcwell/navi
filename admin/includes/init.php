@@ -16,6 +16,14 @@ require_once ABSPATH . 'config.php';
 if (!defined('ADMIN_PATH')) {
     define('ADMIN_PATH', __DIR__ . '/../');
 }
+
+// 动态生成SITE_URL（如果未定义）
+if (!defined('SITE_URL')) {
+    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    define('SITE_URL', $protocol . '://' . $host);
+}
+
 if (!defined('ADMIN_URL')) {
     define('ADMIN_URL', SITE_URL . '/admin');
 }
@@ -29,6 +37,10 @@ define('UPLOAD_PATH', ADMIN_PATH . 'uploads/');
 define('ITEMS_PER_PAGE', 20);
 
 // 错误报告
+if (!defined('DEBUG_MODE')) {
+    define('DEBUG_MODE', false);
+}
+
 if (DEBUG_MODE) {
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
@@ -67,8 +79,9 @@ function get_db_connection() {
                 $pdo = Database::getInstance()->getConnection();
             } else {
                 // 回退到传统方式
+                $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
                 $pdo = new PDO(
-                    'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4',
+                    $dsn,
                     DB_USER,
                     DB_PASS,
                     [
