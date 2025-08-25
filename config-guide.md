@@ -9,9 +9,9 @@
 **位置**: 根目录 `config.php`
 **作用**: 系统级配置，数据库连接等核心设置
 
-#### 必需配置项
+#### 必需配置项（仅5项）
 ```php
-// 数据库配置
+// 数据库配置（必需）
 define('DB_HOST', 'localhost');      // 数据库服务器
 define('DB_PORT', '3306');          // 数据库端口
 define('DB_NAME', 'navi_db');      // 数据库名称
@@ -19,31 +19,17 @@ define('DB_USER', 'root');         // 数据库用户名
 define('DB_PASS', 'password');     // 数据库密码
 define('DB_CHARSET', 'utf8mb4');   // 数据库字符集
 
-// 网站基本信息
-define('SITE_NAME', '我的导航网站');
-define('SITE_DESCRIPTION', '一个简洁实用的导航网站');
-define('SITE_KEYWORDS', '导航,工具,网站,收藏');
-define('SITE_URL', 'https://yoursite.com');
-
-// 管理员配置
+// 管理员配置（必需）
 define('ADMIN_PASSWORD_HASH', '$2y$10$...'); // 使用 password_hash() 生成
-
-// 系统状态
-define('SITE_INSTALLED', true);     // 安装完成后设为true
-define('DEBUG_MODE', false);        // 生产环境设为false
 ```
 
-#### 可选配置项
+#### 可选配置项（仅4项）
 ```php
-// 时区和本地化
-define('TIMEZONE', 'Asia/Shanghai');
-
-// 上传配置
-define('UPLOAD_MAX_SIZE', 2097152); // 2MB
-define('UPLOAD_ALLOWED_TYPES', ['jpg','jpeg','png','gif','webp','svg']);
-
-// 分页配置
-define('LINKS_PER_PAGE', 20);
+// 系统配置（可选）
+define('SITE_INSTALLED', false);     // 安装状态标记
+define('DEBUG_MODE', false);        // 调试模式
+define('TIMEZONE', 'Asia/Shanghai'); // 时区设置
+define('SITE_URL', 'https://yoursite.com'); // 网站URL
 ```
 
 ### 2. 数据库设置表（settings）
