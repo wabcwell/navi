@@ -44,7 +44,7 @@ try {
     $background_type = 'color';
     $background_color = '#f3f4f6';
     $background_image = '';
-    $background_api = 'https://picsum.photos/1920/1080';
+    $background_api = 'https://www.dmoe.cc/random.php';
     $background_opacity = '1';
     $site_name = '我的导航网站';
     $site_description = '一个简洁美观的导航网站';
