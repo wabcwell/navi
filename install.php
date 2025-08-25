@@ -183,22 +183,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
 
         $pdo->exec($sql);
 
-        // 插入默认数据
+        // 插入默认数据 - 与后台设置页面保持一致
         $stmt = $pdo->prepare("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES (?, ?)");
         $settings = [
+            // 基本网站信息
             'site_name' => $site_name,
             'site_description' => $site_description,
             'site_keywords' => '导航,工具,网站',
-            'background_image' => 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop',
-            'custom_css' => '',
-            'footer_text' => '© ' . date('Y') . ' ' . $site_name
+            'site_url' => '',
+            
+            // 显示设置
+            'items_per_page' => 20,
+            'maintenance_mode' => 0,
+            'maintenance_message' => '网站正在维护中，请稍后再访问',
+            
+            // Logo和图标设置
+            'site_icon' => '',
+            'site_logo' => '',
+            'site_logo_type' => 'image',
+            'site_logo_image' => '',
+            'site_logo_icon' => 'fas fa-home',
+            'site_logo_color' => '#007bff',
+            
+            // 背景设置
+            'background_type' => 'color',
+            'background_image' => '',
+            'background_color' => '#f8f9fa',
+            'background_api' => 'https://www.dmoe.cc/random.php',
+            
+            // 页脚设置
+            'footer_content' => '© ' . date('Y') . ' ' . $site_name . '. All rights reserved.',
+            'show_footer' => 1,
+            
+            // 上传设置
+            'upload_max_size' => 10,
+            'upload_allowed_types' => 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar',
+            
+            // 透明度设置
+            'header_bg_opacity' => 0.85,
+            'category_bg_opacity' => 0.85,
+            'links_area_opacity' => 0.85,
+            'link_card_opacity' => 0.85,
+            
+            // 系统设置
+            'timezone' => 'Asia/Shanghai',
+            'date_format' => 'Y-m-d H:i:s',
+            
+            // 其他设置
+            'custom_css' => ''
         ];
 
         foreach ($settings as $key => $value) {
             $stmt->execute([$key, $value]);
         }
 
-        // 插入示例分类（基于db-init-sample-data.php的8个分类）
+        // 插入示例分类（与db-init-sample-data.php完全一致的结构）
         $categories = [
             [
                 'name' => '搜索引擎',
@@ -206,7 +245,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
                 'icon' => 'fas fa-search',
                 'icon_color' => '#4285f4',
                 'color' => '#4285f4',
-                'order_index' => 1
+                'order_index' => 1,
+                'is_active' => 1
             ],
             [
                 'name' => '社交媒体',
@@ -214,7 +254,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
                 'icon' => 'fas fa-users',
                 'icon_color' => '#1877f2',
                 'color' => '#1877f2',
-                'order_index' => 2
+                'order_index' => 2,
+                'is_active' => 1
             ],
             [
                 'name' => '开发工具',
@@ -222,7 +263,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
                 'icon' => 'fas fa-code',
                 'icon_color' => '#24292e',
                 'color' => '#24292e',
-                'order_index' => 3
+                'order_index' => 3,
+                'is_active' => 1
             ],
             [
                 'name' => '设计资源',
@@ -230,7 +272,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
                 'icon' => 'fas fa-palette',
                 'icon_color' => '#ff6b35',
                 'color' => '#ff6b35',
-                'order_index' => 4
+                'order_index' => 4,
+                'is_active' => 1
             ],
             [
                 'name' => '学习平台',
@@ -238,7 +281,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
                 'icon' => 'fas fa-graduation-cap',
                 'icon_color' => '#0f997f',
                 'color' => '#0f997f',
-                'order_index' => 5
+                'order_index' => 5,
+                'is_active' => 1
             ],
             [
                 'name' => '新闻资讯',
@@ -246,7 +290,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
                 'icon' => 'fas fa-newspaper',
                 'icon_color' => '#ff6600',
                 'color' => '#ff6600',
-                'order_index' => 6
+                'order_index' => 6,
+                'is_active' => 1
             ],
             [
                 'name' => '云服务',
@@ -254,7 +299,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
                 'icon' => 'fas fa-cloud',
                 'icon_color' => '#00a1f1',
                 'color' => '#00a1f1',
-                'order_index' => 7
+                'order_index' => 7,
+                'is_active' => 1
             ],
             [
                 'name' => '娱乐休闲',
@@ -262,11 +308,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
                 'icon' => 'fas fa-gamepad',
                 'icon_color' => '#ff0000',
                 'color' => '#ff0000',
-                'order_index' => 8
+                'order_index' => 8,
+                'is_active' => 1
             ]
         ];
 
-        $stmt = $pdo->prepare("INSERT IGNORE INTO categories (name, description, icon, icon_color, color, order_index, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)");
+        $stmt = $pdo->prepare("INSERT IGNORE INTO categories (name, description, icon, icon_color, color, order_index, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)");
         foreach ($categories as $category) {
             $stmt->execute([
                 $category['name'],
@@ -274,7 +321,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
                 $category['icon'],
                 $category['icon_color'],
                 $category['color'],
-                $category['order_index']
+                $category['order_index'],
+                $category['is_active']
             ]);
         }
 
@@ -384,7 +432,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             $categoryMap[$row['name']] = $row['id'];
         }
 
-        $stmt = $pdo->prepare("INSERT IGNORE INTO navigation_links (title, url, description, icon, category_id, sort_order, is_active) VALUES (?, ?, ?, ?, ?, ?, 1)");
+        $stmt = $pdo->prepare("INSERT IGNORE INTO navigation_links (title, url, description, icon, category_id, sort_order, is_active, click_count) VALUES (?, ?, ?, ?, ?, ?, 1, 0)");
         foreach ($links as $index => $link) {
             $categoryId = $categoryMap[$link['category']] ?? null;
             $stmt->execute([
