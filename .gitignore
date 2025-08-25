@@ -1,0 +1,23 @@
+# 忽略文件和目录
+node_modules/
+vendor/
+.env
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.temp
+
+# 忽略上传的文件
+uploads/backgrounds/*
+!uploads/backgrounds/.gitkeep
+uploads/categories/*
+!uploads/categories/.gitkeep
+uploads/links/*
+!uploads/links/.gitkeep
+uploads/settings/*
+!uploads/settings/.gitkeep
+
+# 忽略配置文件
+config.php
+config.js

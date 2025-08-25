@@ -1,0 +1,24 @@
+{
+  "name": "navigation-website",
+  "version": "1.0.0",
+  "description": "一个简洁的导航网站",
+  "main": "index.php",
+  "scripts": {
+    "start": "php server.php",
+    "dev": "php server.php",
+    "serve": "php -S localhost:8000 -t . router.php",
+    "db-test": "php db-test.php",
+    "db-init": "php db-init.php",
+    "db-summary": "php db-test.php --summary",
+    "db-schema": "php db-test.php --schema",
+    "db-sql": "php db-test.php --sql"
+  },
+  "keywords": [
+    "navigation",
+    "website",
+    "mysql",
+    "php"
+  ],
+  "author": "",
+  "license": "ISC"
+}

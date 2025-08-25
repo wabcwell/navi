@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?>导航网站管理后台</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="<?php echo ADMIN_URL; ?>/assets/fontawesome/css/all.min.css" rel="stylesheet">
+    <!-- 本地Bootstrap Icons备用 -->
+    <link href="<?php echo ADMIN_URL; ?>/assets/css/bootstrap-icons.css" rel="stylesheet">
+    <!-- 左侧导航样式 -->
+    <link href="<?php echo ADMIN_URL; ?>/assets/css/sidebar.css" rel="stylesheet">
+    <style>
+        .icon-preview-container {
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .icon-section {
+            transition: all 0.3s ease;
+        }
+        .icon-btn:hover {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .icon-btn {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            padding: 0.5rem;
+        }
+        .image-preview {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.375rem;
+        }
+    </style>
+</head>
+<body>
+    <?php if (is_logged_in()): ?>
+    <!-- 左侧导航 -->
+    <nav class="sidebar">
+        <a href="<?php echo ADMIN_URL; ?>/dashboard.php" class="sidebar-brand">
+            <i class="bi bi-speedometer2"></i>
+            <span>导航管理</span>
+        </a>
+        
+        <ul class="sidebar-nav">
+            <li class="nav-item">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : ''; ?>" 
+                   href="<?php echo ADMIN_URL; ?>/dashboard.php">
+                    <i class="bi bi-house"></i>
+                    <span>仪表盘</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/categories/') !== false ? 'active' : ''; ?>" 
+                   href="<?php echo ADMIN_URL; ?>/categories/">
+                    <i class="bi bi-folder"></i>
+                    <span>分类管理</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/links/') !== false ? 'active' : ''; ?>" 
+                   href="<?php echo ADMIN_URL; ?>/links/">
+                    <i class="bi bi-link-45deg"></i>
+                    <span>链接管理</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/files/') !== false ? 'active' : ''; ?>" 
+                   href="<?php echo ADMIN_URL; ?>/files/">
+                    <i class="bi bi-image"></i>
+                    <span>文件管理</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/settings/') !== false ? 'active' : ''; ?>" 
+                   href="<?php echo ADMIN_URL; ?>/settings/general.php">
+                    <i class="bi bi-gear"></i>
+                    <span>系统设置</span>
+                </a>
+            </li>
+        </ul>
+        
+        <div class="sidebar-footer">
+            <a href="<?php echo ADMIN_URL; ?>/logout.php" class="logout-btn" onclick="return confirm('确定要退出吗？')">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>退出登录</span>
+            </a>
+        </div>
+    </nav>
+    
+    <!-- 移动端遮罩 -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title"><?php echo isset($page_title) ? $page_title : '管理后台'; ?></h1>
+            <?php if (isset($breadcrumb)): ?>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <?php foreach ($breadcrumb as $item): ?>
+                            <?php if (isset($item['url'])): ?>
+                                <li class="breadcrumb-item"><a href="<?php echo $item['url']; ?>"><?php echo $item['title']; ?></a></li>
+                            <?php else: ?>
+                                <li class="breadcrumb-item active" aria-current="page"><?php echo $item['title']; ?></li>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </ol>
+                </nav>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>

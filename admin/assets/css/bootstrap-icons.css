@@ -1,0 +1,31 @@
+/* Bootstrap Icons v1.10.0 - Local Fallback */
+@import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css');
+
+/* 如果CDN加载失败，使用本地备用样式 */
+.bi::before,
+[class^="bi-"]::before,
+[class*=" bi-"]::before {
+  display: inline-block;
+  font-family: "bootstrap-icons" !important;
+  font-style: normal;
+  font-weight: normal !important;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  vertical-align: -0.125em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 使用Unicode编码确保图标显示 */
+.bi-folder::before { content: "📁"; }
+.bi-folder-fill::before { content: "📁"; }
+.bi-plus::before { content: "➕"; }
+.bi-search::before { content: "🔍"; }
+.bi-pencil::before { content: "✏️"; }
+.bi-trash::before { content: "🗑️"; }
+.bi-x::before { content: "❌"; }
+.bi-arrow-down-up::before { content: "↕️"; }
+.bi-chevron-left::before { content: "◀️"; }
+.bi-chevron-right::before { content: "▶️"; }
+.bi-folder-x::before { content: "📂"; }
