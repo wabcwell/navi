@@ -39,22 +39,24 @@ require_once 'config.php';
         $show_footer = 1;
     }
     
-    // 获取透明度设置
+    // 获取透明度设置并转换为不透明度值
     try {
         $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key LIKE '%opacity%'");
         $stmt->execute();
         $opacity_settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
         
-        $header_bg_opacity = $opacity_settings['header_bg_opacity'] ?? '0.85';
-        $category_bg_opacity = $opacity_settings['category_bg_opacity'] ?? '0.85';
-        $links_area_opacity = $opacity_settings['links_area_opacity'] ?? '0.85';
-        $link_card_opacity = $opacity_settings['link_card_opacity'] ?? '0.85';
+        // 将用户设置的透明度值转换为CSS使用的不透明度值
+        $header_bg_opacity = 1 - floatval($opacity_settings['header_bg_opacity'] ?? '0.15');
+        $category_bg_opacity = 1 - floatval($opacity_settings['category_bg_opacity'] ?? '0.15');
+        $links_area_opacity = 1 - floatval($opacity_settings['links_area_opacity'] ?? '0.15');
+        $link_card_opacity = 1 - floatval($opacity_settings['link_card_opacity'] ?? '0.15');
         
     } catch (Exception $e) {
-        $header_bg_opacity = '0.85';
-        $category_bg_opacity = '0.85';
-        $links_area_opacity = '0.85';
-        $link_card_opacity = '0.85';
+        // 默认情况下，使用85%的不透明度（即15%透明度）
+        $header_bg_opacity = 0.85;
+        $category_bg_opacity = 0.85;
+        $links_area_opacity = 0.85;
+        $link_card_opacity = 0.85;
     }
 
 // 获取数据库连接
@@ -104,10 +106,10 @@ try {
     <link rel="stylesheet" href="admin/assets/fontawesome/css/all.min.css">
     <style>
         :root {
-            --header-bg-opacity: <?php echo htmlspecialchars(1 - $header_bg_opacity); ?>;
-            --category-bg-opacity: <?php echo htmlspecialchars(1 - $category_bg_opacity); ?>;
-            --links-area-opacity: <?php echo htmlspecialchars(1 - $links_area_opacity); ?>;
-            --link-card-opacity: <?php echo htmlspecialchars(1 - $link_card_opacity); ?>;
+            --header-bg-opacity: <?php echo htmlspecialchars($header_bg_opacity); ?>;
+            --category-bg-opacity: <?php echo htmlspecialchars($category_bg_opacity); ?>;
+            --links-area-opacity: <?php echo htmlspecialchars($links_area_opacity); ?>;
+            --link-card-opacity: <?php echo htmlspecialchars($link_card_opacity); ?>;
         }
     </style>
 </head>

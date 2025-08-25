@@ -560,14 +560,14 @@ include '../templates/header.php'; ?>
                                 <label for="header_bg_opacity" class="form-label">标题背景透明度</label>
                                 <input type="range" class="form-range" id="header_bg_opacity" name="header_bg_opacity" 
                                        min="0" max="1" step="0.05" value="<?php echo get_site_setting('header_bg_opacity', 0.85); ?>">
-                                <div class="form-text">Logo和标题所在区域的透明度: <span id="header_opacity_value"><?php echo round((1 - get_site_setting('header_bg_opacity', 0.85)) * 100); ?>%</span></div>
+                                <div class="form-text">Logo和标题所在区域的透明度: <span id="header_opacity_value"><?php echo round(get_site_setting('header_bg_opacity', 0.85) * 100); ?>%</span></div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="category_bg_opacity" class="form-label">分类背景透明度</label>
                                 <input type="range" class="form-range" id="category_bg_opacity" name="category_bg_opacity" 
                                        min="0" max="1" step="0.05" value="<?php echo get_site_setting('category_bg_opacity', 0.85); ?>">
-                                <div class="form-text">分类名称所在背景的透明度: <span id="category_opacity_value"><?php echo round((1 - get_site_setting('category_bg_opacity', 0.85)) * 100); ?>%</span></div>
+                                <div class="form-text">分类名称所在背景的透明度: <span id="category_opacity_value"><?php echo round(get_site_setting('category_bg_opacity', 0.85) * 100); ?>%</span></div>
                             </div>
                         </div>
 
@@ -576,14 +576,14 @@ include '../templates/header.php'; ?>
                                 <label for="links_area_opacity" class="form-label">链接区域背景透明度</label>
                                 <input type="range" class="form-range" id="links_area_opacity" name="links_area_opacity" 
                                        min="0" max="1" step="0.05" value="<?php echo get_site_setting('links_area_opacity', 0.85); ?>">
-                                <div class="form-text">链接区域整体的背景透明度: <span id="links_area_opacity_value"><?php echo round((1 - get_site_setting('links_area_opacity', 0.85)) * 100); ?>%</span></div>
+                                <div class="form-text">链接区域整体的背景透明度: <span id="links_area_opacity_value"><?php echo round(get_site_setting('links_area_opacity', 0.85) * 100); ?>%</span></div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="link_card_opacity" class="form-label">链接卡片透明度</label>
                                 <input type="range" class="form-range" id="link_card_opacity" name="link_card_opacity" 
                                        min="0" max="1" step="0.05" value="<?php echo get_site_setting('link_card_opacity', 0.85); ?>">
-                                <div class="form-text">单个链接卡片本身的透明度: <span id="link_card_opacity_value"><?php echo round((1 - get_site_setting('link_card_opacity', 0.85)) * 100); ?>%</span></div>
+                                <div class="form-text">单个链接卡片本身的透明度: <span id="link_card_opacity_value"><?php echo round(get_site_setting('link_card_opacity', 0.85) * 100); ?>%</span></div>
                             </div>
                         </div>
                     </div>
@@ -1006,26 +1006,36 @@ function toggleLogoType() {
             }
         });
 
-// 透明度滑块实时更新（显示为透明度而非不透明度）
-const opacitySliders = [
-    'header_bg_opacity',
-    'category_bg_opacity',
-    'links_area_opacity',
-    'link_card_opacity'
-];
+// 透明度滑块实时更新（直接显示透明度值）
+function initOpacitySliders() {
+    const opacitySliders = [
+        'header_bg_opacity',
+        'category_bg_opacity',
+        'links_area_opacity',
+        'link_card_opacity'
+    ];
 
-opacitySliders.forEach(sliderId => {
-    const slider = document.getElementById(sliderId);
-    const valueDisplay = document.getElementById(sliderId + '_value');
-    
-    if (slider && valueDisplay) {
-        slider.addEventListener('input', function() {
-            // 将不透明度转换为透明度显示
-            const transparency = 1 - parseFloat(this.value);
-            valueDisplay.textContent = Math.round(transparency * 100) + '%';
-        });
-    }
-});
+    opacitySliders.forEach(sliderId => {
+        const slider = document.getElementById(sliderId);
+        const valueDisplay = document.getElementById(sliderId + '_value');
+        
+        if (slider && valueDisplay) {
+            // 初始化显示值
+            const initialValue = parseFloat(slider.value);
+            valueDisplay.textContent = Math.round(initialValue * 100) + '%';
+
+            // 添加滑动事件监听
+            slider.addEventListener('input', function() {
+                // 直接显示透明度值
+                const transparency = parseFloat(this.value);
+                valueDisplay.textContent = Math.round(transparency * 100) + '%';
+            });
+        }
+    });
+}
+
+// 确保DOM加载完成后执行初始化
+document.addEventListener('DOMContentLoaded', initOpacitySliders);
 </script>
 
 <script>

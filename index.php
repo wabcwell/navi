@@ -27,13 +27,17 @@ try {
     $background_api = $bg_settings['background_api'] ?? 'https://picsum.photos/1920/1080';
     $background_opacity = $bg_settings['background_opacity'] ?? '1';
     
-    // 加载网站信息
-    $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('site_name', 'site_description')");
+    // 加载网站信息和透明度设置
+    $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('site_name', 'site_description', 'header_bg_opacity', 'category_bg_opacity', 'links_area_opacity', 'link_card_opacity')");
     $stmt->execute();
     $site_settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
     
     $site_name = $site_settings['site_name'] ?? '我的导航网站';
     $site_description = $site_settings['site_description'] ?? '一个简洁美观的导航网站';
+    $header_bg_opacity = $site_settings['header_bg_opacity'] ?? '0.85';
+    $category_bg_opacity = $site_settings['category_bg_opacity'] ?? '0.85';
+    $links_area_opacity = $site_settings['links_area_opacity'] ?? '0.85';
+    $link_card_opacity = $site_settings['link_card_opacity'] ?? '0.85';
     
 } catch (PDOException $e) {
     // 如果数据库连接失败，使用默认设置
@@ -44,6 +48,10 @@ try {
     $background_opacity = '1';
     $site_name = '我的导航网站';
     $site_description = '一个简洁美观的导航网站';
+    $header_bg_opacity = '0.85';
+    $category_bg_opacity = '0.85';
+    $links_area_opacity = '0.85';
+    $link_card_opacity = '0.85';
 }
 
 // 获取当前页面

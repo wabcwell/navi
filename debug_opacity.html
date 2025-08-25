@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>透明度调试</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        :root {
+            --header-bg-opacity: 1;
+            --category-bg-opacity: 1;
+            --links-area-opacity: 1;
+            --link-card-opacity: 1;
+        }
+        
+        .test-header {
+            background: rgba(255, 255, 255, var(--header-bg-opacity));
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .test-category {
+            background: rgba(255, 255, 255, var(--category-bg-opacity));
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .test-card {
+            background: rgba(255, 255, 255, var(--link-card-opacity));
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h2>测试标题背景</h2>
+        <p>这个区域应该完全透明</p>
+    </div>
+    
+    <div class="test-category">
+        <h2>测试分类背景</h2>
+        <p>这个区域应该完全透明</p>
+    </div>
+    
+    <div class="test-card">
+        <h2>测试卡片背景</h2>
+        <p>这个区域应该完全透明</p>
+    </div>
+    
+    <script>
+        // 检查CSS变量值
+        const root = getComputedStyle(document.documentElement);
+        console.log('header-bg-opacity:', root.getPropertyValue('--header-bg-opacity'));
+        console.log('category-bg-opacity:', root.getPropertyValue('--category-bg-opacity'));
+        console.log('link-card-opacity:', root.getPropertyValue('--link-card-opacity'));
+        
+        // 检查实际背景色
+        const testHeader = document.querySelector('.test-header');
+        const testCategory = document.querySelector('.test-category');
+        const testCard = document.querySelector('.test-card');
+        
+        console.log('Header background:', getComputedStyle(testHeader).background);
+        console.log('Category background:', getComputedStyle(testCategory).background);
+        console.log('Card background:', getComputedStyle(testCard).background);
+    </script>
+</body>
+</html>
