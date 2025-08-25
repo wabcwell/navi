@@ -4,9 +4,15 @@
  * 复制此文件为 config.php 并填写您的实际配置信息
  * 
  * 安装说明：
- * 1. 复制此文件：cp config-sample.php config.php
+ * 1. 复制此文件：
+ *    Windows: copy config-sample.php config.php
+ *    Linux/Mac: cp config-sample.php config.php
  * 2. 编辑 config.php 文件，填入您的实际配置
- * 3. 确保 config.php 不被版本控制跟踪
+ * 3. 确保 config.php 不被版本控制跟踪（已添加到 .gitignore）
+ *
+ * 配置优先级：
+ * 数据库设置 > config.php设置 > 默认值
+ * 用户可通过后台修改大部分设置，无需编辑此文件
  */
 
 // ==================================================
@@ -44,6 +50,9 @@ define('SITE_DESCRIPTION', '一个简洁实用的导航网站，收集常用工�
 // 网站关键词（用于SEO，逗号分隔）
 define('SITE_KEYWORDS', '导航,工具,网站,收藏,实用');
 
+// 网站完整URL（用于生成完整链接）
+define('SITE_URL', 'https://yoursite.com');
+
 // ==================================================
 // 管理员配置
 // ==================================================
@@ -54,30 +63,30 @@ define('SITE_KEYWORDS', '导航,工具,网站,收藏,实用');
 define('ADMIN_PASSWORD_HASH', '$2y$10$请替换为您的密码哈希');
 
 // ==================================================
-// 网站设置
+// 网站设置（已移至数据库设置表，这里仅作系统级配置）
 // ==================================================
 
-// 默认背景图片URL
-define('DEFAULT_BACKGROUND', 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop');
+// 默认背景图片URL（仅当数据库不可用时使用）
+define('DEFAULT_BACKGROUND', 'https://www.dmoe.cc/random.php');
 
-// 自定义CSS（可选）
-define('CUSTOM_CSS', '');
-
-// 页脚文本
+// 页脚文本（仅当数据库不可用时使用）
 define('FOOTER_TEXT', '© 2024 我的导航网站. All rights reserved.');
 
 // ==================================================
 // 功能开关
 // ==================================================
 
-// 是否启用用户自定义背景
+// 是否启用用户自定义背景（系统级开关）
 define('ENABLE_CUSTOM_BACKGROUND', true);
 
-// 是否启用点击统计
+// 是否启用点击统计（系统级开关）
 define('ENABLE_CLICK_TRACKING', true);
 
-// 每页显示链接数量
-define('LINKS_PER_PAGE', 50);
+// 每页显示链接数量（仅当数据库不可用时使用）
+define('LINKS_PER_PAGE', 20);
+
+// 自定义CSS（系统级样式，用户设置会覆盖）
+define('CUSTOM_CSS', '');
 
 // ==================================================
 // 系统配置
@@ -86,11 +95,15 @@ define('LINKS_PER_PAGE', 50);
 // 安装状态标记（安装完成后自动设为true）
 define('SITE_INSTALLED', false);
 
-// 调试模式（开发环境可设为true）
+// 调试模式（开发环境可设为true，生产环境必须设为false）
 define('DEBUG_MODE', false);
 
-// 时区设置
+// 时区设置（影响日期显示和日志记录）
 define('TIMEZONE', 'Asia/Shanghai');
+
+// 会话配置（系统级，用户无法修改）
+define('SESSION_TIMEOUT', 3600); // 会话超时时间（秒）
+define('CSRF_TOKEN_TIMEOUT', 3600); // CSRF令牌超时时间（秒）
 
 // ==================================================
 // 数据库连接函数
