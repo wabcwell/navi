@@ -74,23 +74,18 @@ function get_db_connection() {
     global $pdo;
     if (!isset($pdo)) {
         try {
-            // 尝试使用Config类
-            if (class_exists('Database')) {
-                $pdo = Database::getInstance()->getConnection();
-            } else {
-                // 回退到传统方式
-                $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
-                $pdo = new PDO(
-                    $dsn,
-                    DB_USER,
-                    DB_PASS,
-                    [
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                        PDO::ATTR_EMULATE_PREPARES => false,
-                    ]
-                );
-            }
+            // 直接使用传统方式连接数据库
+            $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
+            $pdo = new PDO(
+                $dsn,
+                DB_USER,
+                DB_PASS,
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                ]
+            );
         } catch (PDOException $e) {
             die('数据库连接失败: ' . $e->getMessage());
         }
