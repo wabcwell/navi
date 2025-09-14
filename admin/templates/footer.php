@@ -2,8 +2,10 @@
 
     <!-- Bootstrap JS -->
 <script src="<?php echo ADMIN_URL; ?>/assets/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <!-- SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="<?php echo ADMIN_URL; ?>/assets/sweetalert2/sweetalert2.min.css">
+    <!-- SweetAlert2 JS -->
+    <script src="<?php echo ADMIN_URL; ?>/assets/sweetalert2/sweetalert2.min.js"></script>
     <!-- 左侧导航JS -->
     <script>
     // 全局配置
