@@ -6,13 +6,11 @@
     <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?>导航网站管理后台</title>
     
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="<?php echo ADMIN_URL; ?>/assets/fontawesome/css/all.min.css" rel="stylesheet">
-    <!-- 本地Bootstrap Icons备用 -->
-    <link href="<?php echo ADMIN_URL; ?>/assets/css/bootstrap-icons.css" rel="stylesheet">
+<link href="<?php echo ADMIN_URL; ?>/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link href="<?php echo ADMIN_URL; ?>/assets/bootstrap/icons/bootstrap-icons.css" rel="stylesheet">
+<!-- Font Awesome -->
+<link href="<?php echo ADMIN_URL; ?>/assets/fontawesome/css/all.min.css" rel="stylesheet">
     <!-- 左侧导航样式 -->
     <link href="<?php echo ADMIN_URL; ?>/assets/css/sidebar.css" rel="stylesheet">
     <style>
