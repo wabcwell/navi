@@ -69,7 +69,6 @@ switch ($page) {
     case 'admin':
         header('Location: admin/');
         exit();
-        break;
     default:
         // 显示主页
         include 'views/home.php';

@@ -1,4 +1,4 @@
-// 现代化紧凑设计的搜索功能
+﻿// 现代化紧凑设计的搜索功能
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     let linkCards = document.querySelectorAll('.link-card');
