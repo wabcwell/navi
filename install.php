@@ -531,7 +531,7 @@ define(\'DB_PORT\', \'' . addslashes($db_port) . '\');
 define(\'DB_NAME\', \'' . addslashes($db_name) . '\');
 define(\'DB_USER\', \'' . addslashes($db_user) . '\');
 define(\'DB_PASS\', \'' . addslashes($db_pass) . '\');
-define(\'DB_CHARSET\', \'" . addslashes($db_charset) . "\');
+define(\'DB_CHARSET\', \'utf8mb4\');
 
 // 安装状态
 define(\'SITE_INSTALLED\', true);
