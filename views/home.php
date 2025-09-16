@@ -248,7 +248,12 @@ try {
                 case 'image':
                     if (backgroundImage) {
                         body.className = 'has-bg-image';
-                        body.style.backgroundImage = "url('" + backgroundImage + "')";
+                        // 检查是否是URL，如果不是则添加正确的路径前缀
+                        if (backgroundImage.startsWith('http')) {
+                            body.style.backgroundImage = "url('" + backgroundImage + "')";
+                        } else {
+                            body.style.backgroundImage = "url('../../uploads/backgrounds/" + backgroundImage + "')";
+                        }
                     }
                     break;
                     

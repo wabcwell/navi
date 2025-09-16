@@ -141,15 +141,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
         $sql = "
         CREATE TABLE IF NOT EXISTS categories (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100) NOT NULL UNIQUE,
+            name VARCHAR(100) NOT NULL,
+            slug VARCHAR(255),
             description TEXT,
-            icon VARCHAR(50),
-            icon_color VARCHAR(7) DEFAULT '#007bff',
             color VARCHAR(7) DEFAULT '#007bff',
+            icon_color VARCHAR(7) DEFAULT NULL,
+            icon VARCHAR(50) DEFAULT NULL,
             order_index INT DEFAULT 0,
-            is_active BOOLEAN DEFAULT TRUE,
+            is_active TINYINT(1) DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY name (name),
+            UNIQUE KEY slug (slug)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
         CREATE TABLE IF NOT EXISTS navigation_links (
@@ -157,23 +160,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             title VARCHAR(200) NOT NULL,
             url VARCHAR(500) NOT NULL,
             description TEXT,
-            icon_url VARCHAR(500),
-            category_id INT,
+            category_id INT NOT NULL,
+            icon_url VARCHAR(500) DEFAULT NULL,
             order_index INT DEFAULT 0,
-            is_active BOOLEAN DEFAULT TRUE,
+            is_active TINYINT(1) DEFAULT 1,
             click_count INT DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
-            INDEX idx_url (url)
+            KEY category_id (category_id),
+            CONSTRAINT navigation_links_ibfk_1 FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
         CREATE TABLE IF NOT EXISTS settings (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            setting_key VARCHAR(100) NOT NULL UNIQUE,
+            id INT NOT NULL AUTO_INCREMENT,
+            setting_key VARCHAR(100) NOT NULL,
             setting_value TEXT,
+            setting_type VARCHAR(50) DEFAULT 'string',
+            description VARCHAR(255) DEFAULT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY setting_key (setting_key)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
         CREATE TABLE IF NOT EXISTS users (
@@ -241,11 +247,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
         CREATE TABLE IF NOT EXISTS user_preferences (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            pref_key VARCHAR(100) NOT NULL UNIQUE,
-            pref_value TEXT,
+            id INT NOT NULL AUTO_INCREMENT,
+            user_id VARCHAR(100) NOT NULL,
+            preference_key VARCHAR(100) NOT NULL,
+            preference_value TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY unique_user_preference (user_id, preference_key)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ";
 
