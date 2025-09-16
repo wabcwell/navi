@@ -176,6 +176,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+        CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            username VARCHAR(50) NOT NULL UNIQUE,
+            email VARCHAR(100) NOT NULL UNIQUE,
+            password VARCHAR(255) NOT NULL,
+            real_name VARCHAR(50),
+            role ENUM('user','editor','admin') DEFAULT 'user',
+            status BOOLEAN DEFAULT TRUE,
+            login_count INT DEFAULT 0,
+            last_login DATETIME,
+            last_ip VARCHAR(45),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+        CREATE TABLE IF NOT EXISTS admin_logs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            action VARCHAR(100) NOT NULL,
+            details TEXT,
+            ip_address VARCHAR(45),
+            user_agent TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            INDEX idx_user_id (user_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+        CREATE TABLE IF NOT EXISTS error_logs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            level VARCHAR(20) NOT NULL,
+            message TEXT NOT NULL,
+            file VARCHAR(255),
+            line INT,
+            context TEXT,
+            user_id INT,
+            ip_address VARCHAR(45),
+            user_agent TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+        CREATE TABLE IF NOT EXISTS login_logs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT,
+            username VARCHAR(50),
+            ip_address VARCHAR(45),
+            user_agent TEXT,
+            login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            success BOOLEAN DEFAULT FALSE,
+            failure_reason VARCHAR(255)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+        CREATE TABLE IF NOT EXISTS operation_logs (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT,
+            username VARCHAR(50),
+            action VARCHAR(100) NOT NULL,
+            target_type VARCHAR(50),
+            target_id INT,
+            old_values TEXT,
+            new_values TEXT,
+            ip_address VARCHAR(45),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
         CREATE TABLE IF NOT EXISTS user_preferences (
             id INT AUTO_INCREMENT PRIMARY KEY,
             pref_key VARCHAR(100) NOT NULL UNIQUE,
@@ -449,8 +513,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             ]);
         }
 
-        // 创建配置文件
+        // 创建管理员用户
         $passwordHash = password_hash($admin_password, PASSWORD_BCRYPT);
+        $stmt = $pdo->prepare("INSERT INTO users (username, email, password, real_name, role, status) VALUES (?, ?, ?, ?, 'admin', 1)");
+        $stmt->execute(['admin', 'admin@example.com', $passwordHash, '系统管理员']);
+
+        // 创建配置文件
         $configContent = '<?php
 /**
  * 网站配置文件
@@ -463,30 +531,10 @@ define(\'DB_PORT\', \'' . addslashes($db_port) . '\');
 define(\'DB_NAME\', \'' . addslashes($db_name) . '\');
 define(\'DB_USER\', \'' . addslashes($db_user) . '\');
 define(\'DB_PASS\', \'' . addslashes($db_pass) . '\');
-define(\'DB_CHARSET\', \'' . addslashes($db_charset) . '\');
-
-// 网站信息
-define(\'SITE_NAME\', \'' . addslashes($site_name) . '\');
-define(\'SITE_DESCRIPTION\', \'' . addslashes($site_description) . '\');
-
-// 管理密码（使用bcrypt加密）
-define(\'ADMIN_PASSWORD_HASH\', \'' . $passwordHash . '\');
+define(\'DB_CHARSET\', \'" . addslashes($db_charset) . "\');
 
 // 安装状态
 define(\'SITE_INSTALLED\', true);
-
-// 数据库连接函数
-function getDBConnection() {
-    static $pdo = null;
-    if ($pdo === null) {
-        $dsn = \'mysql:host=\' . DB_HOST . \';port=\' . DB_PORT . \';dbname=\' . DB_NAME . \';charset=\' . DB_CHARSET;
-        $pdo = new PDO($dsn, DB_USER, DB_PASS, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        ]);
-    }
-    return $pdo;
-}
 ?>';
 
         if (file_put_contents($configFile, $configContent) === false) {

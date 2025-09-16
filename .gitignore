@@ -21,6 +21,6 @@ uploads/settings/*
 # 忽略配置文件
 config.php
 config.js
-
+database_schema.sql
 # 忽略admin目录下的README.md
 admin/README.md
