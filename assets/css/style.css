@@ -9,6 +9,7 @@
     --hover-color: #2563eb;
     --shadow-color: rgba(0, 0, 0, 0.1);
     --shadow-hover: rgba(0, 0, 0, 0.15);
+    --bg-overlay: rgba(255, 255, 255, 0.2);
     --header-overlay: rgba(255, 255, 255, 0.95);
     /* 这些默认值会被PHP动态覆盖，保持与数据库默认值一致 */
     --header-bg-opacity: 0.1; /* 对应数据库默认值0.9: 1-0.9=0.1 */
@@ -41,13 +42,15 @@ body.has-bg-image {
 }
 
 body.has-bg-image::before {
-    content: '';
+    content: "";
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-overlay);
     z-index: -1;
+    pointer-events: none;
 }
 
 /* 背景颜色模式 */
