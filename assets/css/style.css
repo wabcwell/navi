@@ -11,10 +11,11 @@
     --shadow-hover: rgba(0, 0, 0, 0.15);
     --bg-overlay: rgba(255, 255, 255, 0.85);
     --header-overlay: rgba(255, 255, 255, 0.95);
-    --header-bg-opacity: 0.85;
-    --category-bg-opacity: 0.85;
-    --links-area-opacity: 0.85;
-    --link-card-opacity: 0.85;
+    /* 这些默认值会被PHP动态覆盖，保持与数据库默认值一致 */
+    --header-bg-opacity: 0.1; /* 对应数据库默认值0.9: 1-0.9=0.1 */
+    --category-bg-opacity: 0.1; /* 对应数据库默认值0.9: 1-0.9=0.1 */
+    --links-area-opacity: 0.1; /* 对应数据库默认值0.9: 1-0.9=0.1 */
+    --link-card-opacity: 0.1; /* 对应数据库默认值0.9: 1-0.9=0.1 */
 }
 
 * {
