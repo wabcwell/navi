@@ -143,6 +143,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(100) NOT NULL UNIQUE,
             description TEXT,
+            icon VARCHAR(500),
+            icon_color VARCHAR(7) DEFAULT '#007bff',
+            color VARCHAR(7) DEFAULT '#007bff',
             sort_order INT DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
