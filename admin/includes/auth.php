@@ -7,6 +7,20 @@
  * 验证管理员密码
  */
 function verify_admin_password($password) {
+    // 首先尝试从users表获取密码
+    $pdo = get_db_connection();
+    try {
+        $stmt = $pdo->prepare("SELECT password FROM users WHERE username = 'admin'");
+        $stmt->execute();
+        $user = $stmt->fetch();
+        if ($user) {
+            return password_verify($password, $user['password']);
+        }
+    } catch (Exception $e) {
+        // 如果users表查询失败，回退到settings表
+    }
+    
+    // 回退到从settings表获取密码
     $admin_password = get_site_setting('admin_password');
     if (!$admin_password) {
         // 首次安装，使用默认密码
