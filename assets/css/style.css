@@ -297,7 +297,7 @@ body.has-bg-image .link-card:focus {
 
 .link-content p {
     font-size: 0.75rem;
-    color: var(--text-secondary);
+    color: #475569; /* 更深的灰色，从#64748b改为#475569 */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
