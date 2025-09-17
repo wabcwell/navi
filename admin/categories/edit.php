@@ -1,7 +1,5 @@
 <?php
-require_once '../includes/init.php';
-require_once '../includes/auth.php';
-require_once '../includes/functions.php';
+require_once '../includes/load.php';
 
 // 检查是否登录
 if (!is_logged_in()) {
@@ -9,8 +7,8 @@ if (!is_logged_in()) {
     exit;
 }
 
-// 获取数据库连接
-$pdo = get_db_connection();
+// 获取分类管理实例
+$categoryManager = get_category_manager();
 
 // 检查是否有ID参数
 if (!isset($_GET['id'])) {
@@ -21,9 +19,7 @@ if (!isset($_GET['id'])) {
 $category_id = intval($_GET['id']);
 
 // 获取分类信息
-$stmt = $pdo->prepare("SELECT * FROM categories WHERE id = ?");
-$stmt->execute([$category_id]);
-$category = $stmt->fetch(PDO::FETCH_ASSOC);
+$category = $categoryManager->getById($category_id);
 
 if (!$category) {
     header('Location: index.php');
@@ -32,63 +28,81 @@ if (!$category) {
 
 // 处理表单提交
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = trim($_POST['name']);
-    $slug = trim($_POST['slug']);
-    $description = trim($_POST['description']);
-    $color = trim($_POST['color']);
-    $icon_color = trim($_POST['icon_color']);
-    $order_index = intval($_POST['order_index']);
-    $is_active = isset($_POST['is_active']) ? 1 : 0;
-    
-    // 处理图标
-    $icon_type = $_POST['icon_type'];
-    $icon = '';
-    
-    switch ($icon_type) {
-        case 'fontawesome':
-            $icon = trim($_POST['icon_fontawesome']);
-            break;
-        case 'url':
-            $icon = trim($_POST['icon_url']);
-            break;
-        case 'upload':
-            // 处理文件上传
-            if (isset($_FILES['icon_upload']) && $_FILES['icon_upload']['error'] === UPLOAD_ERR_OK) {
-                $file = $_FILES['icon_upload'];
-                $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml'];
-                
-                if (in_array($file['type'], $allowed_types)) {
-                    $upload_dir = '../uploads/categories/';
-                    if (!is_dir($upload_dir)) {
-                        mkdir($upload_dir, 0755, true);
-                    }
+    try {
+        $name = trim($_POST['name']);
+        $description = trim($_POST['description']);
+        $color = trim($_POST['color']);
+        $order_index = intval($_POST['order_index']);
+        $is_active = isset($_POST['is_active']) ? 1 : 0;
+        
+        // 处理图标
+        $icon_type = $_POST['icon_type'];
+        $icon_data = [];
+        
+        switch ($icon_type) {
+            case 'fontawesome':
+                $icon_data['icon_fontawesome'] = trim($_POST['icon_fontawesome']);
+                $icon_data['icon_fontawesome_color'] = trim($_POST['icon_color']);
+                break;
+            case 'url':
+                $icon_data['icon_color_url'] = trim($_POST['icon_url']);
+                break;
+            case 'upload':
+                // 处理文件上传
+                if (isset($_FILES['icon_upload']) && $_FILES['icon_upload']['error'] === UPLOAD_ERR_OK) {
+                    $file = $_FILES['icon_upload'];
+                    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
                     
-                    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-                    $filename = 'category_icon_' . uniqid() . '.' . $extension;
-                    $filepath = $upload_dir . $filename;
-                    
-                    if (move_uploaded_file($file['tmp_name'], $filepath)) {
-                        // 删除旧图标
-                        if ($category['icon'] && file_exists($upload_dir . $category['icon'])) {
-                            unlink($upload_dir . $category['icon']);
+                    if (in_array($file['type'], $allowed_types)) {
+                        $upload_dir = '../uploads/categories/';
+                        if (!is_dir($upload_dir)) {
+                            mkdir($upload_dir, 0755, true);
                         }
-                        $icon = $filename;
+                        
+                        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+                        $filename = 'category_icon_' . uniqid() . '.' . $extension;
+                        $filepath = $upload_dir . $filename;
+                        
+                        if (move_uploaded_file($file['tmp_name'], $filepath)) {
+                            // 删除旧图标
+                            if (!empty($category['icon_color_upload']) && file_exists($upload_dir . $category['icon_color_upload'])) {
+                                unlink($upload_dir . $category['icon_color_upload']);
+                            }
+                            $icon_data['icon_color_upload'] = $filename;
+                        }
                     }
+                } elseif (isset($_POST['current_icon']) && !empty($_POST['current_icon'])) {
+                    // 保留现有图标
+                    $icon_data['icon_color_upload'] = $_POST['current_icon'];
                 }
-            } elseif (isset($_POST['current_icon']) && !empty($_POST['current_icon'])) {
-                // 保留现有图标
-                $icon = $_POST['current_icon'];
-            }
-            break;
+                break;
+        }
+        
+        // 准备分类数据
+        $categoryData = array_merge([
+            'name' => $name,
+            'description' => $description,
+            'color' => $color,
+            'order_index' => $order_index,
+            'is_active' => $is_active,
+            'icon_type' => $icon_type
+        ], $icon_data);
+        
+        // 更新分类
+        $result = $categoryManager->update($category_id, $categoryData);
+        
+        if ($result) {
+            $_SESSION['success'] = '分类更新成功！';
+        } else {
+            $_SESSION['error'] = '分类更新失败：未找到该分类。';
+        }
+        
+        header('Location: index.php');
+        exit;
+        
+    } catch (Exception $e) {
+        $_SESSION['error'] = '更新分类失败：' . $e->getMessage();
     }
-    
-    // 更新数据库
-    $stmt = $pdo->prepare("UPDATE categories SET name = ?, slug = ?, description = ?, icon = ?, color = ?, icon_color = ?, order_index = ?, is_active = ?, updated_at = NOW() WHERE id = ?");
-    $stmt->execute([$name, $slug, $description, $icon, $color, $icon_color, $order_index, $is_active, $category_id]);
-    
-    $_SESSION['success'] = '分类更新成功！';
-    header('Location: index.php');
-    exit;
 }
 
 include '../templates/header.php';

@@ -23,5 +23,6 @@ navi.sql
 config.php
 config.js
 database_schema.sql
+modification_summary.md
 # 忽略admin目录下的README.md
 admin/README.md

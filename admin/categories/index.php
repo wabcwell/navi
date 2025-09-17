@@ -1,7 +1,5 @@
 <?php
-require_once '../includes/init.php';
-require_once '../includes/auth.php';
-require_once '../includes/functions.php';
+require_once '../includes/load.php';
 
 // 检查是否登录
 if (!is_logged_in()) {
@@ -9,31 +7,21 @@ if (!is_logged_in()) {
     exit;
 }
 
-// 获取数据库连接
-$pdo = get_db_connection();
+// 获取分类管理实例
+$categoryManager = get_category_manager();
 
 // 处理删除请求
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     $delete_id = intval($_POST['delete_id']);
     
     try {
-        // 检查是否有链接使用此分类
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM navigation_links WHERE category_id = ?");
-        $stmt->execute([$delete_id]);
-        $link_count = $stmt->fetchColumn();
+        // 尝试删除分类
+        $result = $categoryManager->delete($delete_id);
         
-        if ($link_count > 0) {
-            $_SESSION['error'] = '无法删除：该分类下还有 ' . $link_count . ' 个链接，请先删除或转移这些链接。';
+        if ($result) {
+            $_SESSION['success'] = '分类删除成功！';
         } else {
-            // 删除分类
-            $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ?");
-            $stmt->execute([$delete_id]);
-            
-            if ($stmt->rowCount() > 0) {
-                $_SESSION['success'] = '分类删除成功！';
-            } else {
-                $_SESSION['error'] = '分类删除失败：未找到该分类。';
-            }
+            $_SESSION['error'] = '分类删除失败：未找到该分类。';
         }
         
         header('Location: index.php');
@@ -49,20 +37,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
 // 处理排序更新
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order']) && isset($_POST['order_index'])) {
     try {
-        $pdo->beginTransaction();
-        $stmt = $pdo->prepare("UPDATE categories SET order_index = ? WHERE id = ?");
+        $result = $categoryManager->updateOrder($_POST['order_index']);
         
-        foreach ($_POST['order_index'] as $id => $order_index) {
-            $stmt->execute([intval($order_index), intval($id)]);
+        if ($result) {
+            $_SESSION['success'] = '排序更新成功！';
+        } else {
+            $_SESSION['error'] = '排序更新失败';
         }
         
-        $pdo->commit();
-        $_SESSION['success'] = '排序更新成功！';
         header('Location: index.php');
         exit;
         
     } catch (Exception $e) {
-        $pdo->rollBack();
         $_SESSION['error'] = '排序更新失败：' . $e->getMessage();
         header('Location: index.php');
         exit;
@@ -72,46 +58,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_order']) && is
 // 获取分页参数
 $page = isset($_GET['page']) ? max(1, intval($_GET['page'])) : 1;
 $per_page = 20;
-$offset = ($page - 1) * $per_page;
 
 // 获取搜索参数
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
-// 构建查询条件
-$where = [];
-$params = [];
-
-if ($search) {
-    $where[] = "(name LIKE ? OR description LIKE ?)";
-    $params[] = "%$search%";
-    $params[] = "%$search%";
+// 获取所有分类（包含链接计数）
+try {
+    // 获取所有分类
+    $allCategories = $categoryManager->getAll(false); // false表示获取所有分类（包括非激活的）
+    
+    // 过滤搜索结果
+    if ($search) {
+        $allCategories = array_filter($allCategories, function($category) use ($search) {
+            return stripos($category['name'], $search) !== false || 
+                   stripos($category['description'], $search) !== false;
+        });
+    }
+    
+    // 计算总数和分页
+    $total = count($allCategories);
+    $total_pages = ceil($total / $per_page);
+    $offset = ($page - 1) * $per_page;
+    
+    // 获取当前页的分类
+    $categories = array_slice($allCategories, $offset, $per_page);
+    
+    // 为每个分类添加链接计数
+    $database = get_database();
+    foreach ($categories as &$category) {
+        $stmt = $database->query(
+            "SELECT COUNT(*) FROM navigation_links WHERE category_id = ?", 
+            [$category['id']]
+        );
+        $category['link_count'] = $stmt->fetchColumn();
+    }
+} catch (Exception $e) {
+    $categories = [];
+    $total = 0;
+    $total_pages = 1;
+    $_SESSION['error'] = '获取分类列表失败：' . $e->getMessage();
 }
-
-$where_clause = $where ? "WHERE " . implode(" AND ", $where) : "";
-
-// 获取总数
-$count_sql = "SELECT COUNT(*) FROM categories $where_clause";
-$stmt = $pdo->prepare($count_sql);
-$stmt->execute($params);
-$total = $stmt->fetchColumn();
-
-// 计算总页数
-$total_pages = ceil($total / $per_page);
-
-// 获取分类列表，包含链接计数
-$sql = "SELECT c.*, COALESCE(l.link_count, 0) as link_count 
-        FROM categories c 
-        LEFT JOIN (
-            SELECT category_id, COUNT(*) as link_count 
-            FROM navigation_links 
-            GROUP BY category_id
-        ) l ON c.id = l.category_id 
-        $where_clause 
-        ORDER BY c.order_index ASC, c.id DESC 
-        LIMIT $per_page OFFSET $offset";
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 include '../templates/header.php';
 ?>
