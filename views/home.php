@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../admin/includes/init.php';
+require_once __DIR__ . '/../admin/includes/load.php';
 
 // 获取设置
 $site_name = get_site_setting('site_name', '导航');
