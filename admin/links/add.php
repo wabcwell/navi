@@ -17,8 +17,37 @@ $pdo = get_db_connection();
 $categories = $pdo->query("SELECT id, name FROM categories WHERE is_active = 1 ORDER BY order_index ASC, name ASC")
                   ->fetchAll(PDO::FETCH_ASSOC);
 
+// 处理AJAX文件上传请求
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['icon_upload'])) {
+    // 验证文件上传
+    if ($_FILES['icon_upload']['error'] !== UPLOAD_ERR_OK) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => '文件上传失败']);
+        exit();
+    }
+    
+    // 处理文件上传
+    $fileUpload = get_file_upload_manager('links');
+    $upload_result = $fileUpload->upload($_FILES['icon_upload']);
+    
+    header('Content-Type: application/json');
+    if ($upload_result['success']) {
+        echo json_encode([
+            'success' => true,
+            'file_name' => $upload_result['file_name'],
+            'file_url' => $upload_result['file_url']
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'error' => $upload_result['error']
+        ]);
+    }
+    exit();
+}
+
 // 处理表单提交
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['icon_upload'])) {
     $title = trim($_POST['title'] ?? '');
     $url = trim($_POST['url'] ?? '');
     $description = trim($_POST['description'] ?? '');
@@ -82,82 +111,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
             
         case 'upload':
-            if (isset($_FILES['icon_upload']) && $_FILES['icon_upload']['error'] !== UPLOAD_ERR_NO_FILE) {
-                $fileUpload = get_file_upload_manager('links');
-                $upload_result = $fileUpload->upload($_FILES['icon_upload']);
-                if ($upload_result['success']) {
-                    $icon_filename = $upload_result['file_name'];
-                } else {
-                    $errors[] = $upload_result['error'];
-                }
+            // 检查是否有已上传的图片路径
+            if (isset($_POST['uploaded_icon_path']) && !empty($_POST['uploaded_icon_path'])) {
+                // 使用已上传的图片
+                $icon_filename = $_POST['uploaded_icon_path'];
             }
             break;
             
         case 'url':
             $icon_url = trim($_POST['icon_url'] ?? '');
-            if ($icon_url) {
-                if (!filter_var($icon_url, FILTER_VALIDATE_URL)) {
-                    $errors[] = '请输入有效的图标URL地址';
-                } else {
-                    $icon_filename = $icon_url;
-                }
+            if ($icon_url && filter_var($icon_url, FILTER_VALIDATE_URL)) {
+                $icon_filename = $icon_url;
+            } elseif ($icon_url) {
+                $errors[] = '请输入有效的图标URL地址';
             }
             break;
             
         case 'none':
-        default:
-            $icon_filename = null;
+            // 无图标，不需要处理
             break;
     }
     
-    // 如果没有错误，保存数据
+    // 如果没有错误，插入数据库
     if (empty($errors)) {
         try {
-            // 获取图标相关数据
-            $icon_type = $_POST['icon_type'] ?? 'none';
-            $icon_fontawesome = $_POST['icon_fontawesome'] ?? '';
-            $icon_color = $_POST['icon_color'] ?? '';
-            $icon_url = $_POST['icon_url'] ?? '';
+            $stmt = $pdo->prepare("INSERT INTO navigation_links (title, url, description, category_id, icon_url, display_order, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())");
+            $result = $stmt->execute([$title, $url, $description, $category_id, $icon_filename, $display_order, $is_active]);
             
-            // 处理不同类型的图标
-            $icon_data = [
-                'icon_type' => $icon_type,
-                'icon_fontawesome' => $icon_fontawesome,
-                'icon_fontawesome_color' => $icon_color,
-                'icon_url' => $icon_url,
-                'icon_upload' => $icon_filename // 上传的图片文件名
-            ];
-            
-            $stmt = $pdo->prepare("INSERT INTO navigation_links (title, url, description, category_id, icon_type, icon_fontawesome, icon_fontawesome_color, icon_url, icon_upload, order_index, is_active, click_count, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())");
-            $stmt->execute([
-                $title,
-                $url,
-                $description,
-                $category_id,
-                $icon_data['icon_type'],
-                $icon_data['icon_fontawesome'],
-                $icon_data['icon_fontawesome_color'],
-                $icon_data['icon_url'],
-                $icon_data['icon_upload'],
-                $display_order,
-                $is_active
-            ]);
-            
-            $_SESSION['success'] = '链接添加成功';
-            header('Location: index.php');
-            exit();
-            
+            if ($result) {
+                // 重定向到成功页面
+                header('Location: index.php?message=' . urlencode('链接添加成功'));
+                exit();
+            } else {
+                $errors[] = '添加链接失败，请重试';
+            }
         } catch (PDOException $e) {
             $errors[] = '数据库错误：' . $e->getMessage();
-            
-            // 如果上传了图标但保存失败，删除图标文件
-            if ($icon_filename) {
-                $icon_path = '../uploads/links/' . $icon_filename;
-                if (file_exists($icon_path)) {
-                    unlink($icon_path);
-                }
-            }
         }
     }
 }
@@ -295,10 +284,18 @@ include '../templates/header.php';
 
                             <!-- 图片上传 -->
                             <div id="upload_section" style="display: none;">
-                                <label for="icon_upload" class="form-label">上传图标</label>
-                                <input type="file" class="form-control" id="icon_upload" name="icon_upload" 
-                                       accept="image/*">
+                                <label for="icon_upload_file" class="form-label">上传图标</label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="icon_upload_file" name="icon_upload" 
+                                           accept="image/*">
+                                    <button type="button" class="btn btn-outline-primary" id="upload_btn" disabled>
+                                        <i class="bi bi-upload"></i> 上传
+                                    </button>
+                                </div>
                                 <div class="form-text">支持 JPG、PNG、GIF、SVG 格式，建议尺寸 64x64 像素</div>
+                                <div id="upload_status" class="mt-2"></div>
+                                <!-- 隐藏字段用于保存已上传的图片路径 -->
+                                <input type="hidden" id="uploaded_icon_path" name="uploaded_icon_path" value="">
                             </div>
 
                             <!-- URL输入 -->
@@ -399,14 +396,11 @@ function updatePreview() {
             break;
             
         case 'upload':
-            const uploadFile = document.getElementById('icon_upload')?.files?.[0];
-            if (uploadFile) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.innerHTML = `<img src="${e.target.result}" class="image-preview" style="max-width: 100px; max-height: 100px;">`;
-                }
-                reader.readAsDataURL(uploadFile);
-                return;
+            // 检查是否有已上传的图片路径
+            const uploadedIconPath = document.getElementById('uploaded_icon_path')?.value;
+            if (uploadedIconPath) {
+                // 使用已上传的图片
+                previewHtml = `<img src="/uploads/links/${uploadedIconPath}" class="image-preview" style="max-width: 100px; max-height: 100px;">`;
             } else {
                 previewHtml = '<div class="text-muted"><i class="fas fa-image" style="font-size: 2rem;"></i><p class="mt-2 mb-0">暂无图标</p></div>';
             }
@@ -415,7 +409,7 @@ function updatePreview() {
         case 'url':
             const url = document.getElementById('icon_url')?.value;
             if (url) {
-                previewHtml = `<img src="${url}" class="image-preview" style="max-width: 100px; max-height: 100px;" onerror="this.onerror=null; this.innerHTML='<i class=\'fas fa-link\' style=\'font-size: 2rem; color: #6c757d;\'></i>';">`;
+                previewHtml = `<img src="${url}" class="image-preview" style="max-width: 100px; max-height: 100px;" onerror="this.onerror=null; this.innerHTML='<i class=\\'fas fa-link\\' style=\\'font-size: 2rem; color: #6c757d;\\'></i>';">`;
             } else {
                 previewHtml = '<div class="text-muted"><i class="fas fa-link" style="font-size: 2rem;"></i><p class="mt-2 mb-0">请输入URL</p></div>';
             }
@@ -437,10 +431,74 @@ document.querySelectorAll('input[name="icon_type"]').forEach(radio => {
 document.getElementById('icon_color').addEventListener('input', updatePreview);
 document.getElementById('icon_fontawesome_input').addEventListener('input', updatePreview);
 document.getElementById('icon_url').addEventListener('input', updatePreview);
-document.getElementById('icon_upload').addEventListener('change', updatePreview);
+document.getElementById('icon_upload_file').addEventListener('change', updatePreview);
 
 // 打开图标选择器
 document.getElementById('openIconPicker').addEventListener('click', openIconPicker);
+
+// 新增：文件选择事件监听，启用上传按钮
+document.getElementById('icon_upload_file').addEventListener('change', function() {
+    const file = this.files[0];
+    const uploadBtn = document.getElementById('upload_btn');
+    
+    if (file) {
+        // 启用上传按钮
+        uploadBtn.disabled = false;
+    } else {
+        // 禁用上传按钮
+        uploadBtn.disabled = true;
+    }
+});
+
+// 新增：上传按钮点击事件
+document.getElementById('upload_btn').addEventListener('click', function() {
+    const fileInput = document.getElementById('icon_upload_file');
+    const file = fileInput.files[0];
+    const statusDiv = document.getElementById('upload_status');
+    const uploadedIconPath = document.getElementById('uploaded_icon_path');
+    
+    if (!file) {
+        statusDiv.innerHTML = '<div class="alert alert-warning">请选择要上传的文件</div>';
+        return;
+    }
+    
+    // 创建FormData对象
+    const formData = new FormData();
+    formData.append('icon_upload', file);
+    
+    // 显示上传中状态
+    statusDiv.innerHTML = '<div class="alert alert-info">上传中...</div>';
+    this.disabled = true;
+    
+    // 发送AJAX请求
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 上传成功
+            statusDiv.innerHTML = '<div class="alert alert-success">上传成功</div>';
+            // 保存上传的文件路径
+            uploadedIconPath.value = data.file_name;
+            // 更新预览
+            updatePreview();
+            // 重置上传控件状态
+            fileInput.value = ''; // 清空文件选择
+            this.disabled = true; // 禁用上传按钮
+        } else {
+            // 上传失败
+            statusDiv.innerHTML = '<div class="alert alert-danger">上传失败: ' + data.error + '</div>';
+            this.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        statusDiv.innerHTML = '<div class="alert alert-danger">上传过程中发生错误</div>';
+        this.disabled = false;
+    });
+});
 
 // 打开图标选择器函数
 function openIconPicker() {
@@ -526,6 +584,22 @@ function selectIcon(iconName) {
 
 // 初始化
 updateIconSections();
+
+// 新增：初始化上传相关UI状态
+function initUploadUI() {
+    const uploadedIconPath = document.getElementById('uploaded_icon_path');
+    const uploadBtn = document.getElementById('upload_btn');
+    
+    if (uploadedIconPath && uploadedIconPath.value) {
+        // 如果已有上传的图片路径，启用上传按钮
+        uploadBtn.disabled = false;
+    }
+}
+
+// 页面加载完成后初始化上传UI
+document.addEventListener('DOMContentLoaded', function() {
+    initUploadUI();
+});
 
 // 表单验证
 (function() {

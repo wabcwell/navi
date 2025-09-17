@@ -1,5 +1,5 @@
 <?php
-require_once 'includes/load.php';
+require_once '../includes/load.php';
 
 // 检查登录状态
 if (!is_logged_in()) {

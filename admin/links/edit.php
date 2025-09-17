@@ -28,12 +28,41 @@ if (!$link) {
     exit();
 }
 
+// 处理AJAX文件上传请求
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['icon_upload'])) {
+    // 验证文件上传
+    if ($_FILES['icon_upload']['error'] !== UPLOAD_ERR_OK) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'error' => '文件上传失败']);
+        exit();
+    }
+    
+    // 处理文件上传
+    $fileUpload = get_file_upload_manager('links');
+    $upload_result = $fileUpload->upload($_FILES['icon_upload']);
+    
+    header('Content-Type: application/json');
+    if ($upload_result['success']) {
+        echo json_encode([
+            'success' => true,
+            'file_name' => $upload_result['file_name'],
+            'file_url' => $upload_result['file_url']
+        ]);
+    } else {
+        echo json_encode([
+            'success' => false,
+            'error' => $upload_result['error']
+        ]);
+    }
+    exit();
+}
+
 // 获取分类列表
 $categories = $pdo->query("SELECT id, name FROM categories WHERE is_active = 1 ORDER BY order_index ASC, name ASC")
                   ->fetchAll(PDO::FETCH_ASSOC);
 
 // 处理表单提交
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_FILES['icon_upload'])) {
     $title = trim($_POST['title'] ?? '');
     $url = trim($_POST['url'] ?? '');
     $description = trim($_POST['description'] ?? '');
@@ -351,12 +380,20 @@ include '../templates/header.php';
                             <!-- 图片上传 -->
                             <div id="upload_section" style="display: none;">
                                 <label for="icon_upload_file" class="form-label">上传图标</label>
-                                <input type="file" class="form-control" id="icon_upload_file" name="icon_upload" 
-                                       accept="image/*">
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="icon_upload_file" name="icon_upload" 
+                                           accept="image/*">
+                                    <button type="button" class="btn btn-outline-primary" id="upload_btn" disabled>
+                                        <i class="bi bi-upload"></i> 上传
+                                    </button>
+                                </div>
                                 <div class="form-text">支持 JPG、PNG、GIF、SVG 格式，建议尺寸 64x64 像素</div>
+                                <div id="upload_status" class="mt-2"></div>
+                                <!-- 隐藏字段用于保存已上传的图片路径 -->
+                                <input type="hidden" id="uploaded_icon_path" name="uploaded_icon_path" value="<?php echo !empty($link['icon_url']) && strpos($link['icon_url'] ?? '', '|') === false && !filter_var($link['icon_url'] ?? '', FILTER_VALIDATE_URL) ? htmlspecialchars($link['icon_url']) : ''; ?>">
                                 <?php if (!empty($link['icon_url']) && strpos($link['icon_url'] ?? '', '|') === false && !filter_var($link['icon_url'] ?? '', FILTER_VALIDATE_URL)): ?>
                                     <div class="mt-2">
-                                        <img src="../uploads/links/<?php echo htmlspecialchars($link['icon_url']); ?>" 
+                                        <img src="/uploads/links/<?php echo htmlspecialchars($link['icon_url']); ?>" 
                                              style="max-width: 50px; max-height: 50px; border: 1px solid #ddd; border-radius: 4px;">
                                         <small class="text-muted d-block">当前图标</small>
                                     </div>
@@ -389,7 +426,7 @@ include '../templates/header.php';
                                         <?php elseif (filter_var($link['icon_url'] ?? '', FILTER_VALIDATE_URL)): ?>
                                             <img src="<?php echo htmlspecialchars($link['icon_url'] ?? ''); ?>" class="image-preview" style="max-width: 100px; max-height: 100px;">
                                         <?php else: ?>
-                                            <img src="../uploads/links/<?php echo htmlspecialchars($link['icon_url'] ?? ''); ?>" class="image-preview" style="max-width: 100px; max-height: 100px;">
+                                            <img src="/uploads/links/<?php echo htmlspecialchars($link['icon_url'] ?? ''); ?>" class="image-preview" style="max-width: 100px; max-height: 100px;">
                                         <?php endif; ?>
                                     <?php else: ?>
                                         <div class="text-muted">
@@ -478,14 +515,11 @@ function updatePreview() {
             break;
             
         case 'upload':
-            const uploadFile = document.getElementById('icon_upload_file')?.files?.[0];
-            if (uploadFile) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.innerHTML = `<img src="${e.target.result}" class="image-preview" style="max-width: 100px; max-height: 100px;">`;
-                }
-                reader.readAsDataURL(uploadFile);
-                return;
+            // 检查是否有已上传的图片路径
+            const uploadedIconPath = document.getElementById('uploaded_icon_path')?.value;
+            if (uploadedIconPath) {
+                // 使用已上传的图片
+                previewHtml = `<img src="/uploads/links/${uploadedIconPath}" class="image-preview" style="max-width: 100px; max-height: 100px;">`;
             } else {
                 previewHtml = '<div class="text-muted"><i class="fas fa-image" style="font-size: 2rem;"></i><p class="mt-2 mb-0">暂无图标</p></div>';
             }
@@ -688,6 +722,84 @@ function isValidUrl(string) {
         form.classList.add('was-validated');
     }, false);
 })();
+
+// 文件选择事件监听
+document.getElementById('icon_upload_file')?.addEventListener('change', function() {
+    const uploadBtn = document.getElementById('upload_btn');
+    if (this.files.length > 0) {
+        uploadBtn.disabled = false;
+    } else {
+        uploadBtn.disabled = true;
+    }
+});
+
+// 上传按钮点击事件
+document.getElementById('upload_btn')?.addEventListener('click', function() {
+    const fileInput = document.getElementById('icon_upload_file');
+    const file = fileInput.files[0];
+    const uploadStatus = document.getElementById('upload_status');
+    
+    if (!file) {
+        alert('请选择要上传的文件');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('icon_upload', file);
+    
+    // 显示上传中状态
+    this.disabled = true;
+    this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 上传中...';
+    
+    // 向当前页面发送请求而不是向不存在的upload_icon.php发送请求
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // 上传成功
+            uploadStatus.innerHTML = `<div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle-fill"></i> 上传成功！
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+            
+            // 更新预览
+            const preview = document.getElementById('iconPreview');
+            preview.innerHTML = `<img src="/uploads/links/${data.file_name}" class="image-preview" style="max-width: 100px; max-height: 100px;">`;
+            
+            // 保存上传的文件路径
+            document.getElementById('uploaded_icon_path').value = data.file_name;
+            
+            // 重置上传控件
+            fileInput.value = '';
+            this.disabled = true;
+            this.innerHTML = '<i class="bi bi-upload"></i> 上传';
+        } else {
+            // 上传失败
+            uploadStatus.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i> 上传失败: ${data.error}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+            
+            // 恢复上传按钮状态
+            this.disabled = false;
+            this.innerHTML = '<i class="bi bi-upload"></i> 上传';
+        }
+    })
+    .catch(error => {
+        console.error('上传错误:', error);
+        uploadStatus.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i> 上传过程中发生错误
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>`;
+        
+        // 恢复上传按钮状态
+        this.disabled = false;
+        this.innerHTML = '<i class="bi bi-upload"></i> 上传';
+    });
+});
 </script>
 
 <?php include '../templates/footer.php'; ?>
