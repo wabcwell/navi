@@ -81,9 +81,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
         case 'upload':
             if (isset($_FILES['icon_upload']) && $_FILES['icon_upload']['error'] !== UPLOAD_ERR_NO_FILE) {
-                $upload_result = handle_file_upload($_FILES['icon_upload'], 'links');
+                $fileUpload = get_file_upload_manager('links');
+                $upload_result = $fileUpload->upload($_FILES['icon_upload']);
                 if ($upload_result['success']) {
-                    $icon_filename = $upload_result['filename'];
+                    $icon_filename = $upload_result['file_name'];
                 } else {
                     $errors[] = $upload_result['error'];
                 }

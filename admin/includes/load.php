@@ -22,6 +22,7 @@ require_once __DIR__ . '/NavigationLink.php';
 require_once __DIR__ . '/Settings.php';
 require_once __DIR__ . '/User.php';
 require_once __DIR__ . '/Logs.php';
+require_once __DIR__ . '/FileUpload.php';
 
 // 引入认证相关函数
 require_once __DIR__ . '/auth.php';
@@ -113,4 +114,17 @@ function get_logs_manager() {
         $logs = new Logs($database);
     }
     return $logs;
+}
+
+/**
+ * 获取文件上传管理实例
+ * 使用FileUpload类创建文件上传管理实例
+ * 
+ * @param string $uploadType 上传类型 (categories, links, backgrounds, settings)
+ * @param array $allowedTypes 允许的文件类型
+ * @param int $maxFileSize 最大文件大小
+ * @return FileUpload 文件上传管理实例
+ */
+function get_file_upload_manager($uploadType = 'general', $allowedTypes = [], $maxFileSize = 5242880) {
+    return new FileUpload($uploadType, $allowedTypes, $maxFileSize);
 }

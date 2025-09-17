@@ -48,32 +48,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $icon_data['icon_color_url'] = trim($_POST['icon_url']);
                 break;
             case 'upload':
-                // 处理文件上传
+                // 使用新的文件上传类处理文件上传
                 if (isset($_FILES['icon_upload']) && $_FILES['icon_upload']['error'] === UPLOAD_ERR_OK) {
-                    $file = $_FILES['icon_upload'];
-                    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
+                    $fileUpload = get_file_upload_manager('categories');
+                    $result = $fileUpload->upload($_FILES['icon_upload']);
                     
-                    if (in_array($file['type'], $allowed_types)) {
-                        $upload_dir = '../uploads/categories/';
-                        if (!is_dir($upload_dir)) {
-                            mkdir($upload_dir, 0755, true);
+                    if ($result['success']) {
+                        // 删除旧图标
+                        if (!empty($category['icon']) && file_exists('../uploads/categories/' . $category['icon'])) {
+                            unlink('../uploads/categories/' . $category['icon']);
                         }
-                        
-                        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-                        $filename = 'category_icon_' . uniqid() . '.' . $extension;
-                        $filepath = $upload_dir . $filename;
-                        
-                        if (move_uploaded_file($file['tmp_name'], $filepath)) {
-                            // 删除旧图标
-                            if (!empty($category['icon_color_upload']) && file_exists($upload_dir . $category['icon_color_upload'])) {
-                                unlink($upload_dir . $category['icon_color_upload']);
-                            }
-                            $icon_data['icon_color_upload'] = $filename;
-                        }
+                        $icon_data['icon'] = $result['file_name'];
                     }
                 } elseif (isset($_POST['current_icon']) && !empty($_POST['current_icon'])) {
                     // 保留现有图标
-                    $icon_data['icon_color_upload'] = $_POST['current_icon'];
+                    $icon_data['icon'] = $_POST['current_icon'];
                 }
                 break;
         }

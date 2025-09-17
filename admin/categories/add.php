@@ -32,24 +32,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $icon_data['icon_color_url'] = trim($_POST['icon_url']);
                 break;
             case 'upload':
-                // 处理文件上传
+                // 使用新的文件上传类处理文件上传
                 if (isset($_FILES['icon_file']) && $_FILES['icon_file']['error'] === UPLOAD_ERR_OK) {
-                    $file = $_FILES['icon_file'];
-                    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
+                    $fileUpload = get_file_upload_manager('categories');
+                    $result = $fileUpload->upload($_FILES['icon_file']);
                     
-                    if (in_array($file['type'], $allowed_types)) {
-                        $upload_dir = '../uploads/categories/';
-                        if (!is_dir($upload_dir)) {
-                            mkdir($upload_dir, 0755, true);
-                        }
-                        
-                        $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
-                        $filename = 'category_icon_' . uniqid() . '.' . $extension;
-                        $filepath = $upload_dir . $filename;
-                        
-                        if (move_uploaded_file($file['tmp_name'], $filepath)) {
-                            $icon_data['icon_color_upload'] = $filename;
-                        }
+                    if ($result['success']) {
+                        $icon_data['icon_color_upload'] = $result['file_name'];
                     }
                 }
                 break;

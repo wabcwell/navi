@@ -110,7 +110,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
         case 'upload':
             if (isset($_FILES['icon_upload']) && $_FILES['icon_upload']['error'] !== UPLOAD_ERR_NO_FILE) {
-                $upload_result = handle_file_upload($_FILES['icon_upload'], 'links');
+                $fileUpload = get_file_upload_manager('links');
+                $upload_result = $fileUpload->upload($_FILES['icon_upload']);
                 if ($upload_result['success']) {
                     // 删除旧图标（如果是本地文件）
                     if ($link['icon_url'] && !filter_var($link['icon_url'], FILTER_VALIDATE_URL) && strpos($link['icon_url'], '|') === false) {
@@ -119,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             unlink($old_icon_path);
                         }
                     }
-                    $icon_filename = $upload_result['filename'];
+                    $icon_filename = $upload_result['file_name'];
                 } else {
                     $errors[] = $upload_result['error'];
                 }

@@ -49,7 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 处理网站图标上传
     $site_icon = get_site_setting('site_icon');
     if (isset($_FILES['site_icon']) && $_FILES['site_icon']['error'] === UPLOAD_ERR_OK) {
-        $upload_result = handle_file_upload($_FILES['site_icon'], 'settings', ['image/jpeg', 'image/png', 'image/x-icon']);
+        $fileUpload = get_file_upload_manager('settings');
+        $upload_result = $fileUpload->upload($_FILES['site_icon'], ['image/jpeg', 'image/png', 'image/x-icon']);
         if ($upload_result['success']) {
             // 删除旧图标
             if ($site_icon) {
@@ -58,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     unlink($old_icon_path);
                 }
             }
-            $site_icon = $upload_result['filename'];
+            $site_icon = $upload_result['file_name'];
         } else {
             $errors[] = $upload_result['error'];
         }
@@ -86,10 +87,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($site_logo_type === 'image') {
         if (isset($_FILES['site_logo']) && $_FILES['site_logo']['error'] === UPLOAD_ERR_OK) {
-            $upload_result = handle_file_upload($_FILES['site_logo'], 'settings', ['image/jpeg', 'image/png']);
+            $fileUpload = get_file_upload_manager('settings');
+            $upload_result = $fileUpload->upload($_FILES['site_logo'], ['image/jpeg', 'image/png']);
             if ($upload_result['success']) {
-                $site_logo = $upload_result['filename'];
-                $site_logo_image = '/uploads/settings/' . $upload_result['filename']; // 保存相对于根目录的路径
+                $site_logo = $upload_result['file_name'];
+                $site_logo_image = '/uploads/settings/' . $upload_result['file_name']; // 保存相对于根目录的路径
             } else {
                 $errors[] = $upload_result['error'];
             }
@@ -117,7 +119,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // 处理背景图片上传
     if ($background_type === 'image' && isset($_FILES['background_image_file']) && $_FILES['background_image_file']['error'] === UPLOAD_ERR_OK) {
-        $upload_result = handle_file_upload($_FILES['background_image_file'], 'backgrounds', ['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+        $fileUpload = get_file_upload_manager('backgrounds');
+        $upload_result = $fileUpload->upload($_FILES['background_image_file'], ['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
         if ($upload_result['success']) {
             // 删除旧背景图片
             if ($background_image && strpos($background_image, 'http') !== 0) {
@@ -126,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     unlink($old_bg_path);
                 }
             }
-            $background_image = $upload_result['filename'];
+            $background_image = $upload_result['file_name'];
         } else {
             $errors[] = $upload_result['error'];
         }
