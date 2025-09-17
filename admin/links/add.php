@@ -94,16 +94,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['icon_upload'])) {
     
     // 处理图标
     $icon_filename = null;
-    $icon_type = $_POST['icon_type'] ?? 'none';
+    $icon_type = $_POST['final_icon_type'] ?? 'none';
     
     switch ($icon_type) {
         case 'fontawesome':
             $icon_class = trim($_POST['icon_fontawesome'] ?? '');
-            $icon_color = trim($_POST['icon_color'] ?? '#007bff');
+            $icon_color = trim($_POST['icon_fontawesome_color'] ?? '#000000');
             if ($icon_class) {
                 // 验证Font Awesome图标类名格式
-                if (!preg_match('/^fa-[a-z0-9-]+$/', $icon_class)) {
-                    $errors[] = '请输入有效的Font Awesome图标类名（例如：fa-home）';
+                if (!preg_match('/^fa[bsrlt]? [a-z0-9-]+$/', $icon_class)) {
+                    $errors[] = '请输入有效的Font Awesome图标类名（例如：fas fa-home）';
                 } else {
                     $icon_filename = $icon_class . '|' . $icon_color;
                 }
@@ -115,15 +115,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['icon_upload'])) {
             if (isset($_POST['uploaded_icon_path']) && !empty($_POST['uploaded_icon_path'])) {
                 // 使用已上传的图片
                 $icon_filename = $_POST['uploaded_icon_path'];
+            } else {
+                $errors[] = '请上传图片';
             }
             break;
             
         case 'url':
-            $icon_url = trim($_POST['icon_url'] ?? '');
+            $icon_url = trim($_POST['icon_url_input'] ?? '');
             if ($icon_url && filter_var($icon_url, FILTER_VALIDATE_URL)) {
                 $icon_filename = $icon_url;
             } elseif ($icon_url) {
                 $errors[] = '请输入有效的图标URL地址';
+            } else {
+                $errors[] = '请输入图标URL地址';
             }
             break;
             
@@ -246,40 +250,41 @@ include '../templates/header.php';
                             <div class="mb-3">
                                 <label class="form-label">图标类型</label>
                                 <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check" name="icon_type" id="icon_fontawesome" value="fontawesome" <?php echo ($_POST['icon_type'] ?? 'upload') === 'fontawesome' ? 'checked' : ''; ?>>
+                                    <input type="radio" class="btn-check" name="icon_type" id="icon_fontawesome" value="fontawesome" <?php echo ($_POST['icon_type'] ?? 'fontawesome') === 'fontawesome' ? 'checked' : ''; ?>>
                                     <label class="btn btn-outline-primary" for="icon_fontawesome">Font Awesome</label>
                                     
-                                    <input type="radio" class="btn-check" name="icon_type" id="icon_upload" value="upload" <?php echo ($_POST['icon_type'] ?? 'upload') === 'upload' ? 'checked' : ''; ?>>
+                                    <input type="radio" class="btn-check" name="icon_type" id="icon_upload" value="upload" <?php echo ($_POST['icon_type'] ?? 'fontawesome') === 'upload' ? 'checked' : ''; ?>>
                                     <label class="btn btn-outline-primary" for="icon_upload">上传图片</label>
                                     
-                                    <input type="radio" class="btn-check" name="icon_type" id="icon_url" value="url" <?php echo ($_POST['icon_type'] ?? 'upload') === 'url' ? 'checked' : ''; ?>>
+                                    <input type="radio" class="btn-check" name="icon_type" id="icon_url" value="url" <?php echo ($_POST['icon_type'] ?? 'fontawesome') === 'url' ? 'checked' : ''; ?>>
                                     <label class="btn btn-outline-primary" for="icon_url">URL地址</label>
                                     
-                                    <input type="radio" class="btn-check" name="icon_type" id="icon_none" value="none" <?php echo ($_POST['icon_type'] ?? 'upload') === 'none' ? 'checked' : ''; ?>>
+                                    <input type="radio" class="btn-check" name="icon_type" id="icon_none" value="none" <?php echo ($_POST['icon_type'] ?? 'fontawesome') === 'none' ? 'checked' : ''; ?>>
                                     <label class="btn btn-outline-primary" for="icon_none">无图标</label>
                                 </div>
                             </div>
 
-                            <!-- Font Awesome 图标选择 -->
-                            <div id="fontawesome_section" style="display: none;">
-                                <div class="row">
-                                    <div class="col-8">
-                                        <label for="icon_fontawesome_input" class="form-label">选择图标</label>
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" id="icon_fontawesome_input" name="icon_fontawesome" 
-                                                   placeholder="例如：fa-home" 
-                                                   value="<?php echo htmlspecialchars($_POST['icon_fontawesome'] ?? ''); ?>">
-                                            <button type="button" class="btn btn-outline-secondary" id="openIconPicker">
-                                                <i class="fas fa-icons"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <label for="icon_color" class="form-label">图标颜色</label>
-                                        <input type="color" class="form-control form-control-color w-100" id="icon_color" 
-                                               name="icon_color" value="<?php echo htmlspecialchars($_POST['icon_color'] ?? '#007bff'); ?>">
-                                    </div>
+                            <!-- Font Awesome 图标 -->
+                            <div id="fontawesome_section">
+                                <label for="icon_fontawesome" class="form-label">Font Awesome 图标</label>
+                                <div class="input-group mb-2">
+                                    <input type="text" class="form-control" id="icon_fontawesome" 
+                                           value="<?php echo htmlspecialchars($default_icon ?? 'fas fa-link'); ?>" 
+                                           placeholder="例如: fas fa-home">
+                                    <button type="button" class="btn btn-outline-primary" onclick="openIconPicker()">
+                                        <i class="fas fa-icons"></i> 选择图标
+                                    </button>
                                 </div>
+                                
+                                <label for="icon_fontawesome_color" class="form-label">图标颜色</label>
+                                <input type="color" class="form-control form-control-color" 
+                                       id="icon_fontawesome_color" 
+                                       value="<?php echo htmlspecialchars($default_color ?? '#000000'); ?>" 
+                                       title="选择图标颜色">
+                                
+                                <!-- 隐藏字段用于保存图标和颜色 -->
+                                <input type="hidden" id="icon_fontawesome_input" name="icon_fontawesome" value="">
+                                <input type="hidden" id="icon_fontawesome_color_input" name="icon_fontawesome_color" value="">
                             </div>
 
                             <!-- 图片上传 -->
@@ -296,6 +301,8 @@ include '../templates/header.php';
                                 <div id="upload_status" class="mt-2"></div>
                                 <!-- 隐藏字段用于保存已上传的图片路径 -->
                                 <input type="hidden" id="uploaded_icon_path" name="uploaded_icon_path" value="">
+                                <!-- 隐藏字段用于保存最终的图标类型 -->
+                                <input type="hidden" id="final_icon_type" name="final_icon_type" value="">
                             </div>
 
                             <!-- URL输入 -->
@@ -305,6 +312,15 @@ include '../templates/header.php';
                                        placeholder="https://example.com/icon.png" 
                                        value="<?php echo htmlspecialchars($_POST['icon_url'] ?? ''); ?>">
                                 <div class="form-text">请输入有效的图片URL地址</div>
+                                <!-- 隐藏字段用于保存图标URL -->
+                                <input type="hidden" id="icon_url_input" name="icon_url_input" value="">
+                            </div>
+                            
+                            <!-- 无图标 -->
+                            <div id="none_section" style="display: none;">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i> 不显示图标
+                                </div>
                             </div>
                         </div>
 
@@ -312,7 +328,7 @@ include '../templates/header.php';
                         <div class="col-md-5">
                             <label class="form-label">图标预览</label>
                             <div class="icon-preview-container text-center">
-                                <div id="iconPreview" class="mb-2">
+                                <div id="icon_preview" class="mb-2">
                                     <div class="text-muted">
                                         <i class="fas fa-image" style="font-size: 3rem;"></i>
                                         <p class="mt-2 mb-0">暂无图标</p>
@@ -350,127 +366,173 @@ include '../templates/header.php';
 
 
 <script>
+// 存储图标参数的对象
+let iconParams = {
+    icon_fontawesome: '<?php echo htmlspecialchars($default_icon ?? "fas fa-link"); ?>',
+    icon_fontawesome_color: '<?php echo htmlspecialchars($default_color ?? "#000000"); ?>',
+    icon_upload: '',
+    icon_url: ''
+};
+
+
+
 // Font Awesome 图标列表
 const fontAwesomeIcons = <?php echo json_encode($fontAwesomeIcons); ?>;
 
-// 图标类型切换
-function updateIconSections() {
-    const iconType = document.querySelector('input[name="icon_type"]:checked').value;
-    const fontawesomeSection = document.getElementById('fontawesome_section');
-    const uploadSection = document.getElementById('upload_section');
-    const urlSection = document.getElementById('url_section');
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化图标显示
+    const iconSections = {
+        fontawesome: document.getElementById('fontawesome_section'),
+        upload: document.getElementById('upload_section'),
+        url: document.getElementById('url_section'),
+        none: document.getElementById('none_section')
+    };
     
-    fontawesomeSection.style.display = iconType === 'fontawesome' ? 'block' : 'none';
-    uploadSection.style.display = iconType === 'upload' ? 'block' : 'none';
-    urlSection.style.display = iconType === 'url' ? 'block' : 'none';
+    // 隐藏所有区域
+    Object.values(iconSections).forEach(section => section.style.display = 'none');
+    
+    // 显示默认选中区域
+    const selectedType = '<?php echo ($_POST['icon_type'] ?? 'fontawesome'); ?>';
+    iconSections[selectedType].style.display = 'block';
+    document.getElementById('final_icon_type').value = selectedType;
     
     updatePreview();
-}
-
-// 更新预览
-function updatePreview() {
+    
+    // 图标类型切换
     const iconTypeRadios = document.querySelectorAll('input[name="icon_type"]');
-    let iconType = 'none';
-    for (const radio of iconTypeRadios) {
-        if (radio.checked) {
-            iconType = radio.value;
-            break;
+    
+    iconTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // 隐藏所有区域
+            Object.values(iconSections).forEach(section => section.style.display = 'none');
+            
+            // 显示选中区域
+            iconSections[this.value].style.display = 'block';
+            
+            // 更新隐藏字段
+            document.getElementById('final_icon_type').value = this.value;
+            
+            // 更新预览
+            updatePreview();
+        });
+    });
+});
+    
+    // 监听Font Awesome图标和颜色变化
+    document.getElementById('icon_fontawesome').addEventListener('input', function() {
+        iconParams.icon_fontawesome = this.value;
+        updatePreview();
+    });
+    
+    document.getElementById('icon_fontawesome_color').addEventListener('input', function() {
+        iconParams.icon_fontawesome_color = this.value;
+        updatePreview();
+    });
+    
+    // 监听URL输入变化
+    document.getElementById('icon_url').addEventListener('input', function() {
+        iconParams.icon_url = this.value;
+        updatePreview();
+    });
+    
+    // 监听文件选择
+    document.getElementById('icon_upload_file').addEventListener('change', function() {
+        if (this.files.length > 0) {
+            document.getElementById('upload_btn').disabled = false;
+        } else {
+            document.getElementById('upload_btn').disabled = true;
         }
+    });
+    
+    // 监听上传按钮点击
+    document.getElementById('upload_btn').addEventListener('click', function() {
+        const fileInput = document.getElementById('icon_upload_file');
+        if (fileInput.files.length > 0) {
+            uploadIcon(fileInput.files[0]);
+        }
+    });
+    
+    // 监听表单提交
+    document.getElementById('linkForm').addEventListener('submit', function(e) {
+        // 获取当前选中的图标类型
+        const selectedIconType = document.querySelector('input[name="icon_type"]:checked').value;
+        
+        // 更新隐藏字段
+        document.getElementById('final_icon_type').value = selectedIconType;
+        
+        // 同步所有图标参数到隐藏字段（实现第7点要求）
+        document.getElementById('icon_fontawesome_input').value = iconParams.icon_fontawesome;
+        document.getElementById('icon_fontawesome_color_input').value = iconParams.icon_fontawesome_color;
+        document.getElementById('uploaded_icon_path').value = iconParams.icon_upload;
+        document.getElementById('icon_url_input').value = iconParams.icon_url;
+        
+        // 验证当前选中的标签页
+        if (selectedIconType === 'url' && !iconParams.icon_url.trim()) {
+            e.preventDefault();
+            alert('请填写网络图片地址');
+            return false;
+        }
+        
+        if (selectedIconType === 'upload' && !iconParams.icon_upload) {
+            e.preventDefault();
+            alert('请上传图片');
+            return false;
+        }
+    });
+
+// 更新图标预览
+function updatePreview() {
+    const selectedType = document.querySelector('input[name="icon_type"]:checked').value;
+    const previewContainer = document.getElementById('icon_preview');
+    
+    // 确保元素存在
+    if (!previewContainer) {
+        console.log('Preview container not found');
+        return;
     }
     
-    const color = document.getElementById('icon_color')?.value || '#007bff';
-    const preview = document.getElementById('iconPreview');
+    console.log('Updating preview for type:', selectedType);
     
-    if (!preview) return;
-    
-    let previewHtml = '';
-    
-    switch (iconType) {
+    switch(selectedType) {
         case 'fontawesome':
-            const iconClass = document.getElementById('icon_fontawesome_input')?.value || 'fa-link';
-            if (iconClass) {
-                previewHtml = `<i class="fas ${iconClass}" style="font-size: 3rem; color: ${color}"></i>`;
-            } else {
-                previewHtml = '<div class="text-muted"><i class="fas fa-icons" style="font-size: 2rem;"></i><p class="mt-2 mb-0">请选择图标</p></div>';
-            }
+            const iconClass = document.getElementById('icon_fontawesome').value || 'fas fa-link';
+            const iconColor = document.getElementById('icon_fontawesome_color').value || '#000000';
+            // 移除颜色中的#号前缀，因为Font Awesome 5使用的是不带#的颜色值
+            const cleanColor = iconColor.replace('#', '');
+            previewContainer.innerHTML = `<i class="${iconClass}" style="color: #${cleanColor}; font-size: 3rem;"></i>`;
             break;
             
         case 'upload':
-            // 检查是否有已上传的图片路径
-            const uploadedIconPath = document.getElementById('uploaded_icon_path')?.value;
-            if (uploadedIconPath) {
-                // 使用已上传的图片
-                previewHtml = `<img src="/uploads/links/${uploadedIconPath}" class="image-preview" style="max-width: 100px; max-height: 100px;">`;
+            const uploadedPath = document.getElementById('uploaded_icon_path').value;
+            if (uploadedPath) {
+                // 修复上传图标预览路径
+                previewContainer.innerHTML = `<img src="/uploads/links/${uploadedPath}" alt="Uploaded Icon" style="max-width: 100px; max-height: 100px;">`;
             } else {
-                previewHtml = '<div class="text-muted"><i class="fas fa-image" style="font-size: 2rem;"></i><p class="mt-2 mb-0">暂无图标</p></div>';
+                previewContainer.innerHTML = '<div class="text-muted"><i class="fas fa-image" style="font-size: 2rem;"></i><p class="mt-2 mb-0">暂无图标</p></div>';
             }
             break;
             
         case 'url':
-            const url = document.getElementById('icon_url')?.value;
+            const url = document.getElementById('icon_url').value;
             if (url) {
-                previewHtml = `<img src="${url}" class="image-preview" style="max-width: 100px; max-height: 100px;" onerror="this.onerror=null; this.innerHTML='<i class=\\'fas fa-link\\' style=\\'font-size: 2rem; color: #6c757d;\\'></i>';">`;
+                previewContainer.innerHTML = `<img src="${url}" alt="URL Icon" style="max-width: 100px; max-height: 100px;">`;
             } else {
-                previewHtml = '<div class="text-muted"><i class="fas fa-link" style="font-size: 2rem;"></i><p class="mt-2 mb-0">请输入URL</p></div>';
+                previewContainer.innerHTML = '<div class="text-muted"><i class="fas fa-link" style="font-size: 2rem;"></i><p class="mt-2 mb-0">请输入URL</p></div>';
             }
             break;
             
-        case 'none':
-            previewHtml = '<div class="text-muted"><i class="fas fa-times" style="font-size: 2rem;"></i><p class="mt-2 mb-0">无图标</p></div>';
+        default:
+            previewContainer.innerHTML = '<div class="text-muted"><i class="fas fa-times" style="font-size: 2rem;"></i><p class="mt-2 mb-0">无图标</p></div>';
             break;
     }
-    
-    preview.innerHTML = previewHtml;
 }
 
-// 事件监听
-document.querySelectorAll('input[name="icon_type"]').forEach(radio => {
-    radio.addEventListener('change', updateIconSections);
-});
-
-document.getElementById('icon_color').addEventListener('input', updatePreview);
-document.getElementById('icon_fontawesome_input').addEventListener('input', updatePreview);
-document.getElementById('icon_url').addEventListener('input', updatePreview);
-document.getElementById('icon_upload_file').addEventListener('change', updatePreview);
-
-// 打开图标选择器
-document.getElementById('openIconPicker').addEventListener('click', openIconPicker);
-
-// 新增：文件选择事件监听，启用上传按钮
-document.getElementById('icon_upload_file').addEventListener('change', function() {
-    const file = this.files[0];
-    const uploadBtn = document.getElementById('upload_btn');
-    
-    if (file) {
-        // 启用上传按钮
-        uploadBtn.disabled = false;
-    } else {
-        // 禁用上传按钮
-        uploadBtn.disabled = true;
-    }
-});
-
-// 新增：上传按钮点击事件
-document.getElementById('upload_btn').addEventListener('click', function() {
-    const fileInput = document.getElementById('icon_upload_file');
-    const file = fileInput.files[0];
-    const statusDiv = document.getElementById('upload_status');
-    const uploadedIconPath = document.getElementById('uploaded_icon_path');
-    
-    if (!file) {
-        statusDiv.innerHTML = '<div class="alert alert-warning">请选择要上传的文件</div>';
-        return;
-    }
-    
-    // 创建FormData对象
+// 上传图标
+function uploadIcon(file) {
     const formData = new FormData();
-    formData.append('icon_upload', file);
+    formData.append('icon_upload', file);  // 修改字段名为icon_upload以匹配后端处理
     
-    // 显示上传中状态
-    statusDiv.innerHTML = '<div class="alert alert-info">上传中...</div>';
-    this.disabled = true;
-    
-    // 发送AJAX请求
+    // 向当前页面发送请求而不是向不存在的upload_icon.php发送请求
     fetch(window.location.href, {
         method: 'POST',
         body: formData
@@ -478,29 +540,24 @@ document.getElementById('upload_btn').addEventListener('click', function() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // 上传成功
-            statusDiv.innerHTML = '<div class="alert alert-success">上传成功</div>';
-            // 保存上传的文件路径
-            uploadedIconPath.value = data.file_name;
-            // 更新预览
+            // 保存上传的图片路径
+            iconParams.icon_upload = data.file_name;
+            document.getElementById('uploaded_icon_path').value = data.file_name;
+            document.getElementById('upload_status').innerHTML = 
+                '<div class="alert alert-success alert-dismissible fade show" role="alert">上传成功<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
             updatePreview();
-            // 重置上传控件状态
-            fileInput.value = ''; // 清空文件选择
-            this.disabled = true; // 禁用上传按钮
         } else {
-            // 上传失败
-            statusDiv.innerHTML = '<div class="alert alert-danger">上传失败: ' + data.error + '</div>';
-            this.disabled = false;
+            document.getElementById('upload_status').innerHTML = 
+                '<div class="alert alert-danger alert-dismissible fade show" role="alert">上传失败: ' + data.error + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
         }
     })
     .catch(error => {
-        console.error('Error:', error);
-        statusDiv.innerHTML = '<div class="alert alert-danger">上传过程中发生错误</div>';
-        this.disabled = false;
+        document.getElementById('upload_status').innerHTML = 
+            '<div class="alert alert-danger alert-dismissible fade show" role="alert">上传出错: ' + error.message + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
     });
-});
+}
 
-// 打开图标选择器函数
+// 打开Font Awesome图标选择器
 function openIconPicker() {
     // 创建模态框容器
     const modalDiv = document.createElement('div');
@@ -565,8 +622,8 @@ function openIconPicker() {
 
 // 选择图标
 function selectIcon(iconName) {
-    // 保存完整的图标类名（包含fa-前缀）
-    document.getElementById('icon_fontawesome_input').value = 'fa-' + iconName;
+    document.getElementById('icon_fontawesome').value = 'fas fa-' + iconName;
+    iconParams.icon_fontawesome = 'fas fa-' + iconName;
     updatePreview();
     
     // 正确隐藏模态框，确保背景遮罩层也被清除
@@ -582,46 +639,27 @@ function selectIcon(iconName) {
     }
 }
 
-// 初始化
-updateIconSections();
-
-// 新增：初始化上传相关UI状态
+// 初始化上传UI状态
 function initUploadUI() {
-    const uploadedIconPath = document.getElementById('uploaded_icon_path');
-    const uploadBtn = document.getElementById('upload_btn');
-    
-    if (uploadedIconPath && uploadedIconPath.value) {
-        // 如果已有上传的图片路径，启用上传按钮
-        uploadBtn.disabled = false;
+    const fileInput = document.getElementById('icon_upload_file');
+    document.getElementById('upload_btn').disabled = !fileInput.files.length;
+}
+
+// 验证URL格式的辅助函数
+function isValidURL(string) {
+    try {
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;
     }
 }
 
-// 页面加载完成后初始化上传UI
+// 确保DOM加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
     initUploadUI();
+    updatePreview();
 });
-
-// 表单验证
-(function() {
-    'use strict';
-    var form = document.getElementById('linkForm');
-    form.addEventListener('submit', function(event) {
-        const title = document.getElementById('title').value.trim();
-        const url = document.getElementById('url').value.trim();
-        const category = document.getElementById('category_id').value;
-
-        if (!title || !url || !category) {
-            event.preventDefault();
-            event.stopPropagation();
-            alert('请填写所有必填项');
-        }
-        if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-        form.classList.add('was-validated');
-    }, false);
-})();
 </script>
 
 <?php include '../templates/footer.php'; ?>
