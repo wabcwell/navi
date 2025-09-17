@@ -7,6 +7,60 @@ if (!is_logged_in()) {
     exit;
 }
 
+// 处理AJAX文件上传
+if (isset($_GET['ajax_upload']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+    
+    try {
+        // 检查是否是AJAX请求
+        if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || $_SERVER['HTTP_X_REQUESTED_WITH'] !== 'XMLHttpRequest') {
+            throw new Exception('无效的请求类型');
+        }
+        
+        // 验证文件上传
+        if (!isset($_FILES['icon_file'])) {
+            throw new Exception('未找到上传文件');
+        }
+        
+        if ($_FILES['icon_file']['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception('文件上传失败，错误代码: ' . $_FILES['icon_file']['error']);
+        }
+        
+        // 获取文件上传管理器
+        $uploadManager = get_file_upload_manager('categories');
+        
+        // 处理文件上传
+        $uploadResult = $uploadManager->upload($_FILES['icon_file']);
+        
+        if ($uploadResult['success']) {
+            // 调试：记录上传结果
+            error_log('上传成功 - file_url: ' . $uploadResult['file_url']);
+            error_log('上传成功 - file_path: ' . $uploadResult['file_path']);
+            error_log('上传成功 - file_name: ' . $uploadResult['file_name']);
+            echo json_encode([
+                'success' => true,
+                'message' => '文件上传成功',
+                'path' => $uploadResult['file_url'],
+                'file_name' => $uploadResult['file_name'],
+                'debug' => [
+                    'file_url' => $uploadResult['file_url'],
+                    'file_path' => $uploadResult['file_path'],
+                    'file_name' => $uploadResult['file_name']
+                ]
+            ]);
+        } else {
+            throw new Exception($uploadResult['error']);
+        }
+        
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
 // 获取分类管理实例
 $categoryManager = get_category_manager();
 
@@ -32,14 +86,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $icon_data['icon_color_url'] = trim($_POST['icon_url']);
                 break;
             case 'upload':
-                // 使用新的文件上传类处理文件上传
-                if (isset($_FILES['icon_file']) && $_FILES['icon_file']['error'] === UPLOAD_ERR_OK) {
-                    $fileUpload = get_file_upload_manager('categories');
-                    $result = $fileUpload->upload($_FILES['icon_file']);
-                    
-                    if ($result['success']) {
-                        $icon_data['icon_color_upload'] = $result['file_name'];
-                    }
+                // 使用已上传的图片路径（通过AJAX上传）
+                if (!empty($_POST['uploaded_icon_path'])) {
+                    $icon_data['icon_color_upload'] = $_POST['uploaded_icon_path'];
                 }
                 break;
         }
@@ -173,9 +222,18 @@ include '../templates/header.php';
                         <!-- 图片上传 -->
                         <div id="icon_upload_section" class="icon-section mb-3" style="display: none;">
                             <label for="icon_file" class="form-label">上传图标</label>
-                            <input type="file" class="form-control" id="icon_file" name="icon_file" 
-                                   accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml">
+                            <div class="input-group">
+                                <input type="file" class="form-control" id="icon_file" name="icon_file" 
+                                       accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+                                       onchange="this.nextElementSibling.value = this.files[0]?.name || '';">
+                                <button type="button" class="btn btn-outline-primary" id="upload_btn" disabled>
+                                    <i class="bi bi-upload"></i> 上传
+                                </button>
+                            </div>
+                            <input type="text" class="form-control mt-2" id="uploaded_file_display" 
+                                   placeholder="已上传文件路径" readonly style="background-color: #f8f9fa;">
                             <small class="form-text text-muted">支持 JPG, PNG, GIF, WebP, SVG 格式，最大 2MB</small>
+                            <div id="upload_status" class="mt-2"></div>
                         </div>
                         
                         <!-- URL 输入 -->
@@ -189,6 +247,7 @@ include '../templates/header.php';
                         <!-- 隐藏字段 -->
                         <input type="hidden" id="final_icon" name="final_icon" value="">
                         <input type="hidden" id="final_icon_type" name="final_icon_type" value="font">
+                        <input type="hidden" id="uploaded_icon_path" name="uploaded_icon_path" value="">
                     </div>
                     
                     <!-- 颜色选择器移动到了Font Awesome部分的同一行 -->
@@ -283,24 +342,22 @@ function updateIconPreview() {
             break;
             
         case 'upload':
-            const fileInput = document.getElementById('icon_file');
-            if (fileInput.files && fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewContainer.innerHTML = `<img src="${e.target.result}" class="img-fluid" style="max-height: 60px;">`;
-                    previewText.textContent = '上传图片预览';
-                };
-                reader.readAsDataURL(fileInput.files[0]);
-            } else {
-                previewContainer.innerHTML = '<i class="fas fa-cloud-upload-alt fa-3x text-muted"></i>';
-                previewText.textContent = '等待上传图片';
+            // 预览模块只预览已上传的服务器图片，完全解耦
+            const uploadedPath = document.getElementById('uploaded_icon_path').value;
+            if (uploadedPath) {
+                updateUploadedIconPreview(uploadedPath);
+                return;
             }
+            
+            // 没有已上传图片时，显示无预览状态（不显示本地文件）
+            previewContainer.innerHTML = '<i class="fas fa-image fa-3x text-muted"></i>';
+            previewText.textContent = '无预览';
             break;
             
         case 'url':
             const url = document.getElementById('icon_url').value;
             if (url) {
-                previewContainer.innerHTML = `<img src="${url}" class="img-fluid" style="max-height: 60px;" onerror="this.onerror=null; this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodG0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjZGRkIi8+Cjx0ZXh0IHg9IjMyIiB5PSIzMiIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEyIiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+RXJyb3I8L3RleHQ+Cjwvc3ZnPg==';">`;
+                previewContainer.innerHTML = `<img src="${url}" class="img-fluid" style="max-height: 60px;">`;
                 previewText.textContent = '网络图标预览';
                 document.getElementById('final_icon').value = url;
             } else {
@@ -395,7 +452,121 @@ function getFontAwesomeIcons() {
 document.getElementById('font_icon').addEventListener('input', updateIconPreview);
 document.getElementById('icon_color').addEventListener('input', updateIconPreview);
 document.getElementById('icon_url').addEventListener('input', updateIconPreview);
-document.getElementById('icon_file').addEventListener('change', updateIconPreview);
+document.getElementById('icon_file').addEventListener('change', function() {
+    const uploadBtn = document.getElementById('upload_btn');
+    const fileInput = this;
+    const statusDiv = document.getElementById('upload_status');
+    
+    if (fileInput.files && fileInput.files[0]) {
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="bi bi-upload"></i> 上传';
+        statusDiv.innerHTML = ''; // 清除之前的状态信息
+        // 文件选择完全解耦：只控制上传按钮状态，不影响预览
+    } else {
+        uploadBtn.disabled = true;
+    }
+});
+
+// 图标类型切换时检查是否有已上传的图片
+document.querySelectorAll('input[name="icon_type"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        updateIconPreview();
+    });
+});
+
+// 上传按钮点击事件
+document.getElementById('upload_btn').addEventListener('click', function() {
+    const fileInput = document.getElementById('icon_file');
+    const uploadBtn = this;
+    const statusDiv = document.getElementById('upload_status');
+    
+    if (!fileInput.files || !fileInput.files[0]) {
+        statusDiv.innerHTML = '<div class="alert alert-warning">请先选择图片文件</div>';
+        return;
+    }
+    
+    // 创建FormData对象
+    const formData = new FormData();
+    formData.append('icon_file', fileInput.files[0]);
+    formData.append('ajax_upload', '1');
+    
+    // 禁用上传按钮
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> 上传中...';
+    statusDiv.innerHTML = '<div class="alert alert-info">正在上传图片...</div>';
+    
+    // 发送AJAX请求到当前页面处理上传
+    fetch('?ajax_upload=1', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('上传响应数据:', data); // 调试用
+        console.log('上传路径:', data.path); // 调试用
+        console.log('文件名:', data.file_name); // 调试用
+        if (data.success) {
+            // 上传成功
+            if (data.path) {
+                document.getElementById('uploaded_icon_path').value = data.path;
+                statusDiv.innerHTML = '<div class="alert alert-success">图片上传成功！</div>';
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="bi bi-upload"></i> 上传';
+                
+                // 在文件路径显示框中显示已上传文件路径
+                const fileName = data.file_name || data.path.split('/').pop(); // 优先使用返回的文件名
+                document.getElementById('uploaded_file_display').value = fileName;
+                
+                // 3秒后清除状态信息
+                setTimeout(() => {
+                    statusDiv.innerHTML = '';
+                }, 3000);
+                
+                // 更新预览：只使用服务器返回的图片URL，完全解耦
+                updateUploadedIconPreview(data.path);
+                
+                // 清除文件输入框的本地文件选择（不影响预览，只是清理界面）
+                fileInput.value = '';
+                
+                // 调试：显示上传成功的详细信息
+                console.log('上传成功 - 服务器图片URL:', data.path);
+            } else {
+                throw new Error('上传成功但路径为空');
+            }
+        } else {
+            // 上传失败
+            statusDiv.innerHTML = '<div class="alert alert-danger">上传失败：' + data.message + '</div>';
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i class="bi bi-upload"></i> 上传';
+        }
+    })
+    .catch(error => {
+        console.error('上传错误:', error);
+        statusDiv.innerHTML = '<div class="alert alert-danger">上传出错：' + error.message + '</div>';
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = '<i class="bi bi-upload"></i> 上传';
+        
+        // 显示更详细的错误信息
+        if (error.stack) {
+            console.error('错误堆栈:', error.stack);
+        }
+    });
+});
+
+// 更新已上传图标的预览（完全解耦，只负责显示服务器图片URL）
+function updateUploadedIconPreview(filePath) {
+    const previewContainer = document.getElementById('icon_preview');
+    const previewText = document.getElementById('icon_preview_text');
+    
+    console.log('预览服务器图片URL:', filePath);
+    
+    // 直接使用服务器返回的URL，不做任何处理
+    previewContainer.innerHTML = `<img src="${filePath}" class="img-fluid" style="max-height: 60px;" alt="服务器图片">`;
+    previewText.textContent = '服务器图片';
+}
 
 // 表单提交前设置最终值
 document.querySelector('form').addEventListener('submit', function() {
@@ -413,7 +584,11 @@ document.querySelector('form').addEventListener('submit', function() {
             });
             break;
         case 'upload':
-            // 文件上传由PHP处理
+            // 使用已上传的图片路径（通过AJAX上传）
+            const uploadedPath = document.getElementById('uploaded_icon_path').value;
+            if (uploadedPath) {
+                document.getElementById('final_icon').value = uploadedPath;
+            }
             break;
         case 'url':
             document.getElementById('final_icon').value = document.getElementById('icon_url').value;
