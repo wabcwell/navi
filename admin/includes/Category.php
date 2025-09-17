@@ -80,8 +80,8 @@ class Category {
             $data['color'] = $data['color'] ?? '#007bff';
             $data['icon_fontawesome'] = $data['icon_fontawesome'] ?? null;
             $data['icon_fontawesome_color'] = $data['icon_fontawesome_color'] ?? null;
-            $data['icon_color_upload'] = $data['icon_color_upload'] ?? null;
-            $data['icon_color_url'] = $data['icon_color_url'] ?? null;
+            $data['icon_upload'] = $data['icon_upload'] ?? null;
+            $data['icon_url'] = $data['icon_url'] ?? null;
             $data['icon_type'] = $data['icon_type'] ?? 'fontawesome';
             $data['order_index'] = $data['order_index'] ?? 0;
             $data['is_active'] = $data['is_active'] ?? 1;
@@ -90,7 +90,7 @@ class Category {
             $sql = "INSERT INTO categories (
                 name, slug, description, color, 
                 icon_fontawesome, icon_fontawesome_color, 
-                icon_color_upload, icon_color_url, icon_type,
+                icon_upload, icon_url, icon_type,
                 order_index, is_active
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             
@@ -101,8 +101,8 @@ class Category {
                 $data['color'],
                 $data['icon_fontawesome'],
                 $data['icon_fontawesome_color'],
-                $data['icon_color_upload'],
-                $data['icon_color_url'],
+                $data['icon_upload'],
+                $data['icon_url'],
                 $data['icon_type'],
                 $data['order_index'],
                 $data['is_active']
@@ -137,7 +137,7 @@ class Category {
                 $allowedFields = [
                     'name', 'slug', 'description', 'color', 
                     'icon_fontawesome', 'icon_fontawesome_color',
-                    'icon_color_upload', 'icon_color_url', 'icon_type',
+                    'icon_upload', 'icon_url', 'icon_type',
                     'order_index', 'is_active'
                 ];
                 
