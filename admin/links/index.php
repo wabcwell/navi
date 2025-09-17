@@ -125,7 +125,7 @@ $total = $stmt->fetchColumn();
 $total_pages = ceil($total / $limit);
 
 // 获取链接数据
-$sql = "SELECT l.*, c.name as category_name 
+$sql = "SELECT l.id, l.title, l.url, l.description, l.category_id, l.icon_type, l.icon_fontawesome, l.icon_fontawesome_color, l.icon_url, l.icon_upload, l.order_index, l.is_active, l.click_count, l.created_at, l.updated_at, c.name as category_name 
         FROM navigation_links l 
         LEFT JOIN categories c ON l.category_id = c.id 
         $where_sql 
@@ -238,43 +238,90 @@ include '../templates/header.php';
                                     <input type="checkbox" name="link_ids[]" value="<?php echo $link['id']; ?>">
                                 </td>
                                 <td>
-                                    <?php if ($link['icon_url']): ?>
-                                        <?php 
-                                        $icon = trim($link['icon_url']);
-                                        
-                                        // 处理带颜色信息的格式：fa-shopping-cart|#007bff
-                                        $parts = explode('|', $icon);
-                                        $icon_class = trim($parts[0]);
-                                        $icon_color = isset($parts[1]) ? trim($parts[1]) : '#007bff';
-                                        
-                                        // 检查是否为Font Awesome类名
-                                        if (preg_match('/^(fa-|fas\s|far\s|fab\s)/i', $icon_class)): 
-                                            $displayIcon = $icon_class;
-                                            // 如果没有前缀，添加fas前缀
-                                            if (!preg_match('/^(fas|far|fab)\s/i', $icon_class)) {
-                                                $displayIcon = 'fas ' . $icon_class;
+                                    <?php 
+                                    // 根据icon_type字段的值来显示不同类型的图标
+                                    $iconType = $link['icon_type'] ?? 'none';
+                                    
+                                    switch ($iconType) {
+                                        case 'fontawesome':
+                                            // 显示Font Awesome图标
+                                            $iconClass = $link['icon_fontawesome'] ?? '';
+                                            $iconColor = $link['icon_fontawesome_color'] ?? '#007bff';
+                                            
+                                            if ($iconClass) {
+                                                // 如果没有前缀，添加fas前缀
+                                                if (!preg_match('/^(fas|far|fab)\s/i', $iconClass)) {
+                                                    $iconClass = 'fas ' . $iconClass;
+                                                }
+                                                ?>
+                                                <i class="<?php echo htmlspecialchars($iconClass); ?>" 
+                                                   style="font-size: 1.5rem; color: <?php echo htmlspecialchars($iconColor); ?>;"></i>
+                                                <?php
+                                            } else {
+                                                // 没有图标时显示默认图标
+                                                ?>
+                                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" 
+                                                     style="width: 32px; height: 32px;">
+                                                    <i class="bi bi-link-45deg" style="font-size: 1.2rem;"></i>
+                                                </div>
+                                                <?php
                                             }
-                                        ?>
-                                            <i class="<?php echo htmlspecialchars($displayIcon); ?>" 
-                                               style="font-size: 1.5rem; color: <?php echo htmlspecialchars($icon_color); ?>;"></i>
-                                        <?php 
-                                        // 检查是否为Bootstrap图标类名
-                                        elseif (strpos($icon_class, 'bi-') === 0): ?>
-                                            <i class="<?php echo htmlspecialchars($icon_class); ?>" 
-                                               style="font-size: 1.5rem; color: <?php echo htmlspecialchars($icon_color); ?>;"></i>
-                                        <?php 
-                                        // 否则当作图片文件处理
-                                        else: ?>
-                                            <img src="<?php echo (filter_var($icon_class, FILTER_VALIDATE_URL) ? $icon_class : '/uploads/links/' . $icon_class); ?>" 
-                                                 alt="<?php echo htmlspecialchars($link['title']); ?>" 
-                                                 class="image-preview" style="width: 32px; height: 32px; border-radius: 4px;">
-                                        <?php endif; ?>
-                                    <?php else: ?>
-                                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" 
-                                             style="width: 32px; height: 32px;">
-                                            <i class="bi bi-link-45deg" style="font-size: 1.2rem;"></i>
-                                        </div>
-                                    <?php endif; ?>
+                                            break;
+                                            
+                                        case 'upload':
+                                            // 显示上传的图片
+                                            $iconUpload = $link['icon_upload'] ?? '';
+                                            
+                                            if ($iconUpload) {
+                                                ?>
+                                                <img src="/uploads/links/<?php echo htmlspecialchars($iconUpload); ?>" 
+                                                     alt="<?php echo htmlspecialchars($link['title']); ?>" 
+                                                     class="image-preview" style="width: 32px; height: 32px; border-radius: 4px;">
+                                                <?php
+                                            } else {
+                                                // 没有图标时显示默认图标
+                                                ?>
+                                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" 
+                                                     style="width: 32px; height: 32px;">
+                                                    <i class="bi bi-link-45deg" style="font-size: 1.2rem;"></i>
+                                                </div>
+                                                <?php
+                                            }
+                                            break;
+                                            
+                                        case 'url':
+                                            // 显示URL图片
+                                            $iconUrl = $link['icon_url'] ?? '';
+                                            
+                                            if ($iconUrl) {
+                                                ?>
+                                                <img src="<?php echo filter_var($iconUrl, FILTER_VALIDATE_URL) ? $iconUrl : '/uploads/links/' . $iconUrl; ?>" 
+                                                     alt="<?php echo htmlspecialchars($link['title']); ?>" 
+                                                     class="image-preview" style="width: 32px; height: 32px; border-radius: 4px;">
+                                                <?php
+                                            } else {
+                                                // 没有图标时显示默认图标
+                                                ?>
+                                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" 
+                                                     style="width: 32px; height: 32px;">
+                                                    <i class="bi bi-link-45deg" style="font-size: 1.2rem;"></i>
+                                                </div>
+                                                <?php
+                                            }
+                                            break;
+                                            
+                                        case 'none':
+                                        default:
+                                            // 显示默认图标
+                                            ?>
+                                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" 
+                                                 style="width: 32px; height: 32px;">
+                                                <i class="bi bi-link-45deg" style="font-size: 1.2rem;"></i>
+                                            </div>
+                                            <?php
+                                            break;
+                                    }
+                                    ?>
                                 </td>
                                 <td>
                                     <strong><?php echo htmlspecialchars($link['title']); ?></strong>
