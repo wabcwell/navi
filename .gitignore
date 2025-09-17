@@ -19,6 +19,7 @@ uploads/settings/*
 !uploads/settings/.gitkeep
 
 # 忽略配置文件
+navi.sql
 config.php
 config.js
 database_schema.sql

@@ -3,6 +3,12 @@
  * 管理后台公共函数库
  */
 
+// 引入Category类
+require_once __DIR__ . '/Category.php';
+
+// 引入Database类
+require_once __DIR__ . '/Database.php';
+
 /**
  * 安全输出HTML
  */
@@ -127,28 +133,148 @@ function validate_upload($file) {
 
 /**
  * 获取分类列表
+ * @param PDO $pdo 数据库连接
+ * @param bool $onlyActive 是否只获取激活的分类
+ * @return array 分类列表
  */
-function get_categories($pdo) {
-    $stmt = $pdo->query("SELECT * FROM categories ORDER BY order_index, name");
-    return $stmt->fetchAll();
+function get_categories($pdo, $onlyActive = true) {
+    try {
+        $category = new Category($pdo);
+        return $category->getAll($onlyActive);
+    } catch (Exception $e) {
+        error_log("获取分类列表失败: " . $e->getMessage());
+        return [];
+    }
 }
 
 /**
  * 获取分类信息
+ * @param PDO $pdo 数据库连接
+ * @param int $id 分类ID
+ * @return array|null 分类信息或null
  */
 function get_category($pdo, $id) {
-    $stmt = $pdo->prepare("SELECT * FROM categories WHERE id = ?");
-    $stmt->execute([$id]);
-    return $stmt->fetch();
+    try {
+        $category = new Category($pdo);
+        return $category->getById($id);
+    } catch (Exception $e) {
+        error_log("获取分类信息失败: " . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * 根据slug获取分类信息
+ * @param PDO $pdo 数据库连接
+ * @param string $slug 分类slug
+ * @return array|null 分类信息或null
+ */
+function get_category_by_slug($pdo, $slug) {
+    try {
+        $category = new Category($pdo);
+        return $category->getBySlug($slug);
+    } catch (Exception $e) {
+        error_log("根据slug获取分类信息失败: " . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * 创建新分类
+ * @param PDO $pdo 数据库连接
+ * @param array $data 分类数据
+ * @return int|false 新创建的分类ID或false
+ */
+function create_category($pdo, $data) {
+    try {
+        $category = new Category($pdo);
+        return $category->create($data);
+    } catch (Exception $e) {
+        error_log("创建分类失败: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * 更新分类
+ * @param PDO $pdo 数据库连接
+ * @param int $id 分类ID
+ * @param array $data 更新数据
+ * @return bool 是否更新成功
+ */
+function update_category($pdo, $id, $data) {
+    try {
+        $category = new Category($pdo);
+        return $category->update($id, $data);
+    } catch (Exception $e) {
+        error_log("更新分类失败: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * 删除分类
+ * @param PDO $pdo 数据库连接
+ * @param int $id 分类ID
+ * @return bool 是否删除成功
+ */
+function delete_category($pdo, $id) {
+    try {
+        $category = new Category($pdo);
+        return $category->delete($id);
+    } catch (Exception $e) {
+        error_log("删除分类失败: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * 切换分类激活状态
+ * @param PDO $pdo 数据库连接
+ * @param int $id 分类ID
+ * @return bool 是否切换成功
+ */
+function toggle_category_active($pdo, $id) {
+    try {
+        $category = new Category($pdo);
+        return $category->toggleActive($id);
+    } catch (Exception $e) {
+        error_log("切换分类状态失败: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * 更新分类排序
+ * @param PDO $pdo 数据库连接
+ * @param array $order 排序数组
+ * @return bool 是否更新成功
+ */
+function update_category_order($pdo, $order) {
+    try {
+        $category = new Category($pdo);
+        return $category->updateOrder($order);
+    } catch (Exception $e) {
+        error_log("更新分类排序失败: " . $e->getMessage());
+        return false;
+    }
 }
 
 /**
  * 统计分类下的链接数量
+ * @param PDO $pdo 数据库连接
+ * @param int $category_id 分类ID
+ * @return int 链接数量
  */
 function count_category_links($pdo, $category_id) {
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM navigation_links WHERE category_id = ?");
-    $stmt->execute([$category_id]);
-    return $stmt->fetchColumn();
+    try {
+        $database = new Database();
+        $stmt = $database->query("SELECT COUNT(*) FROM navigation_links WHERE category_id = ?", [$category_id]);
+        return $stmt->fetchColumn();
+    } catch (Exception $e) {
+        error_log("统计分类链接数量失败: " . $e->getMessage());
+        return 0;
+    }
 }
 
 /**

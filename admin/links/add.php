@@ -110,14 +110,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 如果没有错误，保存数据
     if (empty($errors)) {
         try {
-            $stmt = $pdo->prepare("INSERT INTO navigation_links (title, url, description, category_id, icon_url, order_index, is_active, click_count, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())");
+            // 获取图标相关数据
+            $icon_type = $_POST['icon_type'] ?? 'none';
+            $icon_fontawesome = $_POST['icon_fontawesome'] ?? '';
+            $icon_color = $_POST['icon_color'] ?? '';
+            $icon_url = $_POST['icon_url'] ?? '';
+            $icon_color_url = $icon_url; // 保持与旧字段兼容
+            
+            // 处理不同类型的图标
+            $icon_data = [
+                'icon_type' => $icon_type,
+                'icon_fontawesome' => $icon_fontawesome,
+                'icon_fontawesome_color' => $icon_color,
+                'icon_color_url' => $icon_color_url,
+                'icon_color_upload' => $icon_filename // 上传的图片文件名
+            ];
+            
+            $stmt = $pdo->prepare("INSERT INTO navigation_links (title, url, description, category_id, icon_type, icon_fontawesome, icon_fontawesome_color, icon_color_url, icon_color_upload, order_index, is_active, click_count, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())");
             $stmt->execute([
                 $title,
                 $url,
                 $description,
                 $category_id,
-                $icon_filename,
+                $icon_data['icon_type'],
+                $icon_data['icon_fontawesome'],
+                $icon_data['icon_fontawesome_color'],
+                $icon_data['icon_color_url'],
+                $icon_data['icon_color_upload'],
                 $display_order,
                 $is_active
             ]);

@@ -8,10 +8,9 @@
  */
 function verify_admin_password($password) {
     // 首先尝试从users表获取密码
-    $pdo = get_db_connection();
+    $database = new Database();
     try {
-        $stmt = $pdo->prepare("SELECT password FROM users WHERE username = 'admin'");
-        $stmt->execute();
+        $stmt = $database->query("SELECT password FROM users WHERE username = 'admin'");
         $user = $stmt->fetch();
         if ($user) {
             return password_verify($password, $user['password']);
@@ -66,7 +65,6 @@ function is_logged_in() {
  * 记录登录日志
  */
 function log_login_attempt($username, $success) {
-    $pdo = get_db_connection();
-    $stmt = $pdo->prepare("INSERT INTO login_logs (username, ip_address, success, login_time) VALUES (?, ?, ?, NOW())");
-    $stmt->execute([$username, $_SERVER['REMOTE_ADDR'], $success ? 1 : 0]);
+    $database = new Database();
+    $stmt = $database->query("INSERT INTO login_logs (username, ip_address, success, login_time) VALUES (?, ?, ?, NOW())", [$username, $_SERVER['REMOTE_ADDR'], $success ? 1 : 0]);
 }

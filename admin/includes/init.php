@@ -71,37 +71,21 @@ function check_login() {
  * 获取数据库连接
  */
 function get_db_connection() {
-    global $pdo;
-    if (!isset($pdo)) {
-        try {
-            // 直接使用传统方式连接数据库
-            $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET;
-            $pdo = new PDO(
-                $dsn,
-                DB_USER,
-                DB_PASS,
-                [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::ATTR_EMULATE_PREPARES => false,
-                ]
-            );
-        } catch (PDOException $e) {
-            die('数据库连接失败: ' . $e->getMessage());
-        }
+    static $database = null;
+    if ($database === null) {
+        $database = new Database();
     }
-    return $pdo;
+    return $database->getConnection();
 }
 
 /**
  * 获取网站设置
  */
 function get_site_setting($key, $default = null) {
-    $pdo = get_db_connection();
+    $database = new Database();
     // 尝试新的列名
     try {
-        $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
-        $stmt->execute([$key]);
+        $stmt = $database->query("SELECT setting_value FROM settings WHERE setting_key = ?", [$key]);
         $result = $stmt->fetch();
         if ($result) {
             return $result['setting_value'];
@@ -109,8 +93,7 @@ function get_site_setting($key, $default = null) {
     } catch (Exception $e) {
         // 回退到旧的列名（兼容性）
         try {
-            $stmt = $pdo->prepare("SELECT value FROM settings WHERE name = ?");
-            $stmt->execute([$key]);
+            $stmt = $database->query("SELECT value FROM settings WHERE name = ?", [$key]);
             $result = $stmt->fetch();
             if ($result) {
                 return $result['value'];
@@ -126,16 +109,16 @@ function get_site_setting($key, $default = null) {
  * 设置网站配置
  */
 function set_site_setting($key, $value) {
-    $pdo = get_db_connection();
+    $database = new Database();
     try {
         // 使用新的表结构
-        $stmt = $pdo->prepare("REPLACE INTO settings (setting_key, setting_value) VALUES (?, ?)");
-        return $stmt->execute([$key, $value]);
+        $stmt = $database->query("REPLACE INTO settings (setting_key, setting_value) VALUES (?, ?)", [$key, $value]);
+        return true;
     } catch (Exception $e) {
         // 回退到旧的表结构
         try {
-            $stmt = $pdo->prepare("REPLACE INTO settings (name, value) VALUES (?, ?)");
-            return $stmt->execute([$key, $value]);
+            $stmt = $database->query("REPLACE INTO settings (name, value) VALUES (?, ?)", [$key, $value]);
+            return true;
         } catch (Exception $e2) {
             return false;
         }
