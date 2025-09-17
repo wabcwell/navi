@@ -79,7 +79,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         switch ($icon_type) {
             case 'font':
-                $icon_data['icon_fontawesome'] = trim($_POST['font_icon']);
+                // 保存完整的图标类名（带fa-前缀）
+                $icon_name = trim($_POST['font_icon']);
+                $icon_data['icon_fontawesome'] = $icon_name;
                 $icon_data['icon_fontawesome_color'] = trim($_POST['icon_color']);
                 break;
             case 'url':
@@ -116,6 +118,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $formData = $_POST;
     }
 }
+
+// 引入 Font Awesome 图标列表
+require_once '../includes/fontawesome-icons.php';
+
+// 将PHP中的图标列表转换为JavaScript变量
+$fontAwesomeIcons = getFontAwesomeIcons();
 
 include '../templates/header.php';
 ?>
@@ -205,7 +213,7 @@ include '../templates/header.php';
                                     <label for="font_icon" class="form-label">选择图标</label>
                                     <div class="input-group">
                                         <input type="text" class="form-control" id="font_icon" name="font_icon" 
-                                               placeholder="输入图标名称，如: folder" value="folder">
+                                               placeholder="输入图标名称，如: fa-folder" value="fa-folder">
                                         <button type="button" class="btn btn-outline-secondary" onclick="openIconPicker()">
                                             <i class="bi bi-grid-3x3-gap"></i>
                                         </button>
@@ -290,6 +298,9 @@ include '../templates/header.php';
 </div>
 
 <script>
+// 从PHP获取Font Awesome图标列表
+const fontAwesomeIcons = <?php echo json_encode($fontAwesomeIcons); ?>;
+
 document.getElementById('name').addEventListener('input', function() {
     var name = this.value;
     var slug = name.toLowerCase()
@@ -334,15 +345,17 @@ function updateIconPreview() {
     
     switch(iconType) {
         case 'font':
-            const iconName = document.getElementById('font_icon').value || 'folder';
+            const iconValue = document.getElementById('font_icon').value || 'fa-folder';
+            // 使用完整的图标类名（带fa-前缀）
+            const iconName = iconValue.replace(/^fa-/, '');
             const iconColor = document.getElementById('icon_color').value;
             previewContainer.innerHTML = `<i class="fas fa-${iconName} fa-3x" style="color: ${iconColor};"></i>`;
             previewText.textContent = `Font Awesome: ${iconName}`;
-            document.getElementById('final_icon').value = iconName;
+            document.getElementById('final_icon').value = iconValue;
             break;
             
         case 'upload':
-            // 预览模块只预览已上传的服务器图片，完全解耦
+            // 预览模块只预览已上传的服务器图片，完全解藕
             const uploadedPath = document.getElementById('uploaded_icon_path').value;
             if (uploadedPath) {
                 updateUploadedIconPreview(uploadedPath);
@@ -370,37 +383,55 @@ function updateIconPreview() {
 
 // Font Awesome 图标选择器
 function openIconPicker() {
-    const modal = new bootstrap.Modal(document.createElement('div'));
+    // 创建模态框容器
     const modalDiv = document.createElement('div');
     modalDiv.className = 'modal fade';
+    modalDiv.tabIndex = -1;
+    modalDiv.setAttribute('aria-hidden', 'true');
+    
+    // 构建图标网格HTML
+    let iconGridHTML = '';
+    fontAwesomeIcons.forEach(icon => {
+        iconGridHTML += `
+            <div class="col-2">
+                <button type="button" class="btn btn-outline-secondary w-100 icon-btn" 
+                        onclick="selectIcon('${icon}')" title="${icon}">
+                    <i class="fas fa-${icon} fa-lg"></i>
+                </button>
+            </div>`;
+    });
+    
+    // 设置模态框内容
     modalDiv.innerHTML = `
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">选择 Font Awesome 图标</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <input type="text" class="form-control" id="iconSearch" placeholder="搜索图标...">
+                        <input type="text" class="form-control" id="iconSearch" placeholder="搜索图标... (使用英文单词搜索)">
                     </div>
                     <div class="row g-2" id="iconGrid" style="max-height: 400px; overflow-y: auto;">
-                        ${getFontAwesomeIcons().map(icon => `
-                            <div class="col-2">
-                                <button type="button" class="btn btn-outline-secondary w-100 icon-btn" 
-                                        onclick="selectIcon('${icon}')" title="${icon}">
-                                    <i class="fas fa-${icon} fa-lg"></i>
-                                </button>
-                            </div>
-                        `).join('')}
+                        ${iconGridHTML}
                     </div>
                 </div>
             </div>
         </div>
     `;
+    
+    // 添加到页面body中
     document.body.appendChild(modalDiv);
+    
+    // 初始化并显示模态框
     const modalInstance = new bootstrap.Modal(modalDiv);
     modalInstance.show();
+    
+    // 添加模态框隐藏事件监听器
+    modalDiv.addEventListener('hidden.bs.modal', function() {
+        modalDiv.remove();
+    });
     
     // 搜索功能
     document.getElementById('iconSearch').addEventListener('input', function() {
@@ -419,33 +450,21 @@ function openIconPicker() {
 
 // 选择图标
 function selectIcon(iconName) {
-    document.getElementById('font_icon').value = iconName;
+    // 保存完整的图标类名（包含fa-前缀）
+    document.getElementById('font_icon').value = 'fa-' + iconName;
     updateIconPreview();
-    document.querySelector('.modal').remove();
-}
-
-// Font Awesome 图标列表
-function getFontAwesomeIcons() {
-    return [
-        'folder', 'folder-open', 'file', 'file-alt', 'file-code', 'file-text', 'archive',
-        'home', 'building', 'store', 'warehouse', 'industry', 'city', 'map-marker-alt',
-        'user', 'users', 'user-friends', 'user-tie', 'user-graduate', 'user-cog',
-        'heart', 'star', 'bookmark', 'thumbs-up', 'award', 'trophy', 'medal',
-        'cog', 'tools', 'wrench', 'hammer', 'screwdriver', 'cogs', 'sliders-h',
-        'chart-bar', 'chart-line', 'chart-pie', 'analytics', 'poll', 'tachometer-alt',
-        'shopping-cart', 'shopping-bag', 'gift', 'credit-card', 'money-bill-wave',
-        'camera', 'image', 'images', 'photo-video', 'film', 'music', 'play',
-        'book', 'books', 'graduation-cap', 'school', 'university', 'chalkboard-teacher',
-        'laptop', 'desktop', 'tablet-alt', 'mobile-alt', 'server', 'database',
-        'globe', 'network-wired', 'wifi', 'broadcast-tower', 'satellite',
-        'car', 'bus', 'train', 'plane', 'ship', 'rocket', 'bicycle',
-        'coffee', 'utensils', 'pizza-slice', 'ice-cream', 'cocktail',
-        'gamepad', 'dice', 'puzzle-piece', 'chess', 'headphones',
-        'envelope', 'phone', 'fax', 'mail-bulk', 'paper-plane',
-        'lock', 'key', 'shield-alt', 'fire-extinguisher', 'first-aid',
-        'calendar', 'clock', 'stopwatch', 'hourglass-half', 'bell',
-        'lightbulb', 'eye', 'search', 'filter', 'sort', 'download', 'upload'
-    ];
+    
+    // 正确隐藏模态框，确保背景遮罩层也被清除
+    const modalElement = document.querySelector('.modal');
+    if (modalElement) {
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) {
+            modalInstance.hide();
+        } else {
+            // 如果实例不存在，直接移除元素
+            modalElement.remove();
+        }
+    }
 }
 
 // 事件监听
@@ -461,7 +480,7 @@ document.getElementById('icon_file').addEventListener('change', function() {
         uploadBtn.disabled = false;
         uploadBtn.innerHTML = '<i class="bi bi-upload"></i> 上传';
         statusDiv.innerHTML = ''; // 清除之前的状态信息
-        // 文件选择完全解耦：只控制上传按钮状态，不影响预览
+        // 文件选择完全解藕：只控制上传按钮状态，不影响预览
     } else {
         uploadBtn.disabled = true;
     }
@@ -525,7 +544,7 @@ document.getElementById('upload_btn').addEventListener('click', function() {
                     statusDiv.innerHTML = '';
                 }, 3000);
                 
-                // 更新预览：只使用服务器返回的图片URL，完全解耦
+                // 更新预览：只使用服务器返回的图片URL，完全解藕
                 updateUploadedIconPreview(data.path);
                 
                 // 清除文件输入框的本地文件选择（不影响预览，只是清理界面）
@@ -556,7 +575,7 @@ document.getElementById('upload_btn').addEventListener('click', function() {
     });
 });
 
-// 更新已上传图标的预览（完全解耦，只负责显示服务器图片URL）
+// 更新已上传图标的预览（完全解藕，只负责显示服务器图片URL）
 function updateUploadedIconPreview(filePath) {
     const previewContainer = document.getElementById('icon_preview');
     const previewText = document.getElementById('icon_preview_text');
@@ -575,11 +594,13 @@ document.querySelector('form').addEventListener('submit', function() {
     
     switch(iconType) {
         case 'font':
-            const iconName = document.getElementById('font_icon').value;
-            const iconColor = document.getElementById('font_color').value;
+            const iconValue = document.getElementById('font_icon').value;
+            // 使用完整的图标类名（带fa-前缀）
+            const iconName = iconValue.replace(/^fa-/, '');
+            const iconColor = document.getElementById('icon_color').value;
             document.getElementById('final_icon').value = JSON.stringify({
                 type: 'font',
-                name: iconName,
+                name: iconValue,
                 color: iconColor
             });
             break;
