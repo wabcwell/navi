@@ -4,7 +4,7 @@ require_once '../includes/fontawesome-icons.php';
 
 // 检查登录状态
 if (!is_logged_in()) {
-    header('Location: ../index.php');
+    header('Location: ../login.php');
     exit();
 }
 
