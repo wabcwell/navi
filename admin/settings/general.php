@@ -50,7 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $site_icon = get_site_setting('site_icon');
     if (isset($_FILES['site_icon']) && $_FILES['site_icon']['error'] === UPLOAD_ERR_OK) {
         $fileUpload = get_file_upload_manager('settings');
-        $upload_result = $fileUpload->upload($_FILES['site_icon'], ['image/jpeg', 'image/png', 'image/x-icon']);
+        $fileUpload->setAllowedTypes(['jpg', 'jpeg', 'png', 'ico']);
+        $upload_result = $fileUpload->upload($_FILES['site_icon']);
         if ($upload_result['success']) {
             // 删除旧图标
             if ($site_icon) {
@@ -88,7 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($site_logo_type === 'image') {
         if (isset($_FILES['site_logo']) && $_FILES['site_logo']['error'] === UPLOAD_ERR_OK) {
             $fileUpload = get_file_upload_manager('settings');
-            $upload_result = $fileUpload->upload($_FILES['site_logo'], ['image/jpeg', 'image/png']);
+            $fileUpload->setAllowedTypes(['jpg', 'jpeg', 'png']);
+        $upload_result = $fileUpload->upload($_FILES['site_logo']);
             if ($upload_result['success']) {
                 $site_logo = $upload_result['file_name'];
                 $site_logo_image = '/uploads/settings/' . $upload_result['file_name']; // 保存相对于根目录的路径
@@ -120,7 +122,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 处理背景图片上传
     if ($background_type === 'image' && isset($_FILES['background_image_file']) && $_FILES['background_image_file']['error'] === UPLOAD_ERR_OK) {
         $fileUpload = get_file_upload_manager('backgrounds');
-        $upload_result = $fileUpload->upload($_FILES['background_image_file'], ['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+        $fileUpload->setAllowedTypes(['jpg', 'jpeg', 'png', 'gif', 'webp']);
+        $upload_result = $fileUpload->upload($_FILES['background_image_file']);
         if ($upload_result['success']) {
             // 删除旧背景图片
             if ($background_image && strpos($background_image, 'http') !== 0) {
