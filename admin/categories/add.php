@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $icon_data['icon_fontawesome_color'] = trim($_POST['icon_color']);
                 break;
             case 'url':
-                $icon_data['icon_color_url'] = trim($_POST['icon_url']);
+                $icon_data['icon_url'] = trim($_POST['icon_url']);
                 break;
             case 'upload':
                 // 使用已上传的图片路径（通过AJAX上传）

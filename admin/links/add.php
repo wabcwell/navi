@@ -1,7 +1,9 @@
 <?php
-require_once '../includes/init.php';
-require_once '../includes/auth.php';
-require_once '../includes/functions.php';
+require_once '../includes/load.php';
+require_once '../includes/fontawesome-icons.php';
+
+// 获取Font Awesome图标列表
+$fontAwesomeIcons = getFontAwesomeIcons();
 
 // 检查登录状态
 if (!is_logged_in()) {
@@ -116,18 +118,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $icon_fontawesome = $_POST['icon_fontawesome'] ?? '';
             $icon_color = $_POST['icon_color'] ?? '';
             $icon_url = $_POST['icon_url'] ?? '';
-            $icon_color_url = $icon_url; // 保持与旧字段兼容
             
             // 处理不同类型的图标
             $icon_data = [
                 'icon_type' => $icon_type,
                 'icon_fontawesome' => $icon_fontawesome,
                 'icon_fontawesome_color' => $icon_color,
-                'icon_color_url' => $icon_color_url,
-                'icon_color_upload' => $icon_filename // 上传的图片文件名
+                'icon_url' => $icon_url,
+                'icon_upload' => $icon_filename // 上传的图片文件名
             ];
             
-            $stmt = $pdo->prepare("INSERT INTO navigation_links (title, url, description, category_id, icon_type, icon_fontawesome, icon_fontawesome_color, icon_color_url, icon_color_upload, order_index, is_active, click_count, created_at, updated_at)
+            $stmt = $pdo->prepare("INSERT INTO navigation_links (title, url, description, category_id, icon_type, icon_fontawesome, icon_fontawesome_color, icon_url, icon_upload, order_index, is_active, click_count, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())");
             $stmt->execute([
                 $title,
@@ -137,8 +138,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $icon_data['icon_type'],
                 $icon_data['icon_fontawesome'],
                 $icon_data['icon_fontawesome_color'],
-                $icon_data['icon_color_url'],
-                $icon_data['icon_color_upload'],
+                $icon_data['icon_url'],
+                $icon_data['icon_upload'],
                 $display_order,
                 $is_active
             ]);
@@ -352,6 +353,9 @@ include '../templates/header.php';
 
 
 <script>
+// Font Awesome 图标列表
+const fontAwesomeIcons = <?php echo json_encode($fontAwesomeIcons); ?>;
+
 // 图标类型切换
 function updateIconSections() {
     const iconType = document.querySelector('input[name="icon_type"]:checked').value;
@@ -435,74 +439,89 @@ document.getElementById('icon_fontawesome_input').addEventListener('input', upda
 document.getElementById('icon_url').addEventListener('input', updatePreview);
 document.getElementById('icon_upload').addEventListener('change', updatePreview);
 
-// Font Awesome 图标选择器
-let iconModal = null;
+// 打开图标选择器
+document.getElementById('openIconPicker').addEventListener('click', openIconPicker);
 
-document.getElementById('openIconPicker').addEventListener('click', function() {
-    if (!iconModal) {
-        const modalHtml = `
-            <div class="modal fade" id="iconModal" tabindex="-1">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">选择 Font Awesome 图标</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="row g-2" id="iconGrid">
-                                ${getFontAwesomeIcons().map(icon => `
-                                    <div class="col-2">
-                                        <button type="button" class="btn btn-outline-secondary icon-btn w-100" data-icon="${icon}">
-                                            <i class="fas ${icon}"></i>
-                                        </button>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
+// 打开图标选择器函数
+function openIconPicker() {
+    // 创建模态框容器
+    const modalDiv = document.createElement('div');
+    modalDiv.className = 'modal fade';
+    modalDiv.tabIndex = -1;
+    modalDiv.setAttribute('aria-hidden', 'true');
+    
+    // 构建图标网格HTML
+    let iconGridHTML = '';
+    fontAwesomeIcons.forEach(icon => {
+        iconGridHTML += `
+            <div class="col-2">
+                <button type="button" class="btn btn-outline-secondary w-100 icon-btn" 
+                        onclick="selectIcon('${icon}')" title="${icon}">
+                    <i class="fas fa-${icon} fa-lg"></i>
+                </button>
+            </div>`;
+    });
+    
+    // 设置模态框内容
+    modalDiv.innerHTML = `
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">选择 Font Awesome 图标</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input type="text" class="form-control" id="iconSearch" placeholder="搜索图标... (使用英文单词搜索)">
+                    </div>
+                    <div class="row g-2" id="iconGrid" style="max-height: 400px; overflow-y: auto;">
+                        ${iconGridHTML}
                     </div>
                 </div>
             </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        iconModal = new bootstrap.Modal(document.getElementById('iconModal'));
-        
-        // 图标选择事件
-        document.querySelectorAll('#iconGrid .icon-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const icon = this.dataset.icon;
-                document.getElementById('icon_fontawesome_input').value = icon;
-                updatePreview();
-                iconModal.hide();
-            });
-        });
-    }
+        </div>
+    `;
     
-    iconModal.show();
-});
+    // 添加到页面body中
+    document.body.appendChild(modalDiv);
+    
+    // 初始化并显示模态框
+    const modalInstance = new bootstrap.Modal(modalDiv);
+    modalInstance.show();
+    
+    // 添加模态框隐藏事件监听器
+    modalDiv.addEventListener('hidden.bs.modal', function() {
+        modalDiv.remove();
+    });
+    
+    // 搜索功能
+    document.getElementById('iconSearch').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const buttons = document.querySelectorAll('.icon-btn');
+        buttons.forEach(btn => {
+            const iconName = btn.getAttribute('title');
+            btn.parentElement.style.display = iconName.includes(searchTerm) ? 'block' : 'none';
+        });
+    });
+}
 
-// Font Awesome 图标列表
-function getFontAwesomeIcons() {
-    return [
-        'fa-home', 'fa-user', 'fa-cog', 'fa-envelope', 'fa-phone', 'fa-map-marker-alt',
-        'fa-heart', 'fa-star', 'fa-book', 'fa-file', 'fa-folder', 'fa-folder-open',
-        'fa-download', 'fa-upload', 'fa-share', 'fa-link', 'fa-unlink', 'fa-edit',
-        'fa-trash', 'fa-search', 'fa-filter', 'fa-sort', 'fa-list', 'fa-th',
-        'fa-chart-bar', 'fa-chart-line', 'fa-chart-pie', 'fa-calendar', 'fa-clock',
-        'fa-shopping-cart', 'fa-credit-card', 'fa-money-bill', 'fa-tag', 'fa-tags',
-        'fa-image', 'fa-photo-video', 'fa-camera', 'fa-video', 'fa-music', 'fa-play',
-        'fa-cloud', 'fa-server', 'fa-database', 'fa-code', 'fa-terminal', 'fa-laptop',
-        'fa-mobile-alt', 'fa-tablet-alt', 'fa-desktop', 'fa-wifi', 'fa-globe',
-        'fa-shield-alt', 'fa-lock', 'fa-key', 'fa-eye', 'fa-eye-slash', 'fa-bell',
-        'fa-flag', 'fa-bookmark', 'fa-thumbs-up', 'fa-thumbs-down', 'fa-smile',
-        'fa-frown', 'fa-meh', 'fa-save', 'fa-print', 'fa-copy', 'fa-paste',
-        'fa-cut', 'fa-undo', 'fa-redo', 'fa-sync', 'fa-refresh', 'fa-spinner',
-        'fa-check', 'fa-times', 'fa-plus', 'fa-minus', 'fa-question', 'fa-info',
-        'fa-exclamation', 'fa-exclamation-triangle', 'fa-exclamation-circle',
-        'fa-github', 'fa-gitlab', 'fa-bitbucket', 'fa-stack-overflow', 'fa-reddit',
-        'fa-twitter', 'fa-facebook', 'fa-instagram', 'fa-linkedin', 'fa-youtube',
-        'fa-discord', 'fa-slack', 'fa-telegram', 'fa-whatsapp', 'fa-weixin'
-    ];
+// 选择图标
+function selectIcon(iconName) {
+    // 保存完整的图标类名（包含fa-前缀）
+    document.getElementById('icon_fontawesome_input').value = 'fa-' + iconName;
+    updatePreview();
+    
+    // 正确隐藏模态框，确保背景遮罩层也被清除
+    const modalElement = document.querySelector('.modal');
+    if (modalElement) {
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) {
+            modalInstance.hide();
+        } else {
+            // 如果实例不存在，直接移除元素
+            modalElement.remove();
+        }
+    }
 }
 
 // 初始化
