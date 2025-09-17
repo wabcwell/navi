@@ -90,10 +90,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'upload':
                 // 使用已上传的图片路径（通过AJAX上传）
                 if (!empty($_POST['uploaded_icon_path'])) {
-                    $icon_data['icon_color_upload'] = $_POST['uploaded_icon_path'];
+                    $icon_data['icon_upload'] = $_POST['uploaded_icon_path'];
                 }
                 break;
         }
+        
+        // 同步更新所有图标相关字段值（实现第7点要求）
+        // 这样即使用户切换过其他tab页，对应的字段值也会被正确保存
+        $icon_data['icon_fontawesome'] = trim($_POST['icon_fontawesome']);
+        $icon_data['icon_fontawesome_color'] = trim($_POST['icon_fontawesome_color']);
+        $icon_data['icon_upload'] = trim($_POST['icon_upload']);
+        $icon_data['icon_url'] = trim($_POST['icon_url']);
         
         // 准备分类数据
         $categoryData = array_merge([
@@ -256,6 +263,11 @@ include '../templates/header.php';
                         <input type="hidden" id="final_icon" name="final_icon" value="">
                         <input type="hidden" id="final_icon_type" name="final_icon_type" value="font">
                         <input type="hidden" id="uploaded_icon_path" name="uploaded_icon_path" value="">
+                        <!-- 添加缺失的隐藏字段以存储各个图标的值 -->
+                        <input type="hidden" id="icon_fontawesome" name="icon_fontawesome" value="">
+                        <input type="hidden" id="icon_fontawesome_color" name="icon_fontawesome_color" value="#007bff">
+                        <input type="hidden" id="icon_upload" name="icon_upload" value="">
+                        <input type="hidden" id="icon_url_input" name="icon_url" value="">
                     </div>
                     
                     <!-- 颜色选择器移动到了Font Awesome部分的同一行 -->
@@ -300,6 +312,14 @@ include '../templates/header.php';
 <script>
 // 从PHP获取Font Awesome图标列表
 const fontAwesomeIcons = <?php echo json_encode($fontAwesomeIcons); ?>;
+
+// 创建iconParams对象存储图标相关参数
+const iconParams = {
+    icon_fontawesome: document.getElementById('font_icon').value || 'fa-folder',
+    icon_fontawesome_color: document.getElementById('icon_color').value || '#007bff',
+    icon_upload: document.getElementById('uploaded_icon_path').value || '',
+    icon_url: document.getElementById('icon_url').value || ''
+};
 
 document.getElementById('name').addEventListener('input', function() {
     var name = this.value;
@@ -452,6 +472,7 @@ function openIconPicker() {
 function selectIcon(iconName) {
     // 保存完整的图标类名（包含fa-前缀）
     document.getElementById('font_icon').value = 'fa-' + iconName;
+    iconParams.icon_fontawesome = 'fa-' + iconName;  // 同步更新iconParams
     updateIconPreview();
     
     // 正确隐藏模态框，确保背景遮罩层也被清除
@@ -468,9 +489,18 @@ function selectIcon(iconName) {
 }
 
 // 事件监听
-document.getElementById('font_icon').addEventListener('input', updateIconPreview);
-document.getElementById('icon_color').addEventListener('input', updateIconPreview);
-document.getElementById('icon_url').addEventListener('input', updateIconPreview);
+document.getElementById('font_icon').addEventListener('input', function() {
+    iconParams.icon_fontawesome = this.value;  // 同步更新iconParams
+    updateIconPreview();
+});
+document.getElementById('icon_color').addEventListener('input', function() {
+    iconParams.icon_fontawesome_color = this.value;  // 同步更新iconParams
+    updateIconPreview();
+});
+document.getElementById('icon_url').addEventListener('input', function() {
+    iconParams.icon_url = this.value;  // 同步更新iconParams
+    updateIconPreview();
+});
 document.getElementById('icon_file').addEventListener('change', function() {
     const uploadBtn = document.getElementById('upload_btn');
     const fileInput = this;
@@ -539,6 +569,9 @@ document.getElementById('upload_btn').addEventListener('click', function() {
                 const fileName = data.file_name || data.path.split('/').pop(); // 优先使用返回的文件名
                 document.getElementById('uploaded_file_display').value = fileName;
                 
+                // 同步更新iconParams对象
+                iconParams.icon_upload = data.path;
+                
                 // 3秒后清除状态信息
                 setTimeout(() => {
                     statusDiv.innerHTML = '';
@@ -588,16 +621,36 @@ function updateUploadedIconPreview(filePath) {
 }
 
 // 表单提交前设置最终值
-document.querySelector('form').addEventListener('submit', function() {
+document.querySelector('form').addEventListener('submit', function(e) {
     const iconType = document.querySelector('input[name="icon_type"]:checked').value;
     document.getElementById('final_icon_type').value = iconType;
     
+    // 检查网络地址标签页但未填写地址的情况
+    if (iconType === 'url' && !document.getElementById('icon_url').value.trim()) {
+        e.preventDefault();
+        alert('请填写网络图标地址');
+        return;
+    }
+    
+    // 检查上传图片标签页但未上传图片的情况（实现第9点要求）
+    if (iconType === 'upload' && (!iconParams.icon_upload || iconParams.icon_upload.trim() === '')) {
+        e.preventDefault();
+        alert('请上传图片文件');
+        return;
+    }
+    
+    // 同步更新所有图标相关字段值到对应的隐藏字段，确保数据库中这些字段都会被更新
+    // 这样即使用户切换过其他tab页，对应的字段值也会被正确保存
+    document.getElementById('icon_fontawesome').value = iconParams.icon_fontawesome;
+    document.getElementById('icon_fontawesome_color').value = iconParams.icon_fontawesome_color;
+    document.getElementById('icon_upload').value = iconParams.icon_upload;
+    document.getElementById('icon_url_input').value = iconParams.icon_url;
+    
+    // 根据当前选中的标签页设置最终值
     switch(iconType) {
         case 'font':
-            const iconValue = document.getElementById('font_icon').value;
-            // 使用完整的图标类名（带fa-前缀）
-            const iconName = iconValue.replace(/^fa-/, '');
-            const iconColor = document.getElementById('icon_color').value;
+            const iconValue = iconParams.icon_fontawesome;
+            const iconColor = iconParams.icon_fontawesome_color;
             document.getElementById('final_icon').value = JSON.stringify({
                 type: 'font',
                 name: iconValue,
@@ -605,14 +658,14 @@ document.querySelector('form').addEventListener('submit', function() {
             });
             break;
         case 'upload':
-            // 使用已上传的图片路径（通过AJAX上传）
-            const uploadedPath = document.getElementById('uploaded_icon_path').value;
+            // 使用已上传的图片路径
+            const uploadedPath = iconParams.icon_upload;
             if (uploadedPath) {
                 document.getElementById('final_icon').value = uploadedPath;
             }
             break;
         case 'url':
-            document.getElementById('final_icon').value = document.getElementById('icon_url').value;
+            document.getElementById('final_icon').value = iconParams.icon_url;
             break;
     }
 });

@@ -207,8 +207,15 @@ include '../templates/header.php';
                                             
                                         case 'upload':
                                             // 显示上传的图片
-                                            if (!empty($category['icon_upload'])): ?>
-                                                <img src="/uploads/categories/<?php echo htmlspecialchars($category['icon_upload']); ?>" 
+                                            if (!empty($category['icon_upload'])): 
+                                                // 检查icon_upload是否已经包含/uploads/categories/前缀
+                                                if (strpos($category['icon_upload'], '/uploads/categories/') === 0) {
+                                                    $iconSrc = htmlspecialchars($category['icon_upload']);
+                                                } else {
+                                                    $iconSrc = '/uploads/categories/' . htmlspecialchars($category['icon_upload']);
+                                                }
+                                                ?>
+                                                <img src="<?php echo $iconSrc; ?>" 
                                                      alt="<?php echo htmlspecialchars($category['name'] ?? ''); ?>" 
                                                      class="image-preview" style="width: 40px; height: 40px; border-radius: 4px;">
                                             <?php else: ?>
