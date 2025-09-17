@@ -1,6 +1,5 @@
 <?php
-require_once 'includes/init.php';
-require_once 'includes/auth.php';
+require_once 'includes/load.php';
 
 $error = '';
 

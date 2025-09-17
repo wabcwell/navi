@@ -81,11 +81,21 @@ class FileUpload {
                 throw new Exception('文件上传失败');
             }
             
+            // 根据上传类型生成正确的URL路径
+            $urlPath = '/uploads/';
+            if (isset(self::UPLOAD_DIRS[$this->uploadType])) {
+                $urlPath .= self::UPLOAD_DIRS[$this->uploadType] . '/';
+            }
+            if ($subDir) {
+                $urlPath .= $subDir . '/';
+            }
+            $urlPath .= $fileName;
+            
             return [
                 'success' => true,
                 'file_name' => $fileName,
                 'file_path' => $fullPath,
-                'file_url' => '/uploads/' . ($subDir ? $subDir . '/' : '') . $fileName,
+                'file_url' => $urlPath,
                 'file_size' => $file['size'],
                 'file_type' => $fileExtension
             ];

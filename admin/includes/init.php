@@ -12,6 +12,9 @@ if (!defined('ABSPATH')) {
 // 引入根目录配置文件
 require_once ABSPATH . 'config.php';
 
+// 引入Database类（确保在使用前引入）
+require_once __DIR__ . '/Database.php';
+
 // 定义管理后台常量
 if (!defined('ADMIN_PATH')) {
     define('ADMIN_PATH', __DIR__ . '/../');
