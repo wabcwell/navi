@@ -180,34 +180,80 @@ include '../templates/header.php';
                                            min="0" style="width: 60px;">
                                 </td>
                                 <td>
-                                    <?php if ($category['icon']): ?>
-                                        <?php 
-                                        // 检查是否为Font Awesome类名
-                                        $icon = trim($category['icon']);
-                                        if (preg_match('/^(fa-|fas\s|far\s|fab\s)/i', $icon)): 
-                                            $displayIcon = $icon;
-                                            if (!preg_match('/^(fas|far|fab)\s/i', $icon)) {
-                                                $displayIcon = 'fas ' . $icon;
-                                            }
-                                        ?>
-                                            <i class="<?php echo htmlspecialchars($displayIcon ?? ''); ?>" style="font-size: 1.5rem; color: <?php echo htmlspecialchars($category['color'] ?? '#007bff'); ?>;"></i>
-                                        <?php 
-                                        // 检查是否为Bootstrap图标类名
-                                        elseif (strpos($icon, 'bi-') === 0): ?>
-                                            <i class="<?php echo htmlspecialchars($icon ?? ''); ?>" style="font-size: 1.5rem; color: <?php echo htmlspecialchars($category['color'] ?? '#007bff'); ?>;"></i>
-                                        <?php 
-                                        // 否则当作图片文件处理
-                                        else: ?>
-                                            <img src="/uploads/categories/<?php echo $category['icon']; ?>" 
-                                                 alt="<?php echo htmlspecialchars($category['name'] ?? ''); ?>" 
-                                                 class="image-preview" style="width: 40px; height: 40px; border-radius: 4px;">
-                                        <?php endif; ?>
-                                    <?php else: ?>
-                                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" 
-                                             style="width: 40px; height: 40px;">
-                                            <i class="bi bi-folder" style="font-size: 1.2rem;"></i>
-                                        </div>
-                                    <?php endif; ?>
+                                    <?php 
+                                    // 根据icon_type字段显示不同类型的图标
+                                    $iconType = $category['icon_type'] ?? 'fontawesome';
+                                    
+                                    switch ($iconType) {
+                                        case 'fontawesome':
+                                            // 显示Font Awesome图标
+                                            if (!empty($category['icon_fontawesome'])):
+                                                $iconClass = trim($category['icon_fontawesome']);
+                                                // 确保有正确的前缀
+                                                if (!preg_match('/^(fas|far|fab)\s/i', $iconClass)) {
+                                                    $iconClass = 'fas ' . $iconClass;
+                                                }
+                                                $iconColor = $category['icon_fontawesome_color'] ?? $category['color'] ?? '#007bff';
+                                                ?>
+                                                <i class="<?php echo htmlspecialchars($iconClass); ?>" 
+                                                   style="font-size: 1.5rem; color: <?php echo htmlspecialchars($iconColor); ?>;"></i>
+                                            <?php else: ?>
+                                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-folder" style="font-size: 1.2rem;"></i>
+                                                </div>
+                                            <?php endif;
+                                            break;
+                                            
+                                        case 'upload':
+                                            // 显示上传的图片
+                                            if (!empty($category['icon_upload'])): ?>
+                                                <img src="/uploads/categories/<?php echo htmlspecialchars($category['icon_upload']); ?>" 
+                                                     alt="<?php echo htmlspecialchars($category['name'] ?? ''); ?>" 
+                                                     class="image-preview" style="width: 40px; height: 40px; border-radius: 4px;">
+                                            <?php else: ?>
+                                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-folder" style="font-size: 1.2rem;"></i>
+                                                </div>
+                                            <?php endif;
+                                            break;
+                                            
+                                        case 'url':
+                                            // 显示URL图片
+                                            if (!empty($category['icon_url'])): ?>
+                                                <img src="<?php echo htmlspecialchars($category['icon_url']); ?>" 
+                                                     alt="<?php echo htmlspecialchars($category['name'] ?? ''); ?>" 
+                                                     class="image-preview" style="width: 40px; height: 40px; border-radius: 4px;">
+                                            <?php else: ?>
+                                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-folder" style="font-size: 1.2rem;"></i>
+                                                </div>
+                                            <?php endif;
+                                            break;
+                                            
+                                        default:
+                                            // 默认显示Font Awesome图标
+                                            if (!empty($category['icon_fontawesome'])):
+                                                $iconClass = trim($category['icon_fontawesome']);
+                                                // 确保有正确的前缀
+                                                if (!preg_match('/^(fas|far|fab)\s/i', $iconClass)) {
+                                                    $iconClass = 'fas ' . $iconClass;
+                                                }
+                                                $iconColor = $category['icon_fontawesome_color'] ?? $category['color'] ?? '#007bff';
+                                                ?>
+                                                <i class="<?php echo htmlspecialchars($iconClass); ?>" 
+                                                   style="font-size: 1.5rem; color: <?php echo htmlspecialchars($iconColor); ?>;"></i>
+                                            <?php else: ?>
+                                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-folder" style="font-size: 1.2rem;"></i>
+                                                </div>
+                                            <?php endif;
+                                            break;
+                                    }
+                                    ?>
                                 </td>
                                 <td>
                                     <strong><?php echo htmlspecialchars($category['name'] ?? ''); ?></strong>

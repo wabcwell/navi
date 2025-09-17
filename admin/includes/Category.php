@@ -173,7 +173,7 @@ class Category {
     public function delete($id) {
         try {
             // 检查是否有链接使用此分类
-            $stmt = $this->database->query("SELECT COUNT(*) FROM links WHERE category_id = ?", [$id]);
+            $stmt = $this->database->query("SELECT COUNT(*) FROM navigation_links WHERE category_id = ?", [$id]);
             $count = $stmt->fetchColumn();
             
             if ($count > 0) {
