@@ -273,7 +273,7 @@ include '../templates/header.php';
                                             
                                             if ($iconUpload) {
                                                 ?>
-                                                <img src="/uploads/links/<?php echo htmlspecialchars($iconUpload); ?>" 
+                                                <img src="<?php echo htmlspecialchars($iconUpload); ?>" 
                                                      alt="<?php echo htmlspecialchars($link['title']); ?>" 
                                                      class="image-preview" style="width: 32px; height: 32px; border-radius: 4px;">
                                                 <?php
