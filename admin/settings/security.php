@@ -1,5 +1,6 @@
 <?php
 require_once '../includes/load.php';
+require_once '../includes/User.php';
 
 // 检查登录状态
 if (!is_logged_in()) {
@@ -9,6 +10,9 @@ if (!is_logged_in()) {
 
 // 获取设置管理实例
 $settingsManager = get_settings_manager();
+
+// 创建 User 实例
+$userManager = new User();
 
 // 处理密码修改
 if (isset($_POST['change_password'])) {
@@ -33,11 +37,16 @@ if (isset($_POST['change_password'])) {
     }
     
     if (empty($errors)) {
-        $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-        $settingsManager->set('admin_password', $hashed_password);
-        $_SESSION['success'] = '密码修改成功';
-        header('Location: security.php');
-        exit();
+        try {
+            // 使用 User 类更新管理员密码（假设管理员用户ID为1）
+            $userManager->updateUser(1, ['password' => $new_password]);
+            
+            $_SESSION['success'] = '密码修改成功';
+            header('Location: security.php');
+            exit();
+        } catch (Exception $e) {
+            $errors[] = '密码修改失败: ' . $e->getMessage();
+        }
     }
 }
 
