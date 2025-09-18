@@ -89,8 +89,6 @@ $page_title = '安全设置';
 include '../templates/header.php';
 ?>
 
-
-
 <!-- 顶部导航栏 -->
 <div class="row mb-4">
     <div class="col-12">
@@ -124,6 +122,7 @@ include '../templates/header.php';
             </div>
         <?php endif; ?>
         
+        <!-- 密码修改表单 -->
         <div class="card mb-4">
             <div class="card-body">
                 <form method="POST">
@@ -166,139 +165,55 @@ include '../templates/header.php';
             </div>
         </div>
         
+        <!-- 安全设置表单 -->
         <div class="card">
-            <div class="card-body" style="padding: 15px 20px;">
+            <div class="card-body">
                 <form method="POST">
+                    <h5 class="mb-3">安全设置</h5>
+                    
                     <div class="row">
-                        <div class="col-12">
-                            <div class="nav nav-pills">
-                                <a href="general.php" class="nav-link">
-                                    <i class="bi bi-gear"></i> 基本设置
-                                </a>
-                                <a href="security.php" class="nav-link active">
-                                    <i class="bi bi-shield-lock"></i> 安全设置
-                                </a>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="max_login_attempts" class="form-label">最大登录尝试次数</label>
+                                <input type="number" class="form-control" id="max_login_attempts" name="max_login_attempts" 
+                                       value="<?php echo $settingsManager->get('max_login_attempts', 5); ?>" 
+                                       min="1" max="10" required>
+                                <div class="form-text">登录失败多少次后锁定账户</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="lockout_duration" class="form-label">锁定时间(分钟)</label>
+                                <input type="number" class="form-control" id="lockout_duration" name="lockout_duration" 
+                                       value="<?php echo $settingsManager->get('lockout_duration', 30); ?>" 
+                                       min="1" max="60" required>
+                                <div class="form-text">账户被锁定后多长时间自动解锁</div>
                             </div>
                         </div>
-                    </div>
-                
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-body">
-                                    <form method="POST">
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <h5 class="mb-3">管理员账户设置</h5>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="admin_username" class="form-label">管理员用户名</label>
-                                                    <input type="text" class="form-control" id="admin_username" name="admin_username" 
-                                                           value="<?php echo htmlspecialchars($settingsManager->get('admin_username', 'admin')); ?>" 
-                                                           required>
-                                                    <div class="form-text">用于登录后台管理的用户名</div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="admin_email" class="form-label">管理员邮箱</label>
-                                                    <input type="email" class="form-control" id="admin_email" name="admin_email" 
-                                                           value="<?php echo htmlspecialchars($settingsManager->get('admin_email', '')); ?>">
-                                                    <div class="form-text">用于接收系统通知的邮箱地址</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="admin_password" class="form-label">新密码</label>
-                                                    <input type="password" class="form-control" id="admin_password" name="admin_password" 
-                                                           minlength="6">
-                                                    <div class="form-text">留空则不修改密码，至少6位字符</div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="admin_password_confirm" class="form-label">确认新密码</label>
-                                                    <input type="password" class="form-control" id="admin_password_confirm" name="admin_password_confirm" 
-                                                           minlength="6">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <hr>
-                                        <h5 class="mb-3">安全设置</h5>
-                                        
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="session_timeout" class="form-label">会话超时时间(分钟)</label>
-                                                    <input type="number" class="form-control" id="session_timeout" name="session_timeout" 
-                                                           value="<?php echo $settingsManager->get('session_timeout', 30); ?>" 
-                                                           min="1" max="1440" required>
-                                                    <div class="form-text">管理员会话在无操作多长时间后自动过期</div>
-                                                </div>
-                                                
-                                                <div class="mb-3">
-                                                    <label for="max_login_attempts" class="form-label">最大登录尝试次数</label>
-                                                    <input type="number" class="form-control" id="max_login_attempts" name="max_login_attempts" 
-                                                           value="<?php echo $settingsManager->get('max_login_attempts', 5); ?>" 
-                                                           min="1" max="20" required>
-                                                    <div class="form-text">登录失败多少次后锁定账户</div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="col-md-6">
-                                                <div class="mb-3">
-                                                    <label for="login_lockout_duration" class="form-label">登录锁定时长(分钟)</label>
-                                                    <input type="number" class="form-control" id="login_lockout_duration" name="login_lockout_duration" 
-                                                           value="<?php echo $settingsManager->get('login_lockout_duration', 30); ?>" 
-                                                           min="1" max="1440" required>
-                                                    <div class="form-text">账户被锁定后多长时间自动解锁</div>
-                                                </div>
-                                                
-                                                <div class="mb-3">
-                                                    <label for="password_min_length" class="form-label">密码最小长度</label>
-                                                    <input type="number" class="form-control" id="password_min_length" name="password_min_length" 
-                                                           value="<?php echo $settingsManager->get('password_min_length', 6); ?>" 
-                                                           min="4" max="50" required>
-                                                    <div class="form-text">管理员密码的最小字符长度</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="row">
-                                            <div class="col-12">
-                                                <div class="form-check mb-3">
-                                                    <input class="form-check-input" type="checkbox" id="enable_2fa" name="enable_2fa" 
-                                                           value="1" <?php echo $settingsManager->get('enable_2fa', 0) ? 'checked' : ''; ?>>
-                                                    <label class="form-check-label" for="enable_2fa">
-                                                        启用两步验证
-                                                    </label>
-                                                    <div class="form-text">为管理员账户启用两步验证以增强安全性</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="text-end">
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="bi bi-save"></i> 保存设置
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="session_timeout" class="form-label">会话超时时间(分钟)</label>
+                                <input type="number" class="form-control" id="session_timeout" name="session_timeout" 
+                                       value="<?php echo $settingsManager->get('session_timeout', 1800); ?>" 
+                                       min="300" max="7200" required>
+                                <div class="form-text">管理员会话在无操作多长时间后自动过期</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="ip_whitelist" class="form-label">IP白名单</label>
+                                <textarea class="form-control" id="ip_whitelist" name="ip_whitelist" rows="2" 
+                                          placeholder="每行一个IP地址，留空表示允许所有IP"><?php echo htmlspecialchars($settingsManager->get('ip_whitelist', '')); ?></textarea>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="text-center">
+                    <div class="mb-3">
+                        <label for="ip_blacklist" class="form-label">IP黑名单</label>
+                        <textarea class="form-control" id="ip_blacklist" name="ip_blacklist" rows="2" 
+                                  placeholder="每行一个IP地址，留空表示不限制"><?php echo htmlspecialchars($settingsManager->get('ip_blacklist', '')); ?></textarea>
+                    </div>
+                    
+                    <div class="text-end">
                         <button type="submit" name="update_security" class="btn btn-primary">
                             <i class="bi bi-shield-check"></i> 保存安全设置
                         </button>
