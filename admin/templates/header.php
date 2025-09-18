@@ -91,6 +91,10 @@
         </ul>
         
         <div class="sidebar-footer">
+            <a href="/" class="logout-btn" target="_blank" style="margin-bottom: 10px;">
+                <i class="bi bi-house-door"></i>
+                <span>返回前台</span>
+            </a>
             <a href="/admin/logout.php" class="logout-btn" onclick="return confirm('确定要退出吗？')">
                 <i class="bi bi-box-arrow-right"></i>
                 <span>退出登录</span>
