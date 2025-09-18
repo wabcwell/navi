@@ -304,6 +304,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             'upload_allowed_types' => 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar',
             
             // 透明度设置
+            'bg-overlay' => 0.25,
             'header_bg_opacity' => 0.85,
             'category_bg_opacity' => 0.85,
             'links_area_opacity' => 0.85,

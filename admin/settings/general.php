@@ -175,6 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $settingsManager->set('upload_allowed_types', trim($_POST['upload_allowed_types'] ?? 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar'));
         
         // 保存透明度设置
+        $settingsManager->set('bg-overlay', max(0, min(1, floatval($_POST['bg-overlay'] ?? 0.2))));
         $settingsManager->set('header_bg_transparency', max(0, min(1, floatval($_POST['header_bg_transparency'] ?? 0.85))));
         $settingsManager->set('category_bg_transparency', max(0, min(1, floatval($_POST['category_bg_transparency'] ?? 0.85))));
         $settingsManager->set('links_area_transparency', max(0, min(1, floatval($_POST['links_area_transparency'] ?? 0.85))));
@@ -560,6 +561,13 @@ include '../templates/header.php'; ?>
 
                     <div class="row">
                         <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="bg-overlay" class="form-label">整体背景透明度</label>
+                               <input type="range" class="form-range" id="bg-overlay" name="bg-overlay"
+                                      min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('bg-overlay', 0.2); ?>">
+                               <div class="form-text">整个网站背景的遮罩透明度: <span id="bg-overlay_value"><?php echo round($settingsManager->get('bg-overlay', 0.2) * 100); ?>%</span></div>
+                            </div>
+
                             <div class="mb-3">
                                 <label for="header_bg_transparency" class="form-label">标题背景透明度</label>
                                 <input type="range" class="form-range" id="header_bg_transparency" name="header_bg_transparency" 
@@ -1010,16 +1018,18 @@ function toggleLogoType() {
 
 // 透明度滑块实时更新（直接显示透明度值）
 function initTransparencySliders() {
+    // 定义滑块ID和对应的显示值span ID映射
     const transparencySliders = [
-        'header_bg_transparency',
-        'category_bg_transparency',
-        'links_area_transparency',
-        'link_card_transparency'
+        { sliderId: 'bg-overlay', valueId: 'bg-overlay_value' },
+        { sliderId: 'header_bg_transparency', valueId: 'header_transparency_value' },
+        { sliderId: 'category_bg_transparency', valueId: 'category_transparency_value' },
+        { sliderId: 'links_area_transparency', valueId: 'links_area_transparency_value' },
+        { sliderId: 'link_card_transparency', valueId: 'link_card_transparency_value' }
     ];
 
-    transparencySliders.forEach(sliderId => {
-        const slider = document.getElementById(sliderId);
-        const valueDisplay = document.getElementById(sliderId + '_value');
+    transparencySliders.forEach(item => {
+        const slider = document.getElementById(item.sliderId);
+        const valueDisplay = document.getElementById(item.valueId);
         
         if (slider && valueDisplay) {
             // 初始化显示值

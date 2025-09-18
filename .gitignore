@@ -28,5 +28,6 @@ database_update_summary.md
 test_db_connection.php
 AI智障.md
 fontawesome-free-7.0.1-web
+admin\includes\init.php
 # 忽略admin目录下的README.md
 admin/README.md

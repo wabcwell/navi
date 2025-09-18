@@ -30,6 +30,7 @@ $links_area_transparency = $settings['links_area_transparency'] ?? 0.85;
 $link_card_transparency = $settings['link_card_transparency'] ?? 0.85;
 $show_footer = $settings['show_footer'];
 $footer_content = $settings['footer_content'];
+$overlay = $settings['bg-overlay'] ?? 0.2;
 
 ?>
 <!DOCTYPE html>
@@ -46,6 +47,7 @@ $footer_content = $settings['footer_content'];
             --category-bg-opacity: <?php echo htmlspecialchars(1 - floatval($category_bg_transparency)); ?>;
             --links-area-opacity: <?php echo htmlspecialchars(1 - floatval($links_area_transparency)); ?>;
             --link-card-opacity: <?php echo htmlspecialchars(1 - floatval($link_card_transparency)); ?>;
+            --bg-overlay: rgba(255, 255, 255, <?php echo htmlspecialchars(floatval($overlay)); ?>);
         }
     </style>
 </head>
