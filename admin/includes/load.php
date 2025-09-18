@@ -23,6 +23,7 @@ require_once __DIR__ . '/Settings.php';
 require_once __DIR__ . '/User.php';
 require_once __DIR__ . '/Logs.php';
 require_once __DIR__ . '/FileUpload.php';
+require_once __DIR__ . '/FrontendData.php';
 
 // 引入认证相关函数
 require_once __DIR__ . '/auth.php';
