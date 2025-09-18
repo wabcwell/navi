@@ -21,7 +21,7 @@ if (isset($_POST['delete_id'])) {
     if ($link) {
         // 删除链接图标
         if ($link['icon']) {
-            $icon_path = '../uploads/links/' . $link['icon'];
+            $icon_path = '../../uploads/links/' . $link['icon'];
             if (file_exists($icon_path)) {
                 unlink($icon_path);
             }
@@ -62,7 +62,7 @@ if (isset($_POST['batch_action']) && isset($_POST['link_ids'])) {
                 
                 foreach ($icons as $icon) {
                     if ($icon) {
-                        $icon_path = '../uploads/links/' . $icon;
+                        $icon_path = '../../uploads/links/' . $icon;
                         if (file_exists($icon_path)) {
                             unlink($icon_path);
                         }

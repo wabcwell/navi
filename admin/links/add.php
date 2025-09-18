@@ -102,8 +102,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (!isset($_POST['action']) || $_POST
             $icon_color = trim($_POST['icon_fontawesome_color'] ?? '#000000');
             if ($icon_class) {
                 // 验证Font Awesome图标类名格式
-                if (!preg_match('/^fa[bsrlt]? [a-z0-9-]+$/', $icon_class)) {
-                    $errors[] = '请输入有效的Font Awesome图标类名（例如：fas fa-home）';
+                if (!preg_match('/^fa-[a-z0-9-]+$/', $icon_class)) {
+                    $errors[] = '请输入有效的Font Awesome图标类名（例如：fa-home）';
                 } else {
                     // 将图标类名和颜色组合成一个字符串存储在 icon_url 字段中
                     $icon_filename = $icon_class . '|' . $icon_color;
@@ -301,8 +301,8 @@ include '../templates/header.php';
                                 <label for="icon_fontawesome_input" class="form-label">Font Awesome 图标</label>
                                 <div class="input-group mb-2">
                                     <input type="text" class="form-control" id="icon_fontawesome_input" 
-                                           value="<?php echo htmlspecialchars($default_icon ?? 'fas fa-link'); ?>" 
-                                           placeholder="例如: fas fa-home">
+                                           value="<?php echo htmlspecialchars($default_icon ?? 'fa-link'); ?>" 
+                                           placeholder="例如: fa-home">
                                     <button type="button" class="btn btn-outline-primary" onclick="openIconPicker()">
                                         <i class="fas fa-icons"></i> 选择图标
                                     </button>
@@ -319,23 +319,7 @@ include '../templates/header.php';
                                 <input type="hidden" id="icon_fontawesome_color" name="icon_fontawesome_color" value="">
                             </div>
 
-                            <!-- 图片上传 -->
-                            <div id="upload_section" style="display: none;">
-                                <label for="icon_upload_file" class="form-label">上传图标</label>
-                                <div class="input-group">
-                                    <input type="file" class="form-control" id="icon_upload_file" name="icon_upload" 
-                                           accept="image/*">
-                                    <button type="button" class="btn btn-outline-primary" id="upload_btn" disabled>
-                                        <i class="bi bi-upload"></i> 上传
-                                    </button>
-                                </div>
-                                <div class="form-text">支持 JPG、PNG、GIF、SVG 格式，建议尺寸 64x64 像素</div>
-                                <div id="upload_status" class="mt-2"></div>
-                                <!-- 隐藏字段用于保存已上传的图片路径 -->
-                                <input type="hidden" id="uploaded_icon_path" name="uploaded_icon_path" value="">
-                                <!-- 隐藏字段用于保存最终的图标类型 -->
-                                <input type="hidden" id="final_icon_type" name="final_icon_type" value="">
-                            </div>
+                            
 
                             <!-- URL输入 -->
                             <div id="url_section" style="display: none;">
@@ -398,7 +382,7 @@ include '../templates/header.php';
 <script>
 // 存储图标参数的对象
 let iconParams = {
-    icon_fontawesome: '<?php echo htmlspecialchars($default_icon ?? "fas fa-link"); ?>',
+    icon_fontawesome: '<?php echo htmlspecialchars($default_icon ?? "fa-link"); ?>',
     icon_fontawesome_color: '<?php echo htmlspecialchars($default_color ?? "#000000"); ?>',
     icon_upload: '',
     icon_url: ''
@@ -419,7 +403,7 @@ function updatePreview() {
     
     switch(selectedType) {
         case 'fontawesome':
-            const iconClass = iconParams.icon_fontawesome || 'fas fa-link';
+            const iconClass = iconParams.icon_fontawesome || 'fa-link';
             const iconColor = iconParams.icon_fontawesome_color || '#000000';
             previewContainer.innerHTML = `<i class="${iconClass}" style="color: ${iconColor}; font-size: 3rem;"></i>`;
             break;
@@ -491,7 +475,7 @@ function openIconPicker() {
             <div class="col-2">
                 <button type="button" class="btn btn-outline-secondary w-100 icon-btn" 
                         onclick="selectIcon('${icon}')" title="${icon}">
-                    <i class="fas fa-${icon} fa-lg"></i>
+                    <i class="fa-${icon} fa-lg"></i>
                 </button>
             </div>`;
     });
@@ -536,7 +520,7 @@ function openIconPicker() {
 
 // 选择图标
 function selectIcon(iconName) {
-    const iconValue = 'fas fa-' + iconName;
+    const iconValue = 'fa-' + iconName;
     document.getElementById('icon_fontawesome_input').value = iconValue;
     // 更新iconParams对象
     iconParams.icon_fontawesome = iconValue;

@@ -2,555 +2,368 @@
 require_once '../includes/load.php';
 require_once '../includes/fontawesome-icons.php';
 
-// 检查登录状态
-if (!is_logged_in()) {
-    header('Location: ../login.php');
-    exit();
-}
-
-$pdo = get_db_connection();
-
 // 获取链接ID
-$id = intval($_GET['id'] ?? 0);
-if ($id <= 0) {
+$id = $_GET['id'] ?? null;
+if (!$id) {
     header('Location: index.php');
-    exit();
+    exit;
 }
 
 // 获取链接信息
-$stmt = $pdo->prepare("SELECT * FROM navigation_links WHERE id = ?");
-$stmt->execute([$id]);
-$link = $stmt->fetch(PDO::FETCH_ASSOC);
-
+$navigationLinkManager = get_navigation_link_manager();
+$link = $navigationLinkManager->getLinkById($id);
 if (!$link) {
-    $_SESSION['error'] = '链接不存在';
     header('Location: index.php');
-    exit();
+    exit;
 }
 
-// 处理AJAX文件上传请求
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['icon_upload'])) {
-    // 验证文件上传
-    if ($_FILES['icon_upload']['error'] !== UPLOAD_ERR_OK) {
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'error' => '文件上传失败']);
-        exit();
-    }
-    
-    // 处理文件上传
-    $fileUpload = get_file_upload_manager('links');
-    $upload_result = $fileUpload->upload($_FILES['icon_upload']);
-    
-    header('Content-Type: application/json');
-    if ($upload_result['success']) {
-        echo json_encode([
-            'success' => true,
-            'file_name' => $upload_result['file_name'],
-            'file_url' => $upload_result['file_url']
-        ]);
-    } else {
-        echo json_encode([
-            'success' => false,
-            'error' => $upload_result['error']
-        ]);
-    }
-    exit();
-}
-
-// 获取分类列表
-$categories = $pdo->query("SELECT id, name FROM categories WHERE is_active = 1 ORDER BY order_index ASC, name ASC")
-                  ->fetchAll(PDO::FETCH_ASSOC);
+// 获取所有分类
+$categoryManager = get_category_manager();
+$categories = $categoryManager->getAll();
 
 // 处理表单提交
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_FILES['icon_upload'])) {
-    $title = trim($_POST['title'] ?? '');
-    $url = trim($_POST['url'] ?? '');
-    $description = trim($_POST['description'] ?? '');
-    $category_id = intval($_POST['category_id'] ?? 0);
-    $display_order = intval($_POST['order_index'] ?? 0);
-    $is_active = isset($_POST['is_active']) ? 1 : 0;
-    $delete_icon = isset($_POST['delete_icon']) ? 1 : 0;
-    
-    // 验证输入
-    $errors = [];
-    
-    if (empty($title)) {
-        $errors[] = '链接标题不能为空';
-    } elseif (mb_strlen($title) > 100) {
-        $errors[] = '标题不能超过100个字符';
-    }
-    
-    if (empty($url)) {
-        $errors[] = '链接地址不能为空';
-    } elseif (!filter_var($url, FILTER_VALIDATE_URL)) {
-        $errors[] = '请输入有效的URL地址';
-    }
-    
-    if (mb_strlen($description) > 500) {
-        $errors[] = '描述不能超过500个字符';
-    }
-    
-    if ($category_id <= 0) {
-        $errors[] = '请选择分类';
-    } else {
-        // 检查分类是否存在
-        $stmt = $pdo->prepare("SELECT id FROM categories WHERE id = ? AND is_active = 1");
-        $stmt->execute([$category_id]);
-        if (!$stmt->fetch()) {
-            $errors[] = '选择的分类不存在或已禁用';
-        }
-    }
-    
-    // 检查URL是否已存在（排除当前链接）
-    $stmt = $pdo->prepare("SELECT id FROM navigation_links WHERE url = ? AND id != ?");
-    $stmt->execute([$url, $id]);
-    if ($stmt->fetch()) {
-        $errors[] = '该链接地址已存在';
-    }
-    
-    // 处理图标
-    $icon_filename = $link['icon_url'];
-    $icon_type = $_POST['icon_type'] ?? 'none';
-    
-    switch ($icon_type) {
-        case 'fontawesome':
-            $icon_class = trim($_POST['icon_fontawesome_class'] ?? '');
-            $icon_color = trim($_POST['icon_color'] ?? '#007bff');
-            
-            if (!empty($icon_class)) {
-                // 验证图标类名格式
-                if (!preg_match('/^[a-zA-Z0-9-]+$/', $icon_class)) {
-                    $errors[] = '图标类名格式无效，只能包含字母、数字和连字符';
-                } else {
-                    // 删除旧图标（如果是本地文件）
-                    if ($link['icon_url'] && !filter_var($link['icon_url'], FILTER_VALIDATE_URL) && strpos($link['icon_url'], '|') === false) {
-                        $old_icon_path = '../uploads/links/' . $link['icon_url'];
-                        if (file_exists($old_icon_path)) {
-                            unlink($old_icon_path);
-                        }
-                    }
-                    $icon_filename = $icon_class . '|' . $icon_color;
-                }
-            } else {
-                $icon_filename = null;
-            }
-            break;
-            
-        case 'upload':
-            if (isset($_FILES['icon_upload']) && $_FILES['icon_upload']['error'] !== UPLOAD_ERR_NO_FILE) {
-                $fileUpload = get_file_upload_manager('links');
-                $upload_result = $fileUpload->upload($_FILES['icon_upload']);
-                if ($upload_result['success']) {
-                    // 删除旧图标（如果是本地文件）
-                    if ($link['icon_url'] && !filter_var($link['icon_url'], FILTER_VALIDATE_URL) && strpos($link['icon_url'], '|') === false) {
-                        $old_icon_path = '../uploads/links/' . $link['icon_url'];
-                        if (file_exists($old_icon_path)) {
-                            unlink($old_icon_path);
-                        }
-                    }
-                    $icon_filename = $upload_result['file_name'];
-                } else {
-                    $errors[] = $upload_result['error'];
-                }
-            }
-            break;
-            
-        case 'url':
-            $icon_url = trim($_POST['icon_url'] ?? '');
-            if ($icon_url) {
-                if (!filter_var($icon_url, FILTER_VALIDATE_URL)) {
-                    $errors[] = '请输入有效的图标URL地址';
-                } else {
-                    // 删除旧图标（如果是本地文件）
-                    if ($link['icon_url'] && !filter_var($link['icon_url'], FILTER_VALIDATE_URL) && strpos($link['icon_url'], '|') === false) {
-                        $old_icon_path = '../uploads/links/' . $link['icon_url'];
-                        if (file_exists($old_icon_path)) {
-                            unlink($old_icon_path);
-                        }
-                    }
-                    $icon_filename = $icon_url;
-                }
-            } else {
-                $icon_filename = null;
-            }
-            break;
-            
-        case 'none':
-        default:
-            // 删除旧图标（如果是本地文件）
-            if ($link['icon_url'] && !filter_var($link['icon_url'], FILTER_VALIDATE_URL) && strpos($link['icon_url'], '|') === false) {
-                $old_icon_path = '../uploads/links/' . $link['icon_url'];
-                if (file_exists($old_icon_path)) {
-                    unlink($old_icon_path);
-                }
-            }
-            $icon_filename = null;
-            break;
-    }
-    
-    // 如果没有错误，更新数据
-    if (empty($errors)) {
-        try {
-            // 获取图标相关数据
-            $icon_type = $_POST['icon_type'] ?? 'none';
-            $icon_fontawesome = $_POST['icon_fontawesome_class'] ?? '';
-            $icon_color = $_POST['icon_color'] ?? '';
-            $icon_url = $_POST['icon_url'] ?? '';
-            
-            // 处理不同类型的图标
-            $icon_data = [
-                'icon_type' => $icon_type,
-                'icon_fontawesome' => $icon_fontawesome,
-                'icon_fontawesome_color' => $icon_color,
-                'icon_url' => $icon_url,
-                'icon_upload' => $icon_filename
-            ];
-            
-            // 更新数据库
-            $stmt = $pdo->prepare("UPDATE navigation_links SET 
-                                  title = ?, url = ?, description = ?, category_id = ?, 
-                                  icon_type = ?, icon_fontawesome = ?, icon_fontawesome_color = ?, 
-                                  icon_url = ?, icon_upload = ?, 
-                                  order_index = ?, is_active = ?, updated_at = NOW() 
-                                  WHERE id = ?");
-            $stmt->execute([
-                $title,
-                $url,
-                $description,
-                $category_id,
-                $icon_data['icon_type'],
-                $icon_data['icon_fontawesome'],
-                $icon_data['icon_fontawesome_color'],
-                $icon_data['icon_url'],
-                $icon_data['icon_upload'],
-                $display_order,
-                $is_active,
-                $id
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 检查是否是文件上传请求
+    if (isset($_POST['action']) && $_POST['action'] === 'upload_icon' && isset($_FILES['icon_upload'])) {
+        // 处理图标上传
+        $uploadResult = handleFileUpload($_FILES['icon_upload'], 'links');
+        if ($uploadResult['success']) {
+            // 返回JSON响应
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => true,
+                'file_url' => $uploadResult['path'],  // 已经包含/uploads/前缀
+                'file_name' => basename($uploadResult['path']),
+                'message' => '上传成功'
             ]);
-            
-            $_SESSION['success'] = '链接更新成功';
-            header('Location: index.php');
-            exit();
-            
-        } catch (PDOException $e) {
-            $errors[] = '数据库错误：' . $e->getMessage();
-            
-            // 如果上传了图标但更新失败，删除图标文件
-            if ($icon_filename && $icon_filename != $link['icon_url']) {
-                $icon_path = '../uploads/links/' . $icon_filename;
-                if (file_exists($icon_path)) {
-                    unlink($icon_path);
-                }
+            exit;
+        } else {
+            // 返回JSON响应
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'error' => $uploadResult['message']
+            ]);
+            exit;
+        }
+    }
+    
+    // 验证和处理表单数据
+    $data = [
+        'title' => $_POST['title'] ?? '',
+        'url' => $_POST['url'] ?? '',
+        'category_id' => $_POST['category_id'] ?? '',
+        'description' => $_POST['description'] ?? '',
+        'icon_type' => $_POST['icon_type'] ?? 'none',
+        'icon_fontawesome' => $_POST['icon_fontawesome'] ?? '',
+        'icon_fontawesome_color' => $_POST['icon_fontawesome_color'] ?? '#007bff',
+        'icon_url' => $_POST['icon_url'] ?? '',
+        'icon_upload' => $_POST['uploaded_icon_path'] ?? '', // 从隐藏字段获取上传的图标路径
+        'order_index' => intval($_POST['order_index'] ?? 0),
+        'is_active' => isset($_POST['is_active']) ? 1 : 0
+    ];
+    
+    // 处理图标删除
+    if (isset($_POST['remove_icon']) && $_POST['remove_icon'] == '1') {
+        // 如果有上传的图标文件，删除它
+        if (!empty($link['icon_upload'])) {
+            $uploadPath = '../../uploads/links/' . basename($link['icon_upload']);
+            if (file_exists($uploadPath)) {
+                unlink($uploadPath);
             }
         }
+        $data['icon_upload'] = '';
+    }
+    
+    
+    
+    // 更新链接
+    if ($navigationLinkManager->updateLink($id, $data)) {
+        // 记录日志
+        $logsManager = get_logs_manager();
+        $logsManager->addAdminLog($_SESSION['user_id'] ?? 0, '更新链接', '更新链接: ' . $data['title']);
+        header('Location: index.php?success=1');
+        exit;
+    } else {
+        $error = '更新失败';
     }
 }
 
-$page_title = '编辑链接';
-include '../templates/header.php';
+// 处理文件上传
+function handleFileUpload($file, $type) {
+    $uploadDir = '../../uploads/' . $type . '/';
+    
+    // 确保上传目录存在
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
+    
+    // 检查文件类型
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    if (!in_array($file['type'], $allowedTypes)) {
+        return ['success' => false, 'message' => '不支持的文件类型'];
+    }
+    
+    // 检查文件大小（最大2MB）
+    if ($file['size'] > 2 * 1024 * 1024) {
+        return ['success' => false, 'message' => '文件大小超过限制'];
+    }
+    
+    // 生成唯一文件名
+    $extension = pathinfo($file['name'], PATHINFO_EXTENSION);
+    $filename = uniqid() . '.' . $extension;
+    $uploadPath = $uploadDir . $filename;
+    
+    // 移动上传文件
+    if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+        // 返回包含/uploads/前缀的完整路径
+        return ['success' => true, 'path' => '/uploads/' . $type . '/' . $filename];
+    } else {
+        return ['success' => false, 'message' => '文件上传失败'];
+    }
+}
 ?>
 
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="../dashboard.php">仪表盘</a></li>
-        <li class="breadcrumb-item"><a href="index.php">链接管理</a></li>
-        <li class="breadcrumb-item active">编辑链接</li>
-    </ol>
-</nav>
-
-<div class="d-flex justify-content-end mb-4">
-    <a href="index.php" class="btn btn-outline-secondary">
-        <i class="bi bi-arrow-left"></i> 返回列表
-    </a>
-</div>
-
-<?php if (!empty($errors)): ?>
-    <div class="alert alert-danger">
-        <ul class="mb-0">
-            <?php foreach ($errors as $error): ?>
-                <li><?php echo htmlspecialchars($error); ?></li>
-            <?php endforeach; ?>
-        </ul>
-    </div>
-<?php endif; ?>
-
-<div class="card">
-    <div class="card-body">
-        <form method="POST" enctype="multipart/form-data" id="linkForm">
-            <!-- 第1行：链接标题 -->
-            <div class="mb-3">
-                <label for="title" class="form-label">链接标题 *</label>
-                <input type="text" class="form-control" id="title" name="title" 
-                       value="<?php echo htmlspecialchars($link['title']); ?>" 
-                       maxlength="100" required>
-                <div class="form-text">简短明了的标题，不超过100个字符</div>
+<?php include '../templates/header.php'; ?>
+<div class="container-fluid">
+    <div class="row">
+        <?php include '../templates/sidebar.php'; ?>
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">编辑链接</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="index.php" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> 返回列表
+                    </a>
+                </div>
             </div>
-            
-            <!-- 第2行：链接地址 -->
-            <div class="mb-3">
-                <label for="url" class="form-label">链接地址 *</label>
-                <input type="url" class="form-control" id="url" name="url" 
-                       value="<?php echo htmlspecialchars($link['url']); ?>" required>
-                <div class="form-text">请包含 http:// 或 https://</div>
-            </div>
-            
-            <!-- 第3行：所属分类和排序权重 -->
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="category_id" class="form-label">所属分类 *</label>
-                        <select class="form-select" id="category_id" name="category_id" required>
-                            <option value="">选择分类</option>
-                            <?php foreach ($categories as $category): ?>
-                                <option value="<?php echo $category['id']; ?>" 
-                                        <?php echo $link['category_id'] == $category['id'] ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($category['name']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+
+            <?php if (isset($error)): ?>
+                <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
+
+            <form id="linkForm" method="POST" enctype="multipart/form-data">
+                <!-- 第1行：链接标题 -->
+                <div class="mb-3">
+                    <label for="title" class="form-label">链接标题 *</label>
+                    <input type="text" class="form-control" id="title" name="title" 
+                           value="<?php echo htmlspecialchars($link['title']); ?>" required maxlength="100">
+                    <div class="form-text">链接的显示名称，最多100个字符</div>
+                </div>
+                
+                <!-- 第2行：链接地址 -->
+                <div class="mb-3">
+                    <label for="url" class="form-label">链接地址 *</label>
+                    <input type="url" class="form-control" id="url" name="url" 
+                           value="<?php echo htmlspecialchars($link['url']); ?>" required>
+                    <div class="form-text">请包含 http:// 或 https://</div>
+                </div>
+                
+                <!-- 第3行：所属分类和排序权重 -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="category_id" class="form-label">所属分类 *</label>
+                            <select class="form-select" id="category_id" name="category_id" required>
+                                <option value="">选择分类</option>
+                                <?php foreach ($categories as $category): ?>
+                                    <option value="<?php echo $category['id']; ?>" 
+                                            <?php echo $link['category_id'] == $category['id'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($category['name']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="order_index" class="form-label">排序权重</label>
+                            <input type="number" class="form-control" id="order_index" name="order_index" 
+                                   value="<?php echo intval($link['order_index']); ?>" 
+                                   min="0" max="999">
+                            <div class="form-text">数字越大，排序越靠前</div>
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="mb-3">
-                        <label for="order_index" class="form-label">排序权重</label>
-                        <input type="number" class="form-control" id="order_index" name="order_index" 
-                               value="<?php echo intval($link['order_index']); ?>" 
-                               min="0" max="999">
-                        <div class="form-text">数字越大，排序越靠前</div>
+                
+                <!-- 第4行：描述 -->
+                <div class="mb-3">
+                    <label for="description" class="form-label">描述</label>
+                    <textarea class="form-control" id="description" name="description" 
+                              rows="3" maxlength="500"><?php echo htmlspecialchars($link['description']); ?></textarea>
+                    <div class="form-text">简要描述链接内容，不超过500个字符</div>
+                </div>
+                
+                <!-- 第5行：链接图标模块 -->
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">链接图标</h5>
                     </div>
-                </div>
-            </div>
-            
-            <!-- 第4行：描述 -->
-            <div class="mb-3">
-                <label for="description" class="form-label">描述</label>
-                <textarea class="form-control" id="description" name="description" 
-                          rows="3" maxlength="500"><?php echo htmlspecialchars($link['description']); ?></textarea>
-                <div class="form-text">简要描述链接内容，不超过500个字符</div>
-            </div>
-            
-            <!-- 第5行：链接图标模块 -->
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">链接图标</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-7">
-                            <!-- 图标类型选择 -->
-                            <div class="mb-3">
-                                <label class="form-label">图标类型</label>
-                                <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check" name="icon_type" id="icon_fontawesome" value="fontawesome" <?php echo !empty($link['icon_url']) && strpos($link['icon_url'] ?? '', '|') !== false ? 'checked' : ''; ?>>
-                                    <label class="btn btn-outline-primary" for="icon_fontawesome">Font Awesome</label>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-7">
+                                <!-- 图标类型选择 -->
+                                <div class="btn-group w-100 mb-3" role="group">
+                                    <input type="radio" class="btn-check" name="icon_type" id="icon_type_fontawesome" value="fontawesome" <?php echo ($link['icon_type'] ?? 'none') === 'fontawesome' ? 'checked' : ''; ?>>
+                                    <label class="btn btn-outline-primary" for="icon_type_fontawesome">Font Awesome</label>
                                     
-                                    <input type="radio" class="btn-check" name="icon_type" id="icon_upload" value="upload" <?php echo !empty($link['icon_url']) && strpos($link['icon_url'] ?? '', '|') === false && !filter_var($link['icon_url'], FILTER_VALIDATE_URL) ? 'checked' : ''; ?>>
-                                    <label class="btn btn-outline-primary" for="icon_upload">上传图片</label>
+                                    <input type="radio" class="btn-check" name="icon_type" id="icon_type_upload" value="upload" <?php echo ($link['icon_type'] ?? 'none') === 'upload' ? 'checked' : ''; ?>>
+                                    <label class="btn btn-outline-primary" for="icon_type_upload">上传图片</label>
                                     
-                                    <input type="radio" class="btn-check" name="icon_type" id="icon_url" value="url" <?php echo !empty($link['icon_url']) && filter_var($link['icon_url'] ?? '', FILTER_VALIDATE_URL) ? 'checked' : ''; ?>>
-                                    <label class="btn btn-outline-primary" for="icon_url">URL地址</label>
+                                    <input type="radio" class="btn-check" name="icon_type" id="icon_type_url" value="url" <?php echo ($link['icon_type'] ?? 'none') === 'url' ? 'checked' : ''; ?>>
+                                    <label class="btn btn-outline-primary" for="icon_type_url">填写URL</label>
                                     
-                                    <input type="radio" class="btn-check" name="icon_type" id="icon_none" value="none" <?php echo empty($link['icon_url'] ?? '') ? 'checked' : ''; ?>>
-                                    <label class="btn btn-outline-primary" for="icon_none">无图标</label>
+                                    <input type="radio" class="btn-check" name="icon_type" id="icon_type_none" value="none" <?php echo ($link['icon_type'] ?? 'none') === 'none' ? 'checked' : ''; ?>>
+                                    <label class="btn btn-outline-primary" for="icon_type_none">无图标</label>
                                 </div>
-                            </div>
-
-                            <!-- Font Awesome 图标选择 -->
-                            <div id="fontawesome_section" style="display: none;">
-                                <div class="row">
-                                    <div class="col-8">
-                                        <label for="icon_fontawesome_class" class="form-label">选择图标</label>
-                                        <div class="input-group">
-                                            <input type="text" class="form-control" id="icon_fontawesome_class" name="icon_fontawesome_class" 
-                                                   placeholder="例如：fa-home" 
-                                                   value="<?php echo !empty($link['icon_url']) && strpos($link['icon_url'] ?? '', '|') !== false ? explode('|', $link['icon_url'] ?? '')[0] : ''; ?>">
-                                            <button type="button" class="btn btn-outline-secondary" id="openIconPicker">
-                                                <i class="fas fa-icons"></i>
-                                            </button>
+                                
+                                <!-- 隐藏字段 -->
+                                <input type="hidden" name="current_icon" value="<?php 
+                                    if ($link['icon_type'] === 'upload' && !empty($link['icon_upload'])) {
+                                        echo htmlspecialchars($link['icon_upload']);
+                                    } elseif ($link['icon_type'] === 'url' && !empty($link['icon_url'])) {
+                                        echo htmlspecialchars($link['icon_url']);
+                                    } elseif ($link['icon_type'] === 'fontawesome' && !empty($link['icon_fontawesome'])) {
+                                        echo htmlspecialchars($link['icon_fontawesome']);
+                                    } else {
+                                        echo '';
+                                    }
+                                ?>">
+                                <input type="hidden" name="remove_icon" value="0">
+                                <input type="hidden" id="uploaded_icon_path" name="uploaded_icon_path" value="<?php echo htmlspecialchars($link['icon_upload'] ?? ''); ?>">
+                                <!-- 添加final_icon和final_icon_type隐藏字段 -->
+                                <input type="hidden" id="final_icon" name="final_icon" value="">
+                                <input type="hidden" id="final_icon_type" name="final_icon_type" value="<?php echo $link['icon_type'] ?? 'none'; ?>">
+                                
+                                <!-- Font Awesome 图标选择 -->
+                                <div id="fontawesome_section" class="icon-section" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <label for="icon_fontawesome" class="form-label">选择图标</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="icon_fontawesome" name="icon_fontawesome" 
+                                                       placeholder="点击选择图标" readonly
+                                                       value="<?php echo htmlspecialchars($link['icon_fontawesome'] ?? ''); ?>">
+                                                <button type="button" class="btn btn-outline-secondary" id="openIconPicker">
+                                                    <i class="fas fa-icons"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="icon_color" class="form-label">图标颜色</label>
+                                            <input type="color" class="form-control form-control-color w-100" id="icon_color" name="icon_color" 
+                                                   value="<?php echo htmlspecialchars($link['icon_fontawesome_color'] ?? '#007bff'); ?>" style="height: 38px;">
                                         </div>
                                     </div>
-                                    <div class="col-4">
-                                        <label for="icon_color" class="form-label">图标颜色</label>
-                                        <input type="color" class="form-control form-control-color w-100" id="icon_color" 
-                                               name="icon_color" value="<?php echo !empty($link['icon_url']) && strpos($link['icon_url'] ?? '', '|') !== false ? (@explode('|', $link['icon_url'] ?? '')[1] ?: '#007bff') : '#007bff'; ?>">
+                                </div>
+
+                                <!-- 上传图片 -->
+                                <div id="upload_section" class="icon-section" style="display: none;">
+                                    <label for="icon_upload_file" class="form-label">上传图标</label>
+                                    <div class="input-group">
+                                        <input type="file" class="form-control" id="icon_upload_file" name="icon_upload_file" 
+                                               accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+                                               onchange="this.nextElementSibling.value = this.files[0]?.name || '';">
+                                        <button type="button" class="btn btn-outline-primary" id="upload_btn">
+                                            <i class="bi bi-upload"></i> 上传
+                                        </button>
                                     </div>
+                                    <input type="text" class="form-control mt-2" id="uploaded_file_display" 
+                                           placeholder="已上传文件路径" readonly style="background-color: #f8f9fa;"
+                                           value="<?php echo !empty($link['icon_upload']) ? htmlspecialchars(basename($link['icon_upload'])) : ''; ?>">
+                                    <small class="form-text text-muted">支持 JPG, PNG, GIF, WebP, SVG 格式，最大 2MB</small>
+                                    <div id="upload_status" class="mt-2"></div>
+                                </div>
+
+                                <!-- URL输入 -->
+                                <div id="url_section" class="icon-section" style="display: none;">
+                                    <label for="icon_url" class="form-label">图标URL</label>
+                                    <input type="url" class="form-control" id="icon_url" name="icon_url" 
+                                           placeholder="https://example.com/icon.png" 
+                                           value="<?php echo htmlspecialchars($link['icon_url'] ?? ''); ?>">
+                                    <div class="form-text">请输入有效的图片URL地址</div>
                                 </div>
                             </div>
 
-                            <!-- 图片上传 -->
-                            <div id="upload_section" style="display: none;">
-                                <label for="icon_upload_file" class="form-label">上传图标</label>
-                                <div class="input-group">
-                                    <input type="file" class="form-control" id="icon_upload_file" name="icon_upload" 
-                                           accept="image/*">
-                                    <button type="button" class="btn btn-outline-primary" id="upload_btn" disabled>
-                                        <i class="bi bi-upload"></i> 上传
-                                    </button>
-                                </div>
-                                <div class="form-text">支持 JPG、PNG、GIF、SVG 格式，建议尺寸 64x64 像素</div>
-                                <div id="upload_status" class="mt-2"></div>
-                                <!-- 隐藏字段用于保存已上传的图片路径 -->
-                                <input type="hidden" id="uploaded_icon_path" name="uploaded_icon_path" value="<?php echo !empty($link['icon_url']) && strpos($link['icon_url'] ?? '', '|') === false && !filter_var($link['icon_url'] ?? '', FILTER_VALIDATE_URL) ? htmlspecialchars($link['icon_url']) : ''; ?>">
-                                <?php if (!empty($link['icon_url']) && strpos($link['icon_url'] ?? '', '|') === false && !filter_var($link['icon_url'] ?? '', FILTER_VALIDATE_URL)): ?>
-                                    <div class="mt-2">
-                                        <img src="/uploads/links/<?php echo htmlspecialchars($link['icon_url']); ?>" 
-                                             style="max-width: 50px; max-height: 50px; border: 1px solid #ddd; border-radius: 4px;">
-                                        <small class="text-muted d-block">当前图标</small>
+                            <!-- 图标预览 -->
+                            <div class="col-md-5">
+                                <label class="form-label">图标预览</label>
+                                <div class="icon-preview-container text-center">
+                            <div id="iconPreview" class="mb-2">
+                                <?php if (!empty($link['icon_fontawesome'])): ?>
+                                    <i class="fas <?php echo $link['icon_fontawesome']; ?>" style="font-size: 3rem; color: <?php echo htmlspecialchars($link['icon_fontawesome_color'] ?? '#007bff'); ?>"></i>
+                                <?php elseif (!empty($link['icon_url'])): ?>
+                                    <img src="<?php echo htmlspecialchars($link['icon_url']); ?>" class="image-preview" style="max-width: 100px; max-height: 100px; border-radius: 8px;">
+                                <?php elseif (!empty($link['icon_upload'])): ?>
+                                    <img src="/uploads/links/<?php echo $link['icon_upload']; ?>" class="image-preview" style="max-width: 100px; max-height: 100px; border-radius: 8px;">
+                                <?php else: ?>
+                                    <div class="text-muted">
+                                        <i class="fas fa-image" style="font-size: 2rem;"></i>
+                                        <p class="mt-2 mb-0">暂无图标</p>
                                     </div>
                                 <?php endif; ?>
                             </div>
-
-                            <!-- URL输入 -->
-                            <div id="url_section" style="display: none;">
-                                <label for="icon_url_input" class="form-label">图标URL</label>
-                                <input type="url" class="form-control" id="icon_url_input" name="icon_url" 
-                                       placeholder="https://example.com/icon.png" 
-                                       value="<?php echo !empty($link['icon_url']) && filter_var($link['icon_url'] ?? '', FILTER_VALIDATE_URL) ? htmlspecialchars($link['icon_url'] ?? '') : ''; ?>">
-                                <div class="form-text">请输入有效的图片URL地址</div>
-                            </div>
                         </div>
-
-                        <!-- 图标预览 -->
-                        <div class="col-md-5">
-                            <label class="form-label">图标预览</label>
-                            <div class="icon-preview-container text-center">
-                                <div id="iconPreview" class="mb-2">
-                                    <?php if ($link['icon_url'] ?? ''): ?>
-                                    <?php if (strpos($link['icon_url'] ?? '', '|') !== false): ?>
-                                            <?php 
-                                                $iconInfo = explode('|', $link['icon_url'] ?? '');
-                                                $iconClass = $iconInfo[0] ?? 'fa-link';
-                                                $iconColor = $iconInfo[1] ?? '#007bff';
-                                            ?>
-                                            <i class="fas <?php echo htmlspecialchars($iconClass); ?>" style="font-size: 3rem; color: <?php echo htmlspecialchars($iconColor); ?>"></i>
-                                        <?php elseif (filter_var($link['icon_url'] ?? '', FILTER_VALIDATE_URL)): ?>
-                                            <img src="<?php echo htmlspecialchars($link['icon_url'] ?? ''); ?>" class="image-preview" style="max-width: 100px; max-height: 100px;">
-                                        <?php else: ?>
-                                            <img src="/uploads/links/<?php echo htmlspecialchars($link['icon_url'] ?? ''); ?>" class="image-preview" style="max-width: 100px; max-height: 100px;">
-                                        <?php endif; ?>
-                                    <?php else: ?>
-                                        <div class="text-muted">
-                                            <i class="fas fa-image" style="font-size: 2rem;"></i>
-                                            <p class="mt-2 mb-0">暂无图标</p>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- 第6行：立即启用 -->
-            <div class="mb-3">
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active" 
-                           value="1" <?php echo $link['is_active'] ? 'checked' : ''; ?>>
-                    <label class="form-check-label" for="is_active">
-                        立即启用
-                    </label>
+                
+                <!-- 第6行：立即启用 -->
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="is_active" name="is_active" 
+                               value="1" <?php echo $link['is_active'] ? 'checked' : ''; ?>>
+                        <label class="form-check-label" for="is_active">
+                            立即启用
+                        </label>
+                    </div>
                 </div>
-            </div>
-            
-            <!-- 第7行：保存修改按钮 -->
-            <div class="mb-3">
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-save"></i> 保存修改
-                    </button>
+                
+                <!-- 第7行：保存修改按钮 -->
+                <div class="mb-3">
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> 保存修改
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 
 <script>
-// 图标类型切换
-function updateIconSections() {
-    const iconTypeRadios = document.querySelectorAll('input[name="icon_type"]');
-    let iconType = 'none';
-    for (const radio of iconTypeRadios) {
-        if (radio.checked) {
-            iconType = radio.value;
-            break;
-        }
-    }
-    
-    const fontawesomeSection = document.getElementById('fontawesome_section');
-    const uploadSection = document.getElementById('upload_section');
-    const urlSection = document.getElementById('url_section');
-    
-    if (fontawesomeSection) fontawesomeSection.style.display = iconType === 'fontawesome' ? 'block' : 'none';
-    if (uploadSection) uploadSection.style.display = iconType === 'upload' ? 'block' : 'none';
-    if (urlSection) urlSection.style.display = iconType === 'url' ? 'block' : 'none';
-    
-    updatePreview();
-}
+// 初始化 Font Awesome 图标数组
+const fontAwesomeIcons = <?php echo json_encode(getFontAwesomeIcons()); ?>;
 
-// 更新预览
-function updatePreview() {
-    const iconTypeRadios = document.querySelectorAll('input[name="icon_type"]');
-    let iconType = 'none';
-    for (const radio of iconTypeRadios) {
-        if (radio.checked) {
-            iconType = radio.value;
-            break;
-        }
-    }
-    
-    const color = document.getElementById('icon_color')?.value || '#007bff';
+// 图标参数对象
+const iconParams = {
+    icon_fontawesome: document.getElementById('icon_fontawesome')?.value || '',
+    icon_fontawesome_color: document.getElementById('icon_color')?.value || '#000000',
+    icon_upload: document.getElementById('uploaded_icon_path')?.value || '',
+    icon_url: document.getElementById('icon_url')?.value || ''
+};
+
+// 更新已上传图标的预览
+function updateUploadedIconPreview(imagePath) {
     const preview = document.getElementById('iconPreview');
-    if (!preview) return;
     
-    let previewHtml = '';
-    
-    switch (iconType) {
-        case 'fontawesome':
-            const iconClass = document.getElementById('icon_fontawesome_class')?.value || 'fa-link';
-            if (iconClass) {
-                previewHtml = `<i class="fas ${iconClass}" style="font-size: 3rem; color: ${color}"></i>`;
-            } else {
-                previewHtml = '<div class="text-muted"><i class="fas fa-icons" style="font-size: 2rem;"></i><p class="mt-2 mb-0">请选择图标</p></div>';
-            }
-            break;
-            
-        case 'upload':
-            // 检查是否有已上传的图片路径
-            const uploadedIconPath = document.getElementById('uploaded_icon_path')?.value;
-            if (uploadedIconPath) {
-                // 使用已上传的图片
-                previewHtml = `<img src="/uploads/links/${uploadedIconPath}" class="image-preview" style="max-width: 100px; max-height: 100px;">`;
-            } else {
-                previewHtml = '<div class="text-muted"><i class="fas fa-image" style="font-size: 2rem;"></i><p class="mt-2 mb-0">暂无图标</p></div>';
-            }
-            break;
-            
-        case 'url':
-            const url = document.getElementById('icon_url_input')?.value;
-            if (url) {
-                previewHtml = `<img src="${url}" class="image-preview" style="max-width: 100px; max-height: 100px;" onerror="this.onerror=null; this.innerHTML='<i class=\'fas fa-link\' style=\'font-size: 2rem; color: #6c757d;\'></i>';">`;
-            } else {
-                previewHtml = '<div class="text-muted"><i class="fas fa-link" style="font-size: 2rem;"></i><p class="mt-2 mb-0">请输入URL</p></div>';
-            }
-            break;
-            
-        case 'none':
-            previewHtml = '<div class="text-muted"><i class="fas fa-times" style="font-size: 2rem;"></i><p class="mt-2 mb-0">无图标</p></div>';
-            break;
+    if (imagePath) {
+        // 确保图片路径是完整的URL或相对路径
+        let fullImagePath = imagePath;
+        if (imagePath.startsWith('../')) {
+            // 如果路径以../开头，替换为正确的绝对路径
+            fullImagePath = imagePath.replace('../', '/uploads/');
+        } else if (!imagePath.startsWith('http') && !imagePath.startsWith('/')) {
+            // 如果是相对路径，添加正确的前缀
+            fullImagePath = '/uploads/' + imagePath;
+        }
+        // 如果已经是绝对路径（以/开头）或完整URL（以http开头），则不需要修改
+        
+        preview.innerHTML = `<img src="${fullImagePath}" class="image-preview" style="max-width: 100px; max-height: 100px; border-radius: 8px;">`;
     }
-    
-    preview.innerHTML = previewHtml;
 }
-
-// 事件监听
-document.querySelectorAll('input[name="icon_type"]').forEach(radio => {
-    radio?.addEventListener('change', updateIconSections);
-});
-
-document.getElementById('icon_color')?.addEventListener('input', updatePreview);
-document.getElementById('icon_fontawesome_class')?.addEventListener('input', updatePreview);
-document.getElementById('icon_url_input')?.addEventListener('input', updatePreview);
-document.getElementById('icon_upload_file')?.addEventListener('change', updatePreview);
 
 // Font Awesome 图标选择器
 function openIconPicker() {
@@ -613,12 +426,18 @@ function openIconPicker() {
             btn.parentElement.style.display = iconName.includes(searchTerm) ? 'block' : 'none';
         });
     });
+    
+    modalDiv.addEventListener('hidden.bs.modal', function() {
+        modalDiv.remove();
+    });
 }
 
 // 选择图标
 function selectIcon(iconName) {
     // 保存完整的图标类名（包含fa-前缀）
-    document.getElementById('icon_fontawesome_class').value = 'fa-' + iconName;
+    document.getElementById('icon_fontawesome').value = 'fa-' + iconName;
+    // 同步更新iconParams对象
+    iconParams.icon_fontawesome = 'fa-' + iconName;
     updatePreview();
     
     // 正确隐藏模态框，确保背景遮罩层也被清除
@@ -638,120 +457,189 @@ document.getElementById('openIconPicker').addEventListener('click', function() {
     openIconPicker();
 });
 
-// 初始化 Font Awesome 图标数组
-const fontAwesomeIcons = <?php echo json_encode(getFontAwesomeIcons()); ?>;
-
-// 初始化
-if (typeof updateIconSections === 'function') {
-    updateIconSections();
-}
-
-// 检测当前图标类型并设置默认选择
-<?php
-if ($link['icon_url']) {
-    if (strpos($link['icon_url'], '|') !== false) {
-        // Font Awesome 图标
-        $parts = explode('|', $link['icon_url']);
-        echo "document.getElementById('icon_fontawesome').checked = true;";
-        echo "if(document.getElementById('icon_fontawesome_class')) document.getElementById('icon_fontawesome_class').value = '" . addslashes($parts[0]) . "';";
-        echo "if(document.getElementById('icon_color')) document.getElementById('icon_color').value = '" . addslashes($parts[1] ?? '#007bff') . "';";
-    } elseif (filter_var($link['icon_url'], FILTER_VALIDATE_URL)) {
-        // URL 图标
-        echo "document.getElementById('icon_url').checked = true;";
-    } else {
-        // 上传图标
-        echo "document.getElementById('icon_upload').checked = true;";
-    }
-} else {
-    echo "document.getElementById('icon_none').checked = true;";
-}
-?>
-
-updateIconSections();
-
-// 预览URL图片
-function previewUrlImage(url) {
-    if (url && isValidUrl(url)) {
-        const preview = document.getElementById('url_preview');
-        const previewImg = document.getElementById('url_preview_img');
-        preview.style.display = 'block';
-        previewImg.src = url;
-        
-        // 检查图片是否有效
-        previewImg.onerror = function() {
-            preview.style.display = 'none';
-        }
-    } else {
-        document.getElementById('url_preview').style.display = 'none';
-    }
-}
-
-// 清除上传
-function clearUpload() {
-    document.getElementById('icon_upload_file').value = '';
-    document.getElementById('upload_preview').style.display = 'none';
-    document.getElementById('upload_preview_img').src = '';
-}
-
-// 清除URL
-function clearUrl() {
-    document.getElementById('icon_url_input').value = '';
-    document.getElementById('url_preview').style.display = 'none';
-    document.getElementById('url_preview_img').src = '';
-}
-
-// 验证URL
-function isValidUrl(string) {
-    try {
-        new URL(string);
-        return true;
-    } catch (_) {
-        return false;
+// 更新图标预览
+function updatePreview() {
+    const iconTypeElement = document.querySelector('input[name="icon_type"]:checked');
+    if (!iconTypeElement) return; // 如果没有选中的图标类型，直接返回
+    
+    const iconType = iconTypeElement.value;
+    const previewContainer = document.getElementById('iconPreview');
+    if (!previewContainer) return; // 如果预览容器不存在，直接返回
+    
+    switch(iconType) {
+        case 'fontawesome':
+            const iconFontAwesome = document.getElementById('icon_fontawesome');
+            const iconValue = iconFontAwesome ? (iconFontAwesome.value || 'fa-folder') : 'fa-folder';
+            // 使用完整的图标类名（带fa-前缀）
+            const iconName = iconValue.replace(/^fa-/, '');
+            
+            const iconColorElement = document.getElementById('icon_color');
+            const iconColor = iconColorElement ? iconColorElement.value : '#000000';
+            
+            previewContainer.innerHTML = `<i class="fas fa-${iconName} fa-3x" style="color: ${iconColor};"></i>`;
+            break;
+            
+        case 'upload':
+            const uploadedIconPathElement = document.getElementById('uploaded_icon_path');
+            const uploadedPath = uploadedIconPathElement ? uploadedIconPathElement.value : '';
+            
+            if (uploadedPath) {
+                updateUploadedIconPreview(uploadedPath);
+                return;
+            }
+            
+            // 没有已上传图片时，显示无预览状态（不显示本地文件）
+            previewContainer.innerHTML = '<div class="text-muted"><i class="fas fa-image fa-3x"></i><p class="mt-2 mb-0">暂无图标</p></div>';
+            break;
+            
+        case 'url':
+            const iconUrlElement = document.getElementById('icon_url');
+            const url = iconUrlElement ? iconUrlElement.value : '';
+            
+            if (url) {
+                previewContainer.innerHTML = `<img src="${url}" class="image-preview" style="max-width: 100px; max-height: 100px; border-radius: 8px;">`;
+            } else {
+                previewContainer.innerHTML = '<div class="text-muted"><i class="fas fa-link fa-3x"></i><p class="mt-2 mb-0">请输入图标URL</p></div>';
+            }
+            break;
+            
+        default:
+            previewContainer.innerHTML = '<div class="text-muted"><i class="fas fa-ban fa-3x"></i><p class="mt-2 mb-0">无图标</p></div>';
     }
 }
 
-// 表单验证
-(function() {
-    'use strict';
-    var form = document.getElementById('linkForm');
-    form.addEventListener('submit', function(event) {
-        if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-        form.classList.add('was-validated');
-    }, false);
-})();
+// 更新图标区域显示/隐藏
+function updateIconSections() {
+    // 隐藏所有图标区域
+    document.querySelectorAll('.icon-section').forEach(section => {
+        section.style.display = 'none';
+    });
+    
+    // 显示选中的图标区域
+    const selectedTypeElement = document.querySelector('input[name="icon_type"]:checked');
+    if (!selectedTypeElement) return; // 如果没有选中的图标类型，直接返回
+    
+    const selectedType = selectedTypeElement.value;
+    const sectionId = selectedType + '_section';
+    const section = document.getElementById(sectionId);
+    if (section) {
+        section.style.display = 'block';
+    }
+    
+    // 更新最终图标类型
+    const finalIconTypeElement = document.getElementById('final_icon_type');
+    if (finalIconTypeElement) {
+        finalIconTypeElement.value = selectedType;
+    }
+    
+    // 更新预览
+    updatePreview();
+}
 
-// 文件选择事件监听
-document.getElementById('icon_upload_file')?.addEventListener('change', function() {
-    const uploadBtn = document.getElementById('upload_btn');
-    if (this.files.length > 0) {
-        uploadBtn.disabled = false;
-    } else {
-        uploadBtn.disabled = true;
+// 添加事件监听器到图标类型选择器
+document.querySelectorAll('input[name="icon_type"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        updateIconSections();
+    });
+});
+
+// 添加事件监听器到图标相关输入字段
+document.querySelectorAll('input[name="icon_type"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        updateIconSections();
+    });
+});
+
+// 添加事件监听器到图标相关输入字段
+document.addEventListener('DOMContentLoaded', function() {
+    // 只有当元素存在时才添加事件监听器
+    const iconFontAwesome = document.getElementById('icon_fontawesome');
+    if (iconFontAwesome) {
+        iconFontAwesome.addEventListener('input', function() {
+            iconParams.icon_fontawesome = this.value;
+            updatePreview();
+        });
+    }
+
+    const iconColor = document.getElementById('icon_color');
+    if (iconColor) {
+        iconColor.addEventListener('input', function() {
+            iconParams.icon_fontawesome_color = this.value;
+            updatePreview();
+        });
+    }
+
+    const iconUrl = document.getElementById('icon_url');
+    if (iconUrl) {
+        iconUrl.addEventListener('input', function() {
+            iconParams.icon_url = this.value;
+            updatePreview();
+        });
     }
 });
 
-// 上传按钮点击事件
-document.getElementById('upload_btn')?.addEventListener('click', function() {
-    const fileInput = document.getElementById('icon_upload_file');
-    const file = fileInput.files[0];
-    const uploadStatus = document.getElementById('upload_status');
-    
-    if (!file) {
-        alert('请选择要上传的文件');
-        return;
-    }
-    
+// 监听表单提交
+const linkForm = document.getElementById('linkForm');
+if (linkForm) {
+    linkForm.addEventListener('submit', function(e) {
+        // 获取当前选中的图标类型
+        const selectedIconTypeElement = document.querySelector('input[name="icon_type"]:checked');
+        const selectedIconType = selectedIconTypeElement ? selectedIconTypeElement.value : 'none';
+        
+        // 安全地更新隐藏字段
+        const finalIconType = document.getElementById('final_icon_type');
+        if (finalIconType) {
+            finalIconType.value = selectedIconType;
+        }
+        
+        // 同步所有图标参数到隐藏字段
+        const iconFontAwesome = document.getElementById('icon_fontawesome');
+        if (iconFontAwesome) {
+            iconFontAwesome.value = iconParams.icon_fontawesome || '';
+        }
+        
+        const iconFontAwesomeColor = document.getElementById('icon_fontawesome_color');
+        if (iconFontAwesomeColor) {
+            iconFontAwesomeColor.value = iconParams.icon_fontawesome_color || '';
+        }
+        
+        const uploadedIconPath = document.getElementById('uploaded_icon_path');
+        if (uploadedIconPath) {
+            uploadedIconPath.value = iconParams.icon_upload || '';
+        }
+        
+        const iconUrl = document.getElementById('icon_url');
+        if (iconUrl) {
+            iconUrl.value = iconParams.icon_url || '';
+        }
+        
+        // 验证当前选中的标签页
+        if (selectedIconType === 'url' && (!iconParams.icon_url || !iconParams.icon_url.trim())) {
+            e.preventDefault();
+            alert('请填写网络图片地址');
+            return false;
+        }
+        
+        if (selectedIconType === 'upload' && (!iconParams.icon_upload || !iconParams.icon_upload.trim())) {
+            e.preventDefault();
+            alert('请上传图片');
+            return false;
+        }
+        
+        // 同步所有图标参数到表单字段（确保后端能接收到所有值）
+        const finalIcon = document.getElementById('final_icon');
+        if (finalIcon) {
+            finalIcon.value = JSON.stringify(iconParams);
+        }
+    });
+}
+
+// 上传图标
+function uploadIcon(file) {
     const formData = new FormData();
     formData.append('icon_upload', file);
+    formData.append('action', 'upload_icon');
     
-    // 显示上传中状态
-    this.disabled = true;
-    this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 上传中...';
-    
-    // 向当前页面发送请求而不是向不存在的upload_icon.php发送请求
     fetch(window.location.href, {
         method: 'POST',
         body: formData
@@ -759,46 +647,100 @@ document.getElementById('upload_btn')?.addEventListener('click', function() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            // 上传成功
-            uploadStatus.innerHTML = `<div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle-fill"></i> 上传成功！
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>`;
+            // 更新iconParams对象，使用完整路径
+            iconParams.icon_upload = data.file_url;
             
-            // 更新预览
-            const preview = document.getElementById('iconPreview');
-            preview.innerHTML = `<img src="/uploads/links/${data.file_name}" class="image-preview" style="max-width: 100px; max-height: 100px;">`;
+            // 安全地更新隐藏字段，使用完整路径
+            const uploadedIconPath = document.getElementById('uploaded_icon_path');
+            if (uploadedIconPath) {
+                uploadedIconPath.value = data.file_url;
+            }
             
-            // 保存上传的文件路径
-            document.getElementById('uploaded_icon_path').value = data.file_name;
+            // 更新文件显示字段
+            const uploadedFileDisplay = document.getElementById('uploaded_file_display');
+            if (uploadedFileDisplay) {
+                uploadedFileDisplay.value = data.file_name;
+            }
             
-            // 重置上传控件
-            fileInput.value = '';
-            this.disabled = true;
-            this.innerHTML = '<i class="bi bi-upload"></i> 上传';
+            const uploadStatus = document.getElementById('upload_status');
+            if (uploadStatus) {
+                uploadStatus.innerHTML = 
+                    '<div class="alert alert-success alert-dismissible fade show" role="alert">上传成功<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+            }
+            
+            // 重置文件上传控件
+            const fileInput = document.getElementById('icon_upload_file');
+            const uploadBtn = document.getElementById('upload_btn');
+            if (fileInput) {
+                fileInput.value = ''; // 清空文件输入框
+            }
+            if (uploadBtn) {
+                uploadBtn.disabled = true; // 禁用上传按钮
+            }
+            
+            updatePreview();
         } else {
-            // 上传失败
-            uploadStatus.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-triangle-fill"></i> 上传失败: ${data.error}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>`;
-            
-            // 恢复上传按钮状态
-            this.disabled = false;
-            this.innerHTML = '<i class="bi bi-upload"></i> 上传';
+            const uploadStatus = document.getElementById('uploadStatus');
+            if (uploadStatus) {
+                uploadStatus.innerHTML = 
+                    '<div class="alert alert-danger alert-dismissible fade show" role="alert">上传失败: ' + data.error + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+            }
         }
     })
     .catch(error => {
-        console.error('上传错误:', error);
-        uploadStatus.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle-fill"></i> 上传过程中发生错误
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>`;
-        
-        // 恢复上传按钮状态
-        this.disabled = false;
-        this.innerHTML = '<i class="bi bi-upload"></i> 上传';
+        const uploadStatus = document.getElementById('uploadStatus');
+        if (uploadStatus) {
+            uploadStatus.innerHTML = 
+                '<div class="alert alert-danger alert-dismissible fade show" role="alert">上传出错: ' + error.message + '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>';
+        }
     });
+}
+
+// 页面加载完成后初始化图标区域
+document.addEventListener('DOMContentLoaded', function() {
+    updateIconSections();
+    
+    // 监听文件选择
+    const fileInput = document.getElementById('icon_upload_file');
+    const uploadBtn = document.getElementById('upload_btn');
+    
+    if (fileInput && uploadBtn) {
+        fileInput.addEventListener('change', function() {
+            uploadBtn.disabled = this.files.length === 0;
+        });
+        
+        // 监听上传按钮点击
+        uploadBtn.addEventListener('click', function() {
+            if (fileInput.files.length > 0) {
+                uploadIcon(fileInput.files[0]);
+            }
+        });
+    }
+    
+    // 添加事件监听器到图标相关输入字段
+    const iconFontAwesome = document.getElementById('icon_fontawesome');
+    if (iconFontAwesome) {
+        iconFontAwesome.addEventListener('input', function() {
+            iconParams.icon_fontawesome = this.value;
+            updatePreview();
+        });
+    }
+
+    const iconColor = document.getElementById('icon_color');
+    if (iconColor) {
+        iconColor.addEventListener('input', function() {
+            iconParams.icon_fontawesome_color = this.value;
+            updatePreview();
+        });
+    }
+
+    const iconUrl = document.getElementById('icon_url');
+    if (iconUrl) {
+        iconUrl.addEventListener('input', function() {
+            iconParams.icon_url = this.value;
+            updatePreview();
+        });
+    }
 });
 </script>
 
