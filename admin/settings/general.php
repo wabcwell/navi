@@ -176,10 +176,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $settingsManager->set('upload_allowed_types', trim($_POST['upload_allowed_types'] ?? 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar'));
         
         // 保存透明度设置
-        $settingsManager->set('header_bg_opacity', max(0, min(1, floatval($_POST['header_bg_opacity'] ?? 0.85))));
-        $settingsManager->set('category_bg_opacity', max(0, min(1, floatval($_POST['category_bg_opacity'] ?? 0.85))));
-        $settingsManager->set('links_area_opacity', max(0, min(1, floatval($_POST['links_area_opacity'] ?? 0.85))));
-        $settingsManager->set('link_card_opacity', max(0, min(1, floatval($_POST['link_card_opacity'] ?? 0.85))));
+        $settingsManager->set('header_bg_transparency', max(0, min(1, floatval($_POST['header_bg_transparency'] ?? 0.85))));
+        $settingsManager->set('category_bg_transparency', max(0, min(1, floatval($_POST['category_bg_transparency'] ?? 0.85))));
+        $settingsManager->set('links_area_transparency', max(0, min(1, floatval($_POST['links_area_transparency'] ?? 0.85))));
+        $settingsManager->set('link_card_transparency', max(0, min(1, floatval($_POST['link_card_transparency'] ?? 0.85))));
         
         $_SESSION['success'] = '网站设置更新成功';
         header('Location: general.php');
@@ -562,33 +562,33 @@ include '../templates/header.php'; ?>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="header_bg_opacity" class="form-label">标题背景透明度</label>
-                                <input type="range" class="form-range" id="header_bg_opacity" name="header_bg_opacity" 
-                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('header_bg_opacity', 0.85); ?>">
-                                <div class="form-text">Logo和标题所在区域的透明度: <span id="header_opacity_value"><?php echo round($settingsManager->get('header_bg_opacity', 0.85) * 100); ?>%</span></div>
+                                <label for="header_bg_transparency" class="form-label">标题背景透明度</label>
+                                <input type="range" class="form-range" id="header_bg_transparency" name="header_bg_transparency" 
+                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('header_bg_transparency', 0.85); ?>">
+                                <div class="form-text">Logo和标题所在区域的透明度: <span id="header_transparency_value"><?php echo round($settingsManager->get('header_bg_transparency', 0.85) * 100); ?>%</span></div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="category_bg_opacity" class="form-label">分类背景透明度</label>
-                                <input type="range" class="form-range" id="category_bg_opacity" name="category_bg_opacity" 
-                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('category_bg_opacity', 0.85); ?>">
-                                <div class="form-text">分类名称所在背景的透明度: <span id="category_opacity_value"><?php echo round($settingsManager->get('category_bg_opacity', 0.85) * 100); ?>%</span></div>
+                                <label for="category_bg_transparency" class="form-label">分类背景透明度</label>
+                                <input type="range" class="form-range" id="category_bg_transparency" name="category_bg_transparency" 
+                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('category_bg_transparency', 0.85); ?>">
+                                <div class="form-text">分类名称所在背景的透明度: <span id="category_transparency_value"><?php echo round($settingsManager->get('category_bg_transparency', 0.85) * 100); ?>%</span></div>
                             </div>
                         </div>
 
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="links_area_opacity" class="form-label">链接区域背景透明度</label>
-                                <input type="range" class="form-range" id="links_area_opacity" name="links_area_opacity" 
-                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('links_area_opacity', 0.85); ?>">
-                                <div class="form-text">链接区域整体的背景透明度: <span id="links_area_opacity_value"><?php echo round($settingsManager->get('links_area_opacity', 0.85) * 100); ?>%</span></div>
+                                <label for="links_area_transparency" class="form-label">链接区域背景透明度</label>
+                                <input type="range" class="form-range" id="links_area_transparency" name="links_area_transparency" 
+                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('links_area_transparency', 0.85); ?>">
+                                <div class="form-text">链接区域整体的背景透明度: <span id="links_area_transparency_value"><?php echo round($settingsManager->get('links_area_transparency', 0.85) * 100); ?>%</span></div>
                             </div>
 
                             <div class="mb-3">
-                                <label for="link_card_opacity" class="form-label">链接卡片透明度</label>
-                                <input type="range" class="form-range" id="link_card_opacity" name="link_card_opacity" 
-                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('link_card_opacity', 0.85); ?>">
-                                <div class="form-text">单个链接卡片本身的透明度: <span id="link_card_opacity_value"><?php echo round($settingsManager->get('link_card_opacity', 0.85) * 100); ?>%</span></div>
+                                <label for="link_card_transparency" class="form-label">链接卡片透明度</label>
+                                <input type="range" class="form-range" id="link_card_transparency" name="link_card_transparency" 
+                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('link_card_transparency', 0.85); ?>">
+                                <div class="form-text">单个链接卡片本身的透明度: <span id="link_card_transparency_value"><?php echo round($settingsManager->get('link_card_transparency', 0.85) * 100); ?>%</span></div>
                             </div>
                         </div>
                     </div>
@@ -1010,15 +1010,15 @@ function toggleLogoType() {
         });
 
 // 透明度滑块实时更新（直接显示透明度值）
-function initOpacitySliders() {
-    const opacitySliders = [
-        'header_bg_opacity',
-        'category_bg_opacity',
-        'links_area_opacity',
-        'link_card_opacity'
+function initTransparencySliders() {
+    const transparencySliders = [
+        'header_bg_transparency',
+        'category_bg_transparency',
+        'links_area_transparency',
+        'link_card_transparency'
     ];
 
-    opacitySliders.forEach(sliderId => {
+    transparencySliders.forEach(sliderId => {
         const slider = document.getElementById(sliderId);
         const valueDisplay = document.getElementById(sliderId + '_value');
         
@@ -1038,7 +1038,7 @@ function initOpacitySliders() {
 }
 
 // 确保DOM加载完成后执行初始化
-document.addEventListener('DOMContentLoaded', initOpacitySliders);
+document.addEventListener('DOMContentLoaded', initTransparencySliders);
 </script>
 
 <script>

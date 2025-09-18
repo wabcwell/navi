@@ -88,10 +88,10 @@ class FrontendData {
             'background_image' => $this->settingsManager->get('background_image', ''),
             'background_api' => $this->settingsManager->get('background_api', 'https://picsum.photos/1920/1080'),
             'background_opacity' => $this->settingsManager->get('background_opacity', '1'),
-            'header_bg_opacity' => $this->settingsManager->get('header_bg_opacity', '0.85'),
-            'category_bg_opacity' => $this->settingsManager->get('category_bg_opacity', '0.85'),
-            'links_area_opacity' => $this->settingsManager->get('links_area_opacity', '0.85'),
-            'link_card_opacity' => $this->settingsManager->get('link_card_opacity', '0.85'),
+            'header_bg_transparency' => $this->settingsManager->get('header_bg_transparency', '0.85'),
+            'category_bg_transparency' => $this->settingsManager->get('category_bg_transparency', '0.85'),
+            'links_area_transparency' => $this->settingsManager->get('links_area_transparency', '0.85'),
+            'link_card_transparency' => $this->settingsManager->get('link_card_transparency', '0.85'),
             'show_footer' => $this->settingsManager->get('show_footer', '1') == '1',
             'footer_content' => $this->settingsManager->get('footer_content', '&copy; 2024 导航网站. All rights reserved.')
         ];
@@ -114,10 +114,10 @@ class FrontendData {
             'background_image' => '',
             'background_api' => 'https://picsum.photos/1920/1080',
             'background_opacity' => '1',
-            'header_bg_opacity' => '0.85',
-            'category_bg_opacity' => '0.85',
-            'links_area_opacity' => '0.85',
-            'link_card_opacity' => '0.85',
+            'header_bg_transparency' => '0.85',
+            'category_bg_transparency' => '0.85',
+            'links_area_transparency' => '0.85',
+            'link_card_transparency' => '0.85',
             'show_footer' => true,
             'footer_content' => '&copy; 2024 导航网站. All rights reserved.'
         ];

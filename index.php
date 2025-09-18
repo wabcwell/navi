@@ -31,10 +31,10 @@ try {
     $background_opacity = $settings['background_opacity'];
     $site_name = $settings['site_name'];
     $site_description = $settings['site_description'];
-    $header_bg_opacity = $settings['header_bg_opacity'];
-    $category_bg_opacity = $settings['category_bg_opacity'];
-    $links_area_opacity = $settings['links_area_opacity'];
-    $link_card_opacity = $settings['link_card_opacity'];
+    $header_bg_transparency = $settings['header_bg_transparency'];
+    $category_bg_transparency = $settings['category_bg_transparency'];
+    $links_area_transparency = $settings['links_area_transparency'];
+    $link_card_transparency = $settings['link_card_transparency'];
     
 } catch (PDOException $e) {
     // 如果数据库连接失败，使用默认设置
@@ -45,10 +45,10 @@ try {
     $background_opacity = '1';
     $site_name = '我的导航网站';
     $site_description = '一个简洁美观的导航网站';
-    $header_bg_opacity = '0.85';
-    $category_bg_opacity = '0.85';
-    $links_area_opacity = '0.85';
-    $link_card_opacity = '0.85';
+    $header_bg_transparency = '0.85';
+    $category_bg_transparency = '0.85';
+    $links_area_transparency = '0.85';
+    $link_card_transparency = '0.85';
 }
 
 // 获取当前页面

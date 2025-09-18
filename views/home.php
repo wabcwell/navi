@@ -24,10 +24,10 @@ $background_color = $settings['background_color'];
 $background_image = $settings['background_image'];
 $background_api = $settings['background_api'];
 $background_opacity = $settings['background_opacity'];
-$header_bg_opacity = $settings['header_bg_opacity'];
-$category_bg_opacity = $settings['category_bg_opacity'];
-$links_area_opacity = $settings['links_area_opacity'];
-$link_card_opacity = $settings['link_card_opacity'];
+$header_bg_transparency = $settings['header_bg_transparency'] ?? 0.85;
+$category_bg_transparency = $settings['category_bg_transparency'] ?? 0.85;
+$links_area_transparency = $settings['links_area_transparency'] ?? 0.85;
+$link_card_transparency = $settings['link_card_transparency'] ?? 0.85;
 $show_footer = $settings['show_footer'];
 $footer_content = $settings['footer_content'];
 
@@ -42,10 +42,10 @@ $footer_content = $settings['footer_content'];
     <link rel="stylesheet" href="admin/assets/fontawesome/css/all.min.css">
     <style>
         :root {
-            --header-bg-opacity: <?php echo htmlspecialchars(floatval($header_bg_opacity)); ?>;
-            --category-bg-opacity: <?php echo htmlspecialchars(floatval($category_bg_opacity)); ?>;
-            --links-area-opacity: <?php echo htmlspecialchars(floatval($links_area_opacity)); ?>;
-            --link-card-opacity: <?php echo htmlspecialchars(floatval($link_card_opacity)); ?>;
+            --header-bg-opacity: <?php echo htmlspecialchars(1 - floatval($header_bg_transparency)); ?>;
+            --category-bg-opacity: <?php echo htmlspecialchars(1 - floatval($category_bg_transparency)); ?>;
+            --links-area-opacity: <?php echo htmlspecialchars(1 - floatval($links_area_transparency)); ?>;
+            --link-card-opacity: <?php echo htmlspecialchars(1 - floatval($link_card_transparency)); ?>;
         }
     </style>
 </head>
@@ -240,7 +240,8 @@ $footer_content = $settings['footer_content'];
                 document.body.style.backgroundPosition = 'center';
                 document.body.style.backgroundRepeat = 'no-repeat';
                 document.body.style.backgroundColor = backgroundColor;
-                document.body.style.opacity = backgroundOpacity;
+                // 移除body透明度设置，避免整个页面半透明
+                // document.body.style.opacity = backgroundOpacity;
             } else if (backgroundType === 'api' && backgroundApi) {
                 document.body.classList.add('has-bg-image');
                 document.body.style.backgroundImage = `url('${backgroundApi}')`;
@@ -248,17 +249,19 @@ $footer_content = $settings['footer_content'];
                 document.body.style.backgroundPosition = 'center';
                 document.body.style.backgroundRepeat = 'no-repeat';
                 document.body.style.backgroundColor = backgroundColor;
-                document.body.style.opacity = backgroundOpacity;
+                // 移除body透明度设置，避免整个页面半透明
+                // document.body.style.opacity = backgroundOpacity;
             } else if (backgroundType === 'color') {
                 document.body.classList.add('bg-color');
                 document.body.style.backgroundColor = backgroundColor;
-                document.body.style.opacity = backgroundOpacity;
+                // 移除body透明度设置，避免整个页面半透明
+                // document.body.style.opacity = backgroundOpacity;
             }
             
-            // 设置背景覆盖层透明度
-            if (backgroundOpacity && backgroundOpacity !== 1) {
-                document.documentElement.style.setProperty('--bg-overlay', 'rgba(255, 255, 255, ' + (1 - backgroundOpacity) + ')');
-            }
+            // 移除背景覆盖层透明度设置，避免蒙层效果
+            // if (backgroundOpacity && backgroundOpacity !== 1) {
+            //     document.documentElement.style.setProperty('--bg-overlay', 'rgba(255, 255, 255, ' + (1 - backgroundOpacity) + ')');
+            // }
         });
 
         // 搜索功能
