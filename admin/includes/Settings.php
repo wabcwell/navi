@@ -41,6 +41,14 @@ class Settings {
     }
     
     /**
+     * 获取Iconfont URL
+     * @return string Iconfont JS URL
+     */
+    public static function getIconfontUrl() {
+        return self::getSiteSetting('iconfont');
+    }
+    
+    /**
      * 获取后台URL
      * @return string
      */

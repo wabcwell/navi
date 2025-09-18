@@ -240,6 +240,22 @@ include '../templates/header.php';
                                             <?php endif;
                                             break;
                                             
+                                        case 'iconfont':
+                                            // 显示iconfont图标
+                                            if (!empty($category['icon_iconfont'])): 
+                                                $iconColor = $category['icon_iconfont_color'] ?? $category['color'] ?? '#007bff';
+                                                ?>
+                                                <svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem; fill: <?php echo htmlspecialchars($iconColor); ?>;">
+                                                    <use xlink:href="#<?php echo htmlspecialchars($category['icon_iconfont']); ?>"></use>
+                                                </svg>
+                                            <?php else: ?>
+                                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" 
+                                                     style="width: 40px; height: 40px;">
+                                                    <i class="bi bi-folder" style="font-size: 1.2rem;"></i>
+                                                </div>
+                                            <?php endif;
+                                            break;
+                                            
                                         default:
                                             // 默认显示Font Awesome图标
                                             if (!empty($category['icon_fontawesome'])):

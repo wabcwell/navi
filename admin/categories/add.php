@@ -84,6 +84,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $icon_data['icon_fontawesome'] = $icon_name;
                 $icon_data['icon_fontawesome_color'] = trim($_POST['icon_color']);
                 break;
+            case 'iconfont':
+                // 保存iconfont图标类名
+                $icon_data['icon_iconfont'] = trim($_POST['iconfont_icon']);
+                break;
             case 'url':
                 $icon_data['icon_url'] = trim($_POST['icon_url']);
                 break;
@@ -99,6 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 这样即使用户切换过其他tab页，对应的字段值也会被正确保存
         $icon_data['icon_fontawesome'] = trim($_POST['icon_fontawesome']);
         $icon_data['icon_fontawesome_color'] = trim($_POST['icon_fontawesome_color']);
+        $icon_data['icon_iconfont'] = trim($_POST['icon_iconfont']);
         $icon_data['icon_upload'] = trim($_POST['icon_upload']);
         $icon_data['icon_url'] = trim($_POST['icon_url']);
         
@@ -193,6 +198,9 @@ include '../templates/header.php';
                             <input type="radio" class="btn-check" name="icon_type" id="icon_type_font" value="font" checked>
                             <label class="btn btn-outline-primary" for="icon_type_font">Font Awesome</label>
                             
+                            <input type="radio" class="btn-check" name="icon_type" id="icon_type_iconfont" value="iconfont">
+                            <label class="btn btn-outline-primary" for="icon_type_iconfont">Iconfont</label>
+                            
                             <input type="radio" class="btn-check" name="icon_type" id="icon_type_upload" value="upload">
                             <label class="btn btn-outline-primary" for="icon_type_upload">上传图片</label>
                             
@@ -251,6 +259,14 @@ include '../templates/header.php';
                             <div id="upload_status" class="mt-2"></div>
                         </div>
                         
+                        <!-- Iconfont 图标输入 -->
+                        <div id="icon_iconfont_section" class="icon-section mb-3" style="display: none;">
+                            <label for="iconfont_icon" class="form-label">Iconfont 图标</label>
+                            <input type="text" class="form-control" id="iconfont_icon" name="iconfont_icon" 
+                                   placeholder="输入图标名称，如: icon-a-appround51" value="icon-a-appround51">
+                            <small class="form-text text-muted">输入iconfont图标类名，如: icon-a-appround51</small>
+                        </div>
+                        
                         <!-- URL 输入 -->
                         <div id="icon_url_section" class="icon-section mb-3" style="display: none;">
                             <label for="icon_url" class="form-label">图标地址</label>
@@ -266,6 +282,7 @@ include '../templates/header.php';
                         <!-- 添加缺失的隐藏字段以存储各个图标的值 -->
                         <input type="hidden" id="icon_fontawesome" name="icon_fontawesome" value="">
                         <input type="hidden" id="icon_fontawesome_color" name="icon_fontawesome_color" value="#007bff">
+                        <input type="hidden" id="icon_iconfont" name="icon_iconfont" value="">
                         <input type="hidden" id="icon_upload" name="icon_upload" value="">
                         <input type="hidden" id="icon_url_input" name="icon_url" value="">
                     </div>
@@ -317,6 +334,7 @@ const fontAwesomeIcons = <?php echo json_encode($fontAwesomeIcons); ?>;
 const iconParams = {
     icon_fontawesome: document.getElementById('font_icon').value || 'fa-folder',
     icon_fontawesome_color: document.getElementById('icon_color').value || '#007bff',
+    icon_iconfont: document.getElementById('iconfont_icon').value || 'icon-a-appround51',
     icon_upload: document.getElementById('uploaded_icon_path').value || '',
     icon_url: document.getElementById('icon_url').value || ''
 };
@@ -337,6 +355,7 @@ document.getElementById('name').addEventListener('input', function() {
 const iconTypeRadios = document.querySelectorAll('input[name="icon_type"]');
 const iconSections = {
     font: document.getElementById('icon_font_section'),
+    iconfont: document.getElementById('icon_iconfont_section'),
     upload: document.getElementById('icon_upload_section'),
     url: document.getElementById('icon_url_section')
 };
@@ -372,6 +391,24 @@ function updateIconPreview() {
             previewContainer.innerHTML = `<i class="fas fa-${iconName} fa-3x" style="color: ${iconColor};"></i>`;
             previewText.textContent = `Font Awesome: ${iconName}`;
             document.getElementById('final_icon').value = iconValue;
+            break;
+            
+        case 'iconfont':
+            const iconfontValue = document.getElementById('iconfont_icon').value || 'icon-a-appround51';
+            previewContainer.innerHTML = `<svg class="icon" aria-hidden="true" style="font-size: 3em;"><use xlink:href="#${iconfontValue}"></use></svg>`;
+            previewText.textContent = `Iconfont: ${iconfontValue}`;
+            document.getElementById('final_icon').value = iconfontValue;
+            
+            // 确保iconfont SVG被正确渲染
+            setTimeout(() => {
+                const svg = previewContainer.querySelector('svg');
+                if (svg) {
+                    const use = svg.querySelector('use');
+                    if (use && !use.getAttribute('xlink:href').startsWith('#')) {
+                        use.setAttribute('xlink:href', '#' + iconfontValue);
+                    }
+                }
+            }, 100);
             break;
             
         case 'upload':
@@ -499,6 +536,10 @@ document.getElementById('icon_color').addEventListener('input', function() {
 });
 document.getElementById('icon_url').addEventListener('input', function() {
     iconParams.icon_url = this.value;  // 同步更新iconParams
+    updateIconPreview();
+});
+document.getElementById('iconfont_icon').addEventListener('input', function() {
+    iconParams.icon_iconfont = this.value;  // 同步更新iconParams
     updateIconPreview();
 });
 document.getElementById('icon_file').addEventListener('change', function() {
@@ -643,6 +684,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
     // 这样即使用户切换过其他tab页，对应的字段值也会被正确保存
     document.getElementById('icon_fontawesome').value = iconParams.icon_fontawesome;
     document.getElementById('icon_fontawesome_color').value = iconParams.icon_fontawesome_color;
+    document.getElementById('icon_iconfont').value = iconParams.icon_iconfont;
     document.getElementById('icon_upload').value = iconParams.icon_upload;
     document.getElementById('icon_url_input').value = iconParams.icon_url;
     
@@ -656,6 +698,9 @@ document.querySelector('form').addEventListener('submit', function(e) {
                 name: iconValue,
                 color: iconColor
             });
+            break;
+        case 'iconfont':
+            document.getElementById('final_icon').value = iconParams.icon_iconfont;
             break;
         case 'upload':
             // 使用已上传的图片路径

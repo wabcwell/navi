@@ -41,6 +41,8 @@ $overlay = $settings['bg-overlay'] ?? 0.2;
     <title><?php echo htmlspecialchars($site_name); ?></title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="admin/assets/fontawesome/css/all.min.css">
+    <!-- Iconfont -->
+    <script src="<?php echo htmlspecialchars($settings['iconfont'] ?? ''); ?>"></script>
     <style>
         :root {
             --header-bg-opacity: <?php echo htmlspecialchars(1 - floatval($header_bg_transparency)); ?>;
@@ -101,6 +103,12 @@ $overlay = $settings['bg-overlay'] ?? 0.2;
                                  <img src="<?php echo htmlspecialchars($category['icon_upload']); ?>" alt="<?php echo htmlspecialchars($category['name']); ?>" style="width: 100%; height: 100%; object-fit: contain;">
                             <?php elseif ($iconType === 'url' && !empty($category['icon_url'])): ?>
                                 <img src="<?php echo htmlspecialchars($category['icon_url']); ?>" alt="<?php echo htmlspecialchars($category['name']); ?>" style="width: 100%; height: 100%; object-fit: contain;">
+                            <?php elseif ($iconType === 'iconfont' && !empty($category['icon_iconfont'])): 
+                                $iconColor = $category['icon_iconfont_color'] ?? $category['color'] ?? '#007bff';
+                                ?>
+                                <svg class="icon" aria-hidden="true" style="width: 100%; height: 100%; fill: <?php echo htmlspecialchars($iconColor); ?>;">
+                                    <use xlink:href="#<?php echo htmlspecialchars($category['icon_iconfont']); ?>"></use>
+                                </svg>
                             <?php else: ?>
                                 <?php $iconColor = $category['icon_fontawesome_color'] ?? $category['color']; ?>
                                 <i class="fas fa-folder" style="color: <?php echo htmlspecialchars($iconColor); ?>"></i>
@@ -182,6 +190,25 @@ $overlay = $settings['bg-overlay'] ?? 0.2;
                                                 <?php
                                             } else {
                                                 // 没有URL图片时显示默认图标
+                                                ?>
+                                                <i class="fas fa-external-link-alt"></i>
+                                                <?php
+                                            }
+                                            break;
+                                            
+                                        case 'iconfont':
+                                            // 显示iconfont图标
+                                            $iconIconfont = $link['icon_iconfont'] ?? '';
+                                            
+                                            if ($iconIconfont) {
+                                                $iconColor = $link['icon_iconfont_color'] ?? $link['color'] ?? '#007bff';
+                                                ?>
+                                                <svg class="icon" aria-hidden="true" style="width: 100%; height: 100%; fill: <?php echo htmlspecialchars($iconColor); ?>;">
+                                                    <use xlink:href="#<?php echo htmlspecialchars($iconIconfont); ?>"></use>
+                                                </svg>
+                                                <?php
+                                            } else {
+                                                // 没有iconfont图标时显示默认图标
                                                 ?>
                                                 <i class="fas fa-external-link-alt"></i>
                                                 <?php

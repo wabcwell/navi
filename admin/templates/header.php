@@ -11,6 +11,8 @@
 <link href="/admin/assets/bootstrap/icons/bootstrap-icons.css" rel="stylesheet">
 <!-- Font Awesome -->
 <link href="/admin/assets/fontawesome/css/all.min.css" rel="stylesheet">
+    <!-- Iconfont -->
+    <script src="<?php echo Settings::getIconfontUrl(); ?>"></script>
     <!-- 左侧导航样式 -->
     <link href="/admin/assets/css/sidebar.css" rel="stylesheet">
     <style>

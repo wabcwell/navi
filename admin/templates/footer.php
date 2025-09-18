@@ -6,7 +6,6 @@
     <link rel="stylesheet" href="/admin/assets/sweetalert2/sweetalert2.min.css">
     <!-- SweetAlert2 JS -->
     <script src="/admin/assets/sweetalert2/sweetalert2.min.js"></script>
-    <!-- 左侧导航JS -->
     <script>
     // 全局配置
     const ADMIN_URL = '.';
