@@ -2,12 +2,12 @@
 require_once '../includes/load.php';
 
 // 检查登录状态
-if (!is_logged_in()) {
-    header('Location: ../login.php');
+if (!User::checkLogin()) {
+    header('Location: login.php');
     exit();
 }
 
-$pdo = get_db_connection();
+$logsManager = get_logs_manager();
 
 // 获取日志类型
 $log_type = $_GET['type'] ?? 'admin';
@@ -60,31 +60,52 @@ if ($date_to) {
 $where_sql = $where_conditions ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
 
 // 获取总记录数
-$count_sql = "SELECT COUNT(*) FROM {$table} {$where_sql}";
-$stmt = $pdo->prepare($count_sql);
-$stmt->execute($params);
-$total_records = $stmt->fetchColumn();
-$total_pages = max(1, ceil($total_records / $per_page));
+try {
+    $logsManager = get_logs_manager();
+    $total_records = $logsManager->getLogStats($table, $date_from, $date_to)['total'];
+    $total_pages = max(1, ceil($total_records / $per_page));
+} catch (Exception $e) {
+    $total_records = 0;
+    $total_pages = 1;
+}
 
 // 获取日志列表
-$sql = "SELECT * FROM {$table} {$where_sql} ORDER BY created_at DESC LIMIT :limit OFFSET :offset";
-$stmt = $pdo->prepare($sql);
-$params['limit'] = $per_page;
-$params['offset'] = $offset;
-$stmt->execute($params);
-$logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $logsManager = get_logs_manager();
+    switch ($log_type) {
+        case 'admin':
+            $logs = $logsManager->getAdminLogs($per_page, $offset, 'created_at', 'DESC');
+            break;
+        case 'login':
+            $logs = $logsManager->getLoginLogs($per_page, $offset, 'created_at', 'DESC');
+            break;
+        case 'error':
+            $logs = $logsManager->getErrorLogs($per_page, $offset, 'created_at', 'DESC');
+            break;
+        case 'operation':
+            $logs = $logsManager->getOperationLogs($per_page, $offset, 'created_at', 'DESC');
+            break;
+        default:
+            $logs = [];
+    }
+} catch (Exception $e) {
+    $logs = [];
+}
 
 // 处理批量删除
 if (isset($_POST['batch_delete'])) {
     $ids = $_POST['ids'] ?? [];
     
     if (!empty($ids)) {
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $delete_sql = "DELETE FROM {$table} WHERE id IN ({$placeholders})";
-        $stmt = $pdo->prepare($delete_sql);
-        $stmt->execute($ids);
+        try {
+            $logsManager = get_logs_manager();
+            $deleted_count = $logsManager->batchDeleteLogs($table, $ids);
+            
+            $_SESSION['success'] = '已删除 ' . $deleted_count . ' 条日志';
+        } catch (Exception $e) {
+            $_SESSION['error'] = '删除日志时出错: ' . $e->getMessage();
+        }
         
-        $_SESSION['success'] = '已删除 ' . count($ids) . ' 条日志';
         header("Location: logs.php?type={$log_type}");
         exit();
     }
@@ -92,8 +113,34 @@ if (isset($_POST['batch_delete'])) {
 
 // 处理清空日志
 if (isset($_POST['clear_logs'])) {
-    $pdo->exec("TRUNCATE TABLE {$table}");
-    $_SESSION['success'] = '日志已清空';
+    try {
+        $logsManager = get_logs_manager();
+        $result = false;
+        
+        switch ($log_type) {
+            case 'admin':
+                $result = $logsManager->clearAdminLogs();
+                break;
+            case 'login':
+                $result = $logsManager->clearLoginLogs();
+                break;
+            case 'error':
+                $result = $logsManager->clearErrorLogs();
+                break;
+            case 'operation':
+                $result = $logsManager->clearOperationLogs();
+                break;
+        }
+        
+        if ($result) {
+            $_SESSION['success'] = '日志已清空';
+        } else {
+            $_SESSION['error'] = '清空日志失败';
+        }
+    } catch (Exception $e) {
+        $_SESSION['error'] = '清空日志时出错: ' . $e->getMessage();
+    }
+    
     header("Location: logs.php?type={$log_type}");
     exit();
 }
@@ -106,18 +153,25 @@ $stats = [
     'total' => $total_records
 ];
 
-foreach ($stats as $period => &$count) {
-    if ($period !== 'total') {
-        $date_condition = match($period) {
-            'today' => 'DATE(created_at) = CURDATE()',
-            'week' => 'created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)',
-            'month' => 'created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)',
-            default => '1=1'
-        };
-        
-        $sql = "SELECT COUNT(*) FROM {$table} WHERE {$date_condition}";
-        $count = $pdo->query($sql)->fetchColumn();
-    }
+try {
+    $logsManager = get_logs_manager();
+    
+    // 获取今日记录数
+    $today_stats = $logsManager->getLogStats($table, date('Y-m-d'), date('Y-m-d'));
+    $stats['today'] = $today_stats['total'];
+    
+    // 获取本周记录数
+    $week_stats = $logsManager->getLogStats($table, date('Y-m-d', strtotime('-7 days')), date('Y-m-d'));
+    $stats['week'] = $week_stats['total'];
+    
+    // 获取本月记录数
+    $month_stats = $logsManager->getLogStats($table, date('Y-m-d', strtotime('-30 days')), date('Y-m-d'));
+    $stats['month'] = $month_stats['total'];
+} catch (Exception $e) {
+    // 如果获取统计信息失败，保持默认值为0
+    $stats['today'] = 0;
+    $stats['week'] = 0;
+    $stats['month'] = 0;
 }
 
 $page_title = '系统日志';
@@ -144,6 +198,13 @@ include '../templates/header.php';
 <?php if (isset($_SESSION['success'])): ?>
     <div class="alert alert-success alert-dismissible fade show">
         <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+<?php endif; ?>
+
+<?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-danger alert-dismissible fade show">
+        <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 <?php endif; ?>

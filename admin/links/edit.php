@@ -9,7 +9,13 @@ if (!$id) {
     exit;
 }
 
-// 获取链接信息
+// 检查登录状态
+if (!User::checkLogin()) {
+    header('Location: login.php');
+    exit();
+}
+
+//  获取链接信息
 $navigationLinkManager = get_navigation_link_manager();
 $link = $navigationLinkManager->getLinkById($id);
 if (!$link) {

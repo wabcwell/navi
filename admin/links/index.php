@@ -2,34 +2,48 @@
 require_once '../includes/load.php';
 
 // 检查登录状态
-if (!is_logged_in()) {
-    header('Location: ../login.php');
+if (!User::checkLogin()) {
+    header('Location: login.php');
     exit();
 }
 
-$pdo = get_db_connection();
+// 获取导航链接管理实例
+$linkManager = get_navigation_link_manager();
+// 获取数据库实例用于分类查询
+$database = get_database();
+$pdo = $database->getConnection();
 
 // 处理删除操作
 if (isset($_POST['delete_id'])) {
     $id = intval($_POST['delete_id']);
     
     // 获取链接信息
-    $stmt = $pdo->prepare("SELECT id FROM navigation_links WHERE id = ?");
-    $stmt->execute([$id]);
-    $link = $stmt->fetch(PDO::FETCH_ASSOC);
+    $link = $linkManager->getLinkById($id);
     
     if ($link) {
         // 删除链接图标
-        if ($link['icon']) {
-            $icon_path = '../../uploads/links/' . $link['icon'];
+        // 注意：这里需要根据实际的字段名进行调整
+        $iconField = '';
+        if (!empty($link['icon_upload'])) {
+            $iconField = $link['icon_upload'];
+        } elseif (!empty($link['icon'])) {
+            $iconField = $link['icon'];
+        }
+        
+        if ($iconField) {
+            $icon_path = '../../uploads/links/' . $iconField;
             if (file_exists($icon_path)) {
                 unlink($icon_path);
             }
         }
         
-        $stmt = $pdo->prepare("DELETE FROM navigation_links WHERE id = ?");
-        $stmt->execute([$id]);
-        $_SESSION['success'] = '链接删除成功';
+        // 使用 NavigationLink 类删除链接
+        $result = $linkManager->deleteLink($id);
+        if ($result) {
+            $_SESSION['success'] = '链接删除成功';
+        } else {
+            $_SESSION['error'] = '链接删除失败';
+        }
     }
     
     header('Location: index.php');
@@ -40,41 +54,55 @@ if (isset($_POST['delete_id'])) {
 if (isset($_POST['batch_action']) && isset($_POST['link_ids'])) {
     $action = $_POST['batch_action'];
     $ids = array_map('intval', $_POST['link_ids']);
-    $ids_placeholder = implode(',', array_fill(0, count($ids), '?'));
     
+    $successCount = 0;
     switch ($action) {
         case 'activate':
-            $stmt = $pdo->prepare("UPDATE navigation_links SET is_active = 1 WHERE id IN ($ids_placeholder)");
-            $stmt->execute($ids);
-            $_SESSION['success'] = '已启用 ' . count($ids) . ' 个链接';
+            foreach ($ids as $id) {
+                $data = ['is_active' => 1];
+                if ($linkManager->updateLink($id, $data)) {
+                    $successCount++;
+                }
+            }
+            $_SESSION['success'] = '已启用 ' . $successCount . ' 个链接';
             break;
         case 'deactivate':
-            $stmt = $pdo->prepare("UPDATE navigation_links SET is_active = 0 WHERE id IN ($ids_placeholder)");
-            $stmt->execute($ids);
-            $_SESSION['success'] = '已禁用 ' . count($ids) . ' 个链接';
+            foreach ($ids as $id) {
+                $data = ['is_active' => 0];
+                if ($linkManager->updateLink($id, $data)) {
+                    $successCount++;
+                }
+            }
+            $_SESSION['success'] = '已禁用 ' . $successCount . ' 个链接';
             break;
         case 'delete':
-            // 删除图标文件（如果存在icon字段）
-            try {
-                $stmt = $pdo->prepare("SELECT icon FROM navigation_links WHERE id IN ($ids_placeholder)");
-                $stmt->execute($ids);
-                $icons = $stmt->fetchAll(PDO::FETCH_COLUMN);
-                
-                foreach ($icons as $icon) {
-                    if ($icon) {
-                        $icon_path = '../../uploads/links/' . $icon;
+            // 删除图标文件并删除链接
+            foreach ($ids as $id) {
+                // 获取链接信息以删除图标
+                $link = $linkManager->getLinkById($id);
+                if ($link) {
+                    // 删除链接图标
+                    $iconField = '';
+                    if (!empty($link['icon_upload'])) {
+                        $iconField = $link['icon_upload'];
+                    } elseif (!empty($link['icon'])) {
+                        $iconField = $link['icon'];
+                    }
+                    
+                    if ($iconField) {
+                        $icon_path = '../../uploads/links/' . $iconField;
                         if (file_exists($icon_path)) {
                             unlink($icon_path);
                         }
                     }
                 }
-            } catch (PDOException $e) {
-                // icon字段不存在，跳过图标删除
+                
+                // 删除链接
+                if ($linkManager->deleteLink($id)) {
+                    $successCount++;
+                }
             }
-            
-            $stmt = $pdo->prepare("DELETE FROM navigation_links WHERE id IN ($ids_placeholder)");
-            $stmt->execute($ids);
-            $_SESSION['success'] = '已删除 ' . count($ids) . ' 个链接';
+            $_SESSION['success'] = '已删除 ' . $successCount . ' 个链接';
             break;
     }
     
@@ -118,22 +146,11 @@ if ($status !== '') {
 $where_sql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
 // 获取总数
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM navigation_links l $where_sql");
-$stmt->execute($params);
-$total = $stmt->fetchColumn();
+$total = $linkManager->getLinksCount($where_sql, $params);
 $total_pages = ceil($total / $limit);
 
 // 获取链接数据
-$sql = "SELECT l.id, l.title, l.url, l.description, l.category_id, l.icon_type, l.icon_fontawesome, l.icon_fontawesome_color, l.icon_url, l.icon_upload, l.order_index, l.is_active, l.click_count, l.created_at, l.updated_at, c.name as category_name 
-        FROM navigation_links l 
-        LEFT JOIN categories c ON l.category_id = c.id 
-        $where_sql 
-        ORDER BY l.order_index ASC, l.id DESC 
-        LIMIT $limit OFFSET $offset";
-
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$links = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$links = $linkManager->getLinks($limit, $offset, $where_sql, $params);
 
 $page_title = '链接管理';
 include '../templates/header.php';

@@ -2,12 +2,11 @@
 require_once '../includes/load.php';
 
 // 检查登录状态
-if (!is_logged_in()) {
-    header('Location: ../login.php');
+if (!User::checkLogin()) {
+    header('Location: login.php');
     exit();
 }
 
-$pdo = get_db_connection();
 $settingsManager = get_settings_manager();
 
 // 处理表单提交

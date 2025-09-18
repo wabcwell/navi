@@ -9,8 +9,11 @@ if (!defined('ABSPATH')) {
     define('ABSPATH', dirname(dirname(__DIR__)) . '/');
 }
 
-// 引入初始化文件（包含配置、认证、数据库连接等核心功能）
-require_once __DIR__ . '/init.php';
+// 加载配置文件
+require_once ABSPATH . 'config.php';
+
+// 引入初始化文件（已重构，功能分散到各相关类中）
+//require_once __DIR__ . '/init.php';
 
 // 引入公共函数库
 require_once __DIR__ . '/functions.php';

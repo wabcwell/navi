@@ -4,8 +4,8 @@ require_once 'includes/load.php';
 $error = '';
 
 // 检查是否已登录
-if (is_logged_in()) {
-    header('Location: ' . ADMIN_URL . '/dashboard.php');
+if (User::checkLogin()) {
+    header('Location: ' . Settings::getAdminUrl() . '/dashboard.php');
     exit();
 }
 
@@ -16,14 +16,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if (empty($username) || empty($password)) {
         $error = '用户名和密码不能为空';
-    } elseif ($username === 'admin' && verify_admin_password($password)) {
-        admin_login();
-        log_login_attempt($username, true);
-        header('Location: ' . ADMIN_URL . '/dashboard.php');
-        exit();
     } else {
-        $error = '用户名或密码错误';
-        log_login_attempt($username, false);
+        // 使用新的认证方法
+        $user = User::checkUserLogin($username, $password, $_SERVER['REMOTE_ADDR'] ?? null);
+        
+        if ($user) {
+            // 登录成功，设置会话
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['admin_logged_in'] = true; // 添加这一行以确保与is_logged_in()函数兼容
+            
+            // 记录登录日志
+            $logs = new Logs();
+            $logs->addLoginLog($user['id'], $user['username'], true, null, $_SERVER['REMOTE_ADDR'] ?? null);
+            
+            header('Location: ' . Settings::getAdminUrl() . '/dashboard.php');
+            exit();
+        } else {
+            $error = '用户名或密码错误';
+            
+            // 记录失败日志
+            $logs = new Logs();
+            $logs->addLoginLog(null, $username, false, '密码错误', $_SERVER['REMOTE_ADDR'] ?? null);
+        }
     }
 }
 ?>
@@ -33,8 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理登录 - 导航网站</title>
-    <link href="<?php echo ADMIN_URL; ?>/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="<?php echo ADMIN_URL; ?>/assets/bootstrap/icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="<?php echo Settings::getAdminUrl(); ?>/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="<?php echo Settings::getAdminUrl(); ?>/assets/bootstrap/icons/bootstrap-icons.css" rel="stylesheet">
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

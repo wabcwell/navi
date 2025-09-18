@@ -6,12 +6,15 @@ require_once '../includes/fontawesome-icons.php';
 $fontAwesomeIcons = getFontAwesomeIcons();
 
 // 检查登录状态
-if (!is_logged_in()) {
-    header('Location: ../login.php');
+if (!User::checkLogin()) {
+    header('Location: login.php');
     exit();
 }
 
-$pdo = get_db_connection();
+// 获取导航链接管理实例
+$linkManager = get_navigation_link_manager();
+$database = get_database();
+$pdo = $database->getConnection();
 
 // 获取分类列表
 $categories = $pdo->query("SELECT id, name FROM categories WHERE is_active = 1 ORDER BY order_index ASC, name ASC")
@@ -86,9 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (!isset($_POST['action']) || $_POST
     }
     
     // 检查URL是否已存在
-    $stmt = $pdo->prepare("SELECT id FROM navigation_links WHERE url = ?");
-    $stmt->execute([$url]);
-    if ($stmt->fetch()) {
+    if ($linkManager->isUrlExists($url)) {
         $errors[] = '该链接地址已存在';
     }
     
@@ -140,49 +141,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (!isset($_POST['action']) || $_POST
     // 如果没有错误，插入数据库
     if (empty($errors)) {
         try {
-            // 获取图标相关数据
-            $icon_type = $_POST['final_icon_type'] ?? 'none';
-            $icon_fontawesome = $_POST['icon_fontawesome'] ?? '';
-            $icon_fontawesome_color = $_POST['icon_fontawesome_color'] ?? '';
-            $icon_url = $_POST['icon_url_input'] ?? '';
-            $icon_upload = $_POST['uploaded_icon_path'] ?? '';
-            
-            // 处理不同类型的图标
-            $icon_data = [
-                'icon_type' => $icon_type,
-                'icon_fontawesome' => $icon_fontawesome,
-                'icon_fontawesome_color' => $icon_fontawesome_color,
-                'icon_url' => $icon_url,
-                'icon_upload' => $icon_upload
+            // 准备链接数据
+            $linkData = [
+                'title' => $title,
+                'url' => $url,
+                'description' => $description,
+                'category_id' => $category_id,
+                'icon_type' => $_POST['final_icon_type'] ?? 'none',
+                'icon_fontawesome' => $_POST['icon_fontawesome'] ?? '',
+                'icon_fontawesome_color' => $_POST['icon_fontawesome_color'] ?? '',
+                'icon_url' => $_POST['icon_url_input'] ?? '',
+                'icon_upload' => $_POST['uploaded_icon_path'] ?? '',
+                'order_index' => $order_index,
+                'is_active' => $is_active
             ];
             
-            // 更新数据库
-            $stmt = $pdo->prepare("INSERT INTO navigation_links (
-                title, url, description, category_id, 
-                icon_type, icon_fontawesome, icon_fontawesome_color, 
-                icon_url, icon_upload, 
-                order_index, is_active, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+            // 使用 NavigationLink 类创建链接
+            $linkId = $linkManager->createLink($linkData);
             
-            $result = $stmt->execute([
-                $title, $url, $description, $category_id,
-                $icon_data['icon_type'],
-                $icon_data['icon_fontawesome'],
-                $icon_data['icon_fontawesome_color'],
-                $icon_data['icon_url'],
-                $icon_data['icon_upload'],
-                $order_index, $is_active
-            ]);
-            
-            if ($result) {
+            if ($linkId) {
                 // 重定向到成功页面
                 header('Location: index.php?message=' . urlencode('链接添加成功'));
                 exit();
             } else {
                 $errors[] = '添加链接失败，请重试';
             }
-        } catch (PDOException $e) {
-            $errors[] = '数据库错误：' . $e->getMessage();
+        } catch (Exception $e) {
+            $errors[] = '添加链接失败：' . $e->getMessage();
         }
     }
 }

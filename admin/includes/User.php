@@ -204,24 +204,64 @@ public function __construct($database = null) {
                 // 更新登录信息
                 $updateData = [
                     'login_count' => $user['login_count'] + 1,
-                    'last_login' => date('Y-m-d H:i:s')
+                    'last_login' => date('Y-m-d H:i:s'),
+                    'last_ip' => $ip
                 ];
-                
-                if ($ip) {
-                    $updateData['last_ip'] = $ip;
-                }
-                
                 $this->updateUser($user['id'], $updateData);
                 
-                // 移除密码字段再返回
-                unset($user['password']);
                 return $user;
             }
             
             return false;
         } catch (Exception $e) {
-            throw new Exception('用户验证失败: ' . $e->getMessage());
+            throw new Exception('登录验证失败: ' . $e->getMessage());
         }
+    }
+    
+    /**
+     * 检查用户是否已登录（兼容原函数）
+     * 
+     * @return bool 是否已登录
+     */
+    public static function checkLogin() {
+        // 启动会话（如果未启动）
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // 检查会话中是否有用户ID
+        if (isset($_SESSION['user_id']) && $_SESSION['user_id'] > 0) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 获取当前登录用户信息
+     * 
+     * @return array|null 用户数据或null
+     */
+    public static function getCurrentUser() {
+        if (!self::checkLogin()) {
+            return null;
+        }
+        
+        $user = new self();
+        return $user->getUserById($_SESSION['user_id']);
+    }
+    
+    /**
+     * 用户登录验证（静态方法，兼容原函数）
+     * 
+     * @param string $username 用户名或邮箱
+     * @param string $password 密码
+     * @param string $ip IP地址
+     * @return array|false 用户数据或false
+     */
+    public static function checkUserLogin($username, $password, $ip = null) {
+        $user = new self();
+        return $user->authenticate($username, $password, $ip);
     }
     
     /**

@@ -65,7 +65,7 @@ date_default_timezone_set('Asia/Shanghai');
  */
 function check_login() {
     if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-        header('Location: ' . ADMIN_URL . '/index.php');
+        header('Location: index.php');
         exit();
     }
 }

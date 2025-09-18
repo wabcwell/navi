@@ -3,9 +3,9 @@ session_start();
 require_once '../includes/load.php';
 
 // 检查登录
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: ../login.php');
-    exit;
+if (!User::checkLogin()) {
+    header('Location: login.php');
+    exit();
 }
 
 // 设置上传目录

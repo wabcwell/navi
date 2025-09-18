@@ -131,19 +131,8 @@ class FrontendData {
      */
     public function searchLinks($keyword) {
         try {
-            $sql = "SELECT * FROM navigation_links 
-                    WHERE is_active = 1 
-                    AND (title LIKE ? OR description LIKE ? OR url LIKE ?)
-                    ORDER BY order_index ASC, id ASC";
-            
-            $searchTerm = "%" . $keyword . "%";
-            
-            // 直接使用数据库连接
-            $database = new Database();
-            $stmt = $database->query($sql, [$searchTerm, $searchTerm, $searchTerm]);
-            
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-            
+            // 使用 NavigationLink 类的方法来搜索链接
+            return $this->navigationLinkManager->searchLinks($keyword);
         } catch (Exception $e) {
             error_log("搜索链接失败: " . $e->getMessage());
             return [];

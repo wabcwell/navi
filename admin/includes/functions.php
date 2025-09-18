@@ -268,9 +268,8 @@ function update_category_order($pdo, $order) {
  */
 function count_category_links($pdo, $category_id) {
     try {
-        $database = new Database();
-        $stmt = $database->query("SELECT COUNT(*) FROM navigation_links WHERE category_id = ?", [$category_id]);
-        return $stmt->fetchColumn();
+        $navigationLinkManager = get_navigation_link_manager();
+        return $navigationLinkManager->countLinksByCategory($category_id);
     } catch (Exception $e) {
         error_log("统计分类链接数量失败: " . $e->getMessage());
         return 0;

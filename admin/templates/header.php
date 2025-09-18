@@ -6,13 +6,13 @@
     <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?>导航网站管理后台</title>
     
     <!-- Bootstrap CSS -->
-<link href="<?php echo ADMIN_URL; ?>/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+<link href="/admin/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 <!-- Bootstrap Icons -->
-<link href="<?php echo ADMIN_URL; ?>/assets/bootstrap/icons/bootstrap-icons.css" rel="stylesheet">
+<link href="/admin/assets/bootstrap/icons/bootstrap-icons.css" rel="stylesheet">
 <!-- Font Awesome -->
-<link href="<?php echo ADMIN_URL; ?>/assets/fontawesome/css/all.min.css" rel="stylesheet">
+<link href="/admin/assets/fontawesome/css/all.min.css" rel="stylesheet">
     <!-- 左侧导航样式 -->
-    <link href="<?php echo ADMIN_URL; ?>/assets/css/sidebar.css" rel="stylesheet">
+    <link href="/admin/assets/css/sidebar.css" rel="stylesheet">
     <style>
         .icon-preview-container {
             min-height: 100px;
@@ -44,10 +44,10 @@
     </style>
 </head>
 <body>
-    <?php if (is_logged_in()): ?>
+    <?php if (User::checkLogin()): ?>
     <!-- 左侧导航 -->
     <nav class="sidebar">
-        <a href="<?php echo ADMIN_URL; ?>/dashboard.php" class="sidebar-brand">
+        <a href="/admin/dashboard.php" class="sidebar-brand">
             <i class="bi bi-speedometer2"></i>
             <span>导航管理</span>
         </a>
@@ -55,35 +55,35 @@
         <ul class="sidebar-nav">
             <li class="nav-item">
                 <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : ''; ?>" 
-                   href="<?php echo ADMIN_URL; ?>/dashboard.php">
+                   href="/admin/dashboard.php">
                     <i class="bi bi-house"></i>
                     <span>仪表盘</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/categories/') !== false ? 'active' : ''; ?>" 
-                   href="<?php echo ADMIN_URL; ?>/categories/">
+                   href="/admin/categories/">
                     <i class="bi bi-folder"></i>
                     <span>分类管理</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/links/') !== false ? 'active' : ''; ?>" 
-                   href="<?php echo ADMIN_URL; ?>/links/">
+                   href="/admin/links/">
                     <i class="bi bi-link-45deg"></i>
                     <span>链接管理</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/files/') !== false ? 'active' : ''; ?>" 
-                   href="<?php echo ADMIN_URL; ?>/files/">
+                   href="/admin/files/">
                     <i class="bi bi-image"></i>
                     <span>文件管理</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/settings/') !== false ? 'active' : ''; ?>" 
-                   href="<?php echo ADMIN_URL; ?>/settings/general.php">
+                   href="/admin/settings/general.php">
                     <i class="bi bi-gear"></i>
                     <span>系统设置</span>
                 </a>
@@ -91,7 +91,7 @@
         </ul>
         
         <div class="sidebar-footer">
-            <a href="<?php echo ADMIN_URL; ?>/logout.php" class="logout-btn" onclick="return confirm('确定要退出吗？')">
+            <a href="/admin/logout.php" class="logout-btn" onclick="return confirm('确定要退出吗？')">
                 <i class="bi bi-box-arrow-right"></i>
                 <span>退出登录</span>
             </a>

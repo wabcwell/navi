@@ -6,6 +6,7 @@
 
 class Settings {
     private $database;
+    private static $instance = null;
     
     public function __construct($database = null) {
         if ($database === null) {
@@ -13,6 +14,38 @@ class Settings {
         } else {
             $this->database = $database;
         }
+    }
+    
+    /**
+     * 获取Settings单例实例
+     * @return Settings
+     */
+    public static function getInstance() {
+        if (self::$instance === null) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+    
+    /**
+     * 获取网站URL
+     * @return string
+     */
+    public static function getSiteUrl() {
+        if (!defined('SITE_URL')) {
+            $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            return $protocol . '://' . $host;
+        }
+        return SITE_URL;
+    }
+    
+    /**
+     * 获取后台URL
+     * @return string
+     */
+    public static function getAdminUrl() {
+        return self::getSiteUrl() . '/admin';
     }
     
     /**
@@ -29,28 +62,16 @@ class Settings {
     }
     
     /**
-     * 根据键名获取设置值
+     * 获取设置（兼容原函数）
      * @param string $key 设置键名
      * @param mixed $default 默认值
-     * @return mixed 设置值或默认值
+     * @return mixed 设置值
      */
     public function get($key, $default = null) {
         try {
-            // 尝试新的列名
-            $stmt = $this->database->query("SELECT setting_value FROM settings WHERE setting_key = ?", [$key]);
+            $stmt = $this->database->query("SELECT value FROM settings WHERE key_name = ?", [$key]);
             $result = $stmt->fetch();
-            if ($result) {
-                return $result['setting_value'];
-            }
-            
-            // 回退到旧的列名（兼容性）
-            $stmt = $this->database->query("SELECT value FROM settings WHERE name = ?", [$key]);
-            $result = $stmt->fetch();
-            if ($result) {
-                return $result['value'];
-            }
-            
-            return $default;
+            return $result ? $result['value'] : $default;
         } catch (Exception $e) {
             return $default;
         }
@@ -71,23 +92,46 @@ class Settings {
     }
     
     /**
-     * 创建或更新设置项
+     * 设置配置项（兼容原函数）
      * @param string $key 设置键名
      * @param mixed $value 设置值
-     * @param string $type 设置类型
-     * @param string $description 设置描述
-     * @return bool 是否操作成功
+     * @return bool 是否成功
      */
-    public function set($key, $value, $type = 'string', $description = '') {
+    public function set($key, $value) {
         try {
-            $stmt = $this->database->query(
-                "REPLACE INTO settings (setting_key, setting_value, setting_type, description) VALUES (?, ?, ?, ?)",
-                [$key, $value, $type, $description]
-            );
-            return true;
+            // 首先检查记录是否存在
+            $existing = $this->get($key);
+            
+            if ($existing !== null) {
+                // 更新现有记录
+                return $this->database->update('settings', ['value' => $value], 'key_name = ?', [$key]) > 0;
+            } else {
+                // 插入新记录
+                return $this->database->insert('settings', ['key_name' => $key, 'value' => $value]) > 0;
+            }
         } catch (Exception $e) {
-            throw new Exception("设置配置项失败: " . $e->getMessage());
+            return false;
         }
+    }
+    
+    /**
+     * 获取设置（静态方法，兼容原函数）
+     * @param string $key 设置键名
+     * @param mixed $default 默认值
+     * @return mixed 设置值
+     */
+    public static function getSiteSetting($key, $default = null) {
+        return self::getInstance()->get($key, $default);
+    }
+    
+    /**
+     * 设置配置项（静态方法，兼容原函数）
+     * @param string $key 设置键名
+     * @param mixed $value 设置值
+     * @return bool 是否成功
+     */
+    public static function setSiteSetting($key, $value) {
+        return self::getInstance()->set($key, $value);
     }
     
     /**

@@ -179,6 +179,44 @@ public function __construct($database = null) {
     }
     
     /**
+     * 根据搜索关键词获取链接
+     * 
+     * @param string $keyword 搜索关键词
+     * @return array 匹配的链接数组
+     */
+    public function searchLinks($keyword) {
+        $sql = "SELECT * FROM navigation_links 
+                WHERE is_active = 1 
+                AND (title LIKE ? OR description LIKE ? OR url LIKE ?)
+                ORDER BY order_index ASC, id ASC";
+        
+        $searchTerm = "%" . $keyword . "%";
+        
+        try {
+            $stmt = $this->db->query($sql, [$searchTerm, $searchTerm, $searchTerm]);
+            return $stmt->fetchAll();
+        } catch (Exception $e) {
+            throw new Exception('搜索链接失败: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * 统计分类下的链接数量
+     * 
+     * @param int $category_id 分类ID
+     * @return int 链接数量
+     */
+    public function countLinksByCategory($category_id) {
+        try {
+            $sql = "SELECT COUNT(*) FROM navigation_links WHERE category_id = ?";
+            $stmt = $this->db->query($sql, [$category_id]);
+            return $stmt->fetchColumn();
+        } catch (Exception $e) {
+            throw new Exception('统计分类链接数量失败: ' . $e->getMessage());
+        }
+    }
+    
+    /**
      * 检查URL是否已存在
      * 
      * @param string $url URL地址
@@ -219,6 +257,49 @@ public function __construct($database = null) {
             return $stmt->fetch();
         } catch (Exception $e) {
             throw new Exception('获取统计信息失败: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * 获取带分页和筛选的链接数据
+     * 
+     * @param int $limit 每页数量
+     * @param int $offset 偏移量
+     * @param string $whereSql WHERE条件SQL
+     * @param array $params 参数数组
+     * @return array 链接数据
+     */
+    public function getLinks($limit, $offset, $whereSql = '', $params = []) {
+        $sql = "SELECT l.id, l.title, l.url, l.description, l.category_id, l.icon_type, l.icon_fontawesome, l.icon_fontawesome_color, l.icon_url, l.icon_upload, l.order_index, l.is_active, l.click_count, l.created_at, l.updated_at, c.name as category_name 
+                FROM navigation_links l 
+                LEFT JOIN categories c ON l.category_id = c.id 
+                $whereSql 
+                ORDER BY l.order_index ASC, l.id DESC 
+                LIMIT $limit OFFSET $offset";
+        
+        try {
+            $stmt = $this->db->query($sql, $params);
+            return $stmt->fetchAll();
+        } catch (Exception $e) {
+            throw new Exception('获取链接数据失败: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * 获取符合条件的链接总数
+     * 
+     * @param string $whereSql WHERE条件SQL
+     * @param array $params 参数数组
+     * @return int 链接总数
+     */
+    public function getLinksCount($whereSql = '', $params = []) {
+        $sql = "SELECT COUNT(*) FROM navigation_links l $whereSql";
+        
+        try {
+            $stmt = $this->db->query($sql, $params);
+            return $stmt->fetchColumn();
+        } catch (Exception $e) {
+            throw new Exception('获取链接总数失败: ' . $e->getMessage());
         }
     }
 }

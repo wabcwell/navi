@@ -2,9 +2,9 @@
 require_once '../includes/load.php';
 
 // 检查是否登录
-if (!is_logged_in()) {
-    header('Location: ../login.php');
-    exit;
+if (!User::checkLogin()) {
+    header('Location: login.php');
+    exit();
 }
 
 // 获取分类管理实例

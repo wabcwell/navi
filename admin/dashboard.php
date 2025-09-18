@@ -2,13 +2,14 @@
 require_once 'includes/load.php';
 
 // 检查登录状态
-if (!is_logged_in()) {
-    header('Location: index.php');
+if (!User::checkLogin()) {
+    header('Location: login.php');
     exit();
 }
 
-// 获取统计信息
-$pdo = get_db_connection();
+// 获取数据库连接
+$database = new Database();
+$pdo = $database->getConnection();
 
 // 分类统计
 $stmt = $pdo->query("SELECT COUNT(*) FROM categories");
