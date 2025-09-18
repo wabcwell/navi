@@ -97,8 +97,14 @@ $overlay = $settings['bg-overlay'] ?? 0.2;
                             
                             if ($iconType === 'fontawesome' && !empty($category['icon_fontawesome'])): 
                                 $iconColor = $category['icon_fontawesome_color'] ?? $category['color'];
+                                $iconClass = $category['icon_fontawesome'];
+                                
+                                // 确保有正确的前缀
+                                if (!preg_match('/^(fas|far|fab)\s/i', $iconClass)) {
+                                    $iconClass = 'fas ' . $iconClass;
+                                }
                             ?>
-                                <i class="<?php echo htmlspecialchars($category['icon_fontawesome']); ?>" style="color: <?php echo htmlspecialchars($iconColor); ?>"></i>
+                                <i class="<?php echo htmlspecialchars($iconClass); ?>" style="color: <?php echo htmlspecialchars($iconColor); ?>"></i>
                             <?php elseif ($iconType === 'upload' && !empty($category['icon_upload'])): ?>
                                  <img src="<?php echo htmlspecialchars($category['icon_upload']); ?>" alt="<?php echo htmlspecialchars($category['name']); ?>" style="width: 100%; height: 100%; object-fit: contain;">
                             <?php elseif ($iconType === 'url' && !empty($category['icon_url'])): ?>
