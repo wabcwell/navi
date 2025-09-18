@@ -145,8 +145,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             slug VARCHAR(255),
             description TEXT,
             color VARCHAR(7) DEFAULT '#007bff',
-            icon_color VARCHAR(7) DEFAULT NULL,
-            icon VARCHAR(50) DEFAULT NULL,
+            icon_fontawesome VARCHAR(50) DEFAULT NULL,
+            icon_fontawesome_color VARCHAR(7) DEFAULT NULL,
+            icon_upload VARCHAR(500) DEFAULT NULL,
+            icon_fontawesome VARCHAR(500) DEFAULT NULL,
+            icon_type VARCHAR(20) DEFAULT 'fontawesome',
             order_index INT DEFAULT 0,
             is_active TINYINT(1) DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -161,7 +164,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             url VARCHAR(500) NOT NULL,
             description TEXT,
             category_id INT NOT NULL,
-            icon_url VARCHAR(500) DEFAULT NULL,
+            icon_fontawesome VARCHAR(500) DEFAULT NULL,
+            icon_type ENUM('fontawesome','upload','url','none') DEFAULT 'none',
+            icon_upload VARCHAR(500) DEFAULT NULL,
+            icon_fontawesome_color VARCHAR(20) DEFAULT NULL,
+            icon_fontawesome VARCHAR(100) DEFAULT NULL,
             order_index INT DEFAULT 0,
             is_active TINYINT(1) DEFAULT 1,
             click_count INT DEFAULT 0,
@@ -279,7 +286,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             'site_logo' => '',
             'site_logo_type' => 'image',
             'site_logo_image' => '',
-            'site_logo_icon' => 'fas fa-home',
+            'site_logo_icon' => 'fa-home',
             'site_logo_color' => '#007bff',
             
             // 背景设置
@@ -319,8 +326,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             [
                 'name' => '搜索引擎',
                 'description' => '常用搜索引擎集合',
-                'icon' => 'fas fa-search',
-                'icon_color' => '#4285f4',
+				'icon_type' => 'fontawesome', 
+                'icon_fontawesome' => 'fa-search',
+                'icon_fontawesome_color' => '#4285f4',
                 'color' => '#4285f4',
                 'order_index' => 1,
                 'is_active' => 1
@@ -328,8 +336,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             [
                 'name' => '社交媒体',
                 'description' => '主流社交平台',
-                'icon' => 'fas fa-users',
-                'icon_color' => '#1877f2',
+				'icon_type' => 'fontawesome', 
+                'icon_fontawesome' => 'fa-users',
+                'icon_fontawesome_color' => '#1877f2',
                 'color' => '#1877f2',
                 'order_index' => 2,
                 'is_active' => 1
@@ -337,8 +346,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             [
                 'name' => '开发工具',
                 'description' => '程序员必备开发工具',
-                'icon' => 'fas fa-code',
-                'icon_color' => '#24292e',
+				'icon_type' => 'fontawesome', 
+                'icon_fontawesome' => 'fa-code',
+                'icon_fontawesome_color' => '#24292e',
                 'color' => '#24292e',
                 'order_index' => 3,
                 'is_active' => 1
@@ -346,8 +356,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             [
                 'name' => '设计资源',
                 'description' => '设计素材和工具网站',
-                'icon' => 'fas fa-palette',
-                'icon_color' => '#ff6b35',
+				'icon_type' => 'fontawesome', 
+                'icon_fontawesome' => 'fa-palette',
+                'icon_fontawesome_color' => '#ff6b35',
                 'color' => '#ff6b35',
                 'order_index' => 4,
                 'is_active' => 1
@@ -355,8 +366,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             [
                 'name' => '学习平台',
                 'description' => '在线学习和技术教程',
-                'icon' => 'fas fa-graduation-cap',
-                'icon_color' => '#0f997f',
+				'icon_type' => 'fontawesome', 
+                'icon_fontawesome' => 'fa-graduation-cap',
+                'icon_fontawesome_color' => '#0f997f',
                 'color' => '#0f997f',
                 'order_index' => 5,
                 'is_active' => 1
@@ -364,8 +376,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             [
                 'name' => '新闻资讯',
                 'description' => '科技新闻和资讯网站',
-                'icon' => 'fas fa-newspaper',
-                'icon_color' => '#ff6600',
+				'icon_type' => 'fontawesome', 
+                'icon_fontawesome' => 'fa-newspaper',
+                'icon_fontawesome_color' => '#ff6600',
                 'color' => '#ff6600',
                 'order_index' => 6,
                 'is_active' => 1
@@ -373,8 +386,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             [
                 'name' => '云服务',
                 'description' => '云计算和存储服务',
-                'icon' => 'fas fa-cloud',
-                'icon_color' => '#00a1f1',
+				'icon_type' => 'fontawesome', 
+                'icon_fontawesome' => 'fa-cloud',
+                'icon_fontawesome_color' => '#00a1f1',
                 'color' => '#00a1f1',
                 'order_index' => 7,
                 'is_active' => 1
@@ -382,21 +396,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             [
                 'name' => '娱乐休闲',
                 'description' => '休闲娱乐和视频网站',
-                'icon' => 'fas fa-gamepad',
-                'icon_color' => '#ff0000',
+				'icon_type' => 'fontawesome', 
+                'icon_fontawesome' => 'fa-gamepad',
+                'icon_fontawesome_color' => '#ff0000',
                 'color' => '#ff0000',
                 'order_index' => 8,
                 'is_active' => 1
             ]
         ];
 
-        $stmt = $pdo->prepare("INSERT IGNORE INTO categories (name, description, icon, icon_color, color, order_index, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT IGNORE INTO categories (name, description, icon_type, icon_fontawesome, icon_fontawesome_color, color, order_index, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         foreach ($categories as $category) {
             $stmt->execute([
                 $category['name'],
                 $category['description'],
-                $category['icon'],
-                $category['icon_color'],
+                $category['icon_type'],
+                $category['icon_fontawesome'],
+                $category['icon_fontawesome_color'],
                 $category['color'],
                 $category['order_index'],
                 $category['is_active']
@@ -406,100 +422,100 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
         // 插入示例链接（基于db-init-sample-data.php的80个链接）
         $links = [
             // 搜索引擎 (10个)
-            ['title' => 'Google', 'url' => 'https://www.google.com', 'description' => '全球最大的搜索引擎', 'category' => '搜索引擎', 'icon_url' => 'fab fa-google'],
-            ['title' => '百度', 'url' => 'https://www.baidu.com', 'description' => '国内最大的搜索引擎', 'category' => '搜索引擎', 'icon_url' => 'fas fa-search'],
-            ['title' => '必应', 'url' => 'https://www.bing.com', 'description' => '微软的搜索引擎', 'category' => '搜索引擎', 'icon_url' => 'fab fa-microsoft'],
-            ['title' => 'DuckDuckGo', 'url' => 'https://duckduckgo.com', 'description' => '隐私保护的搜索引擎', 'category' => '搜索引擎', 'icon_url' => 'fas fa-shield-alt'],
-            ['title' => 'Yandex', 'url' => 'https://yandex.com', 'description' => '俄罗斯搜索引擎', 'category' => '搜索引擎', 'icon_url' => 'fab fa-yandex'],
-            ['title' => '搜狗', 'url' => 'https://www.sogou.com', 'description' => '搜狗搜索引擎', 'category' => '搜索引擎', 'icon_url' => 'fas fa-search'],
-            ['title' => '360搜索', 'url' => 'https://www.so.com', 'description' => '360搜索引擎', 'category' => '搜索引擎', 'icon_url' => 'fas fa-shield-alt'],
-            ['title' => 'Ecosia', 'url' => 'https://www.ecosia.org', 'description' => '环保搜索引擎', 'category' => '搜索引擎', 'icon_url' => 'fas fa-leaf'],
-            ['title' => 'Startpage', 'url' => 'https://www.startpage.com', 'description' => '隐私搜索引擎', 'category' => '搜索引擎', 'icon_url' => 'fas fa-user-secret'],
-            ['title' => 'Qwant', 'url' => 'https://www.qwant.com', 'description' => '欧洲隐私搜索引擎', 'category' => '搜索引擎', 'icon_url' => 'fas fa-search'],
+            ['title' => 'Google', 'url' => 'https://www.google.com', 'description' => '全球最大的搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-google'],
+            ['title' => '百度', 'url' => 'https://www.baidu.com', 'description' => '国内最大的搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-search'],
+            ['title' => '必应', 'url' => 'https://www.bing.com', 'description' => '微软的搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-microsoft'],
+            ['title' => 'DuckDuckGo', 'url' => 'https://duckduckgo.com', 'description' => '隐私保护的搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-shield-alt'],
+            ['title' => 'Yandex', 'url' => 'https://yandex.com', 'description' => '俄罗斯搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-yandex'],
+            ['title' => '搜狗', 'url' => 'https://www.sogou.com', 'description' => '搜狗搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-search'],
+            ['title' => '360搜索', 'url' => 'https://www.so.com', 'description' => '360搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-shield-alt'],
+            ['title' => 'Ecosia', 'url' => 'https://www.ecosia.org', 'description' => '环保搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-leaf'],
+            ['title' => 'Startpage', 'url' => 'https://www.startpage.com', 'description' => '隐私搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-user-secret'],
+            ['title' => 'Qwant', 'url' => 'https://www.qwant.com', 'description' => '欧洲隐私搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-search'],
             
             // 社交媒体 (10个)
-            ['title' => '微博', 'url' => 'https://weibo.com', 'description' => '中国主流社交媒体平台', 'category' => '社交媒体', 'icon_url' => 'fab fa-weibo'],
-            ['title' => 'Twitter', 'url' => 'https://twitter.com', 'description' => '全球社交媒体平台', 'category' => '社交媒体', 'icon_url' => 'fab fa-twitter'],
-            ['title' => 'Facebook', 'url' => 'https://facebook.com', 'description' => '全球最大的社交网络', 'category' => '社交媒体', 'icon_url' => 'fab fa-facebook'],
-            ['title' => 'Instagram', 'url' => 'https://instagram.com', 'description' => '图片分享社交平台', 'category' => '社交媒体', 'icon_url' => 'fab fa-instagram'],
-            ['title' => 'LinkedIn', 'url' => 'https://linkedin.com', 'description' => '职业社交平台', 'category' => '社交媒体', 'icon_url' => 'fab fa-linkedin'],
-            ['title' => 'Reddit', 'url' => 'https://reddit.com', 'description' => '社区讨论平台', 'category' => '社交媒体', 'icon_url' => 'fab fa-reddit'],
-            ['title' => '知乎', 'url' => 'https://www.zhihu.com', 'description' => '中文问答社区', 'category' => '社交媒体', 'icon_url' => 'fas fa-question-circle'],
-            ['title' => '豆瓣', 'url' => 'https://www.douban.com', 'description' => '文化娱乐社区', 'category' => '社交媒体', 'icon_url' => 'fas fa-book'],
-            ['title' => '小红书', 'url' => 'https://www.xiaohongshu.com', 'description' => '生活方式分享平台', 'category' => '社交媒体', 'icon_url' => 'fas fa-shopping-bag'],
-            ['title' => 'TikTok', 'url' => 'https://www.tiktok.com', 'description' => '短视频社交平台', 'category' => '社交媒体', 'icon_url' => 'fab fa-tiktok'],
+            ['title' => '微博', 'url' => 'https://weibo.com', 'description' => '中国主流社交媒体平台', 'category' => '社交媒体', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-weibo'],
+            ['title' => 'Twitter', 'url' => 'https://twitter.com', 'description' => '全球社交媒体平台', 'category' => '社交媒体', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-twitter'],
+            ['title' => 'Facebook', 'url' => 'https://facebook.com', 'description' => '全球最大的社交网络', 'category' => '社交媒体', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-facebook'],
+            ['title' => 'Instagram', 'url' => 'https://instagram.com', 'description' => '图片分享社交平台', 'category' => '社交媒体', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-instagram'],
+            ['title' => 'LinkedIn', 'url' => 'https://linkedin.com', 'description' => '职业社交平台', 'category' => '社交媒体', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-linkedin'],
+            ['title' => 'Reddit', 'url' => 'https://reddit.com', 'description' => '社区讨论平台', 'category' => '社交媒体', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-reddit'],
+            ['title' => '知乎', 'url' => 'https://www.zhihu.com', 'description' => '中文问答社区', 'category' => '社交媒体', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-question-circle'],
+            ['title' => '豆瓣', 'url' => 'https://www.douban.com', 'description' => '文化娱乐社区', 'category' => '社交媒体', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-book'],
+            ['title' => '小红书', 'url' => 'https://www.xiaohongshu.com', 'description' => '生活方式分享平台', 'category' => '社交媒体', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-shopping-bag'],
+            ['title' => 'TikTok', 'url' => 'https://www.tiktok.com', 'description' => '短视频社交平台', 'category' => '社交媒体', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-tiktok'],
             
             // 开发工具 (10个)
-            ['title' => 'GitHub', 'url' => 'https://github.com', 'description' => '代码托管和协作平台', 'category' => '开发工具', 'icon_url' => 'fab fa-github'],
-            ['title' => 'GitLab', 'url' => 'https://gitlab.com', 'description' => 'DevOps平台', 'category' => '开发工具', 'icon_url' => 'fab fa-gitlab'],
-            ['title' => 'VS Code', 'url' => 'https://code.visualstudio.com', 'description' => '微软代码编辑器', 'category' => '开发工具', 'icon_url' => 'fas fa-code'],
-            ['title' => 'Stack Overflow', 'url' => 'https://stackoverflow.com', 'description' => '程序员问答社区', 'category' => '开发工具', 'icon_url' => 'fab fa-stack-overflow'],
-            ['title' => 'MDN Web Docs', 'url' => 'https://developer.mozilla.org', 'description' => 'Web开发文档', 'category' => '开发工具', 'icon_url' => 'fab fa-firefox'],
-            ['title' => 'npm', 'url' => 'https://www.npmjs.com', 'description' => 'Node.js包管理器', 'category' => '开发工具', 'icon_url' => 'fab fa-npm'],
-            ['title' => 'Docker Hub', 'url' => 'https://hub.docker.com', 'description' => '容器镜像仓库', 'category' => '开发工具', 'icon_url' => 'fab fa-docker'],
-            ['title' => 'Postman', 'url' => 'https://www.postman.com', 'description' => 'API测试工具', 'category' => '开发工具', 'icon_url' => 'fas fa-vial'],
-            ['title' => 'CodePen', 'url' => 'https://codepen.io', 'description' => '前端代码在线编辑器', 'category' => '开发工具', 'icon_url' => 'fab fa-codepen'],
-            ['title' => 'JSFiddle', 'url' => 'https://jsfiddle.net', 'description' => '在线代码测试工具', 'category' => '开发工具', 'icon_url' => 'fas fa-code'],
+            ['title' => 'GitHub', 'url' => 'https://github.com', 'description' => '代码托管和协作平台', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-github'],
+            ['title' => 'GitLab', 'url' => 'https://gitlab.com', 'description' => 'DevOps平台', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-gitlab'],
+            ['title' => 'VS Code', 'url' => 'https://code.visualstudio.com', 'description' => '微软代码编辑器', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-code'],
+            ['title' => 'Stack Overflow', 'url' => 'https://stackoverflow.com', 'description' => '程序员问答社区', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-stack-overflow'],
+            ['title' => 'MDN Web Docs', 'url' => 'https://developer.mozilla.org', 'description' => 'Web开发文档', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-firefox'],
+            ['title' => 'npm', 'url' => 'https://www.npmjs.com', 'description' => 'Node.js包管理器', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-npm'],
+            ['title' => 'Docker Hub', 'url' => 'https://hub.docker.com', 'description' => '容器镜像仓库', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-docker'],
+            ['title' => 'Postman', 'url' => 'https://www.postman.com', 'description' => 'API测试工具', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-vial'],
+            ['title' => 'CodePen', 'url' => 'https://codepen.io', 'description' => '前端代码在线编辑器', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-codepen'],
+            ['title' => 'JSFiddle', 'url' => 'https://jsfiddle.net', 'description' => '在线代码测试工具', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-code'],
             
             // 设计资源 (10个)
-            ['title' => 'Dribbble', 'url' => 'https://dribbble.com', 'description' => '设计师作品展示平台', 'category' => '设计资源', 'icon_url' => 'fab fa-dribbble'],
-            ['title' => 'Behance', 'url' => 'https://behance.net', 'description' => '创意设计作品展示', 'category' => '设计资源', 'icon_url' => 'fab fa-behance'],
-            ['title' => 'Figma', 'url' => 'https://figma.com', 'description' => '在线设计协作工具', 'category' => '设计资源', 'icon_url' => 'fab fa-figma'],
-            ['title' => 'Adobe Creative Cloud', 'url' => 'https://creativecloud.com', 'description' => 'Adobe创意套件', 'category' => '设计资源', 'icon_url' => 'fab fa-adobe'],
-            ['title' => 'Canva', 'url' => 'https://www.canva.com', 'description' => '在线设计平台', 'category' => '设计资源', 'icon_url' => 'fas fa-palette'],
-            ['title' => 'Unsplash', 'url' => 'https://unsplash.com', 'description' => '免费高质量图片', 'category' => '设计资源', 'icon_url' => 'fas fa-camera'],
-            ['title' => 'Pexels', 'url' => 'https://www.pexels.com', 'description' => '免费图片和视频', 'category' => '设计资源', 'icon_url' => 'fas fa-camera'],
-            ['title' => 'Freepik', 'url' => 'https://www.freepik.com', 'description' => '免费设计素材', 'category' => '设计资源', 'icon_url' => 'fas fa-palette'],
-            ['title' => 'Iconfont', 'url' => 'https://www.iconfont.cn', 'description' => '阿里巴巴矢量图标库', 'category' => '设计资源', 'icon_url' => 'fas fa-icons'],
-            ['title' => 'LottieFiles', 'url' => 'https://lottiefiles.com', 'description' => '动画设计资源', 'category' => '设计资源', 'icon_url' => 'fas fa-play-circle'],
+            ['title' => 'Dribbble', 'url' => 'https://dribbble.com', 'description' => '设计师作品展示平台', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-dribbble'],
+            ['title' => 'Behance', 'url' => 'https://behance.net', 'description' => '创意设计作品展示', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-behance'],
+            ['title' => 'Figma', 'url' => 'https://figma.com', 'description' => '在线设计协作工具', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-figma'],
+            ['title' => 'Adobe Creative Cloud', 'url' => 'https://creativecloud.com', 'description' => 'Adobe创意套件', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-adobe'],
+            ['title' => 'Canva', 'url' => 'https://www.canva.com', 'description' => '在线设计平台', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-palette'],
+            ['title' => 'Unsplash', 'url' => 'https://unsplash.com', 'description' => '免费高质量图片', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-camera'],
+            ['title' => 'Pexels', 'url' => 'https://www.pexels.com', 'description' => '免费图片和视频', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-camera'],
+            ['title' => 'Freepik', 'url' => 'https://www.freepik.com', 'description' => '免费设计素材', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-palette'],
+            ['title' => 'Iconfont', 'url' => 'https://www.iconfont.cn', 'description' => '阿里巴巴矢量图标库', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-icons'],
+            ['title' => 'LottieFiles', 'url' => 'https://lottiefiles.com', 'description' => '动画设计资源', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-play-circle'],
             
             // 学习平台 (10个)
-            ['title' => 'Coursera', 'url' => 'https://www.coursera.org', 'description' => '在线课程平台', 'category' => '学习平台', 'icon_url' => 'fas fa-graduation-cap'],
-            ['title' => 'edX', 'url' => 'https://www.edx.org', 'description' => '在线学习平台', 'category' => '学习平台', 'icon_url' => 'fas fa-university'],
-            ['title' => 'Udemy', 'url' => 'https://www.udemy.com', 'description' => '在线课程市场', 'category' => '学习平台', 'icon_url' => 'fas fa-laptop'],
-            ['title' => 'Khan Academy', 'url' => 'https://www.khanacademy.org', 'description' => '免费教育平台', 'category' => '学习平台', 'icon_url' => 'fas fa-book-open'],
-            ['title' => 'Codecademy', 'url' => 'https://www.codecademy.com', 'description' => '编程学习平台', 'category' => '学习平台', 'icon_url' => 'fas fa-code'],
-            ['title' => 'LeetCode', 'url' => 'https://leetcode.com', 'description' => '算法练习平台', 'category' => '学习平台', 'icon_url' => 'fas fa-code'],
-            ['title' => '慕课网', 'url' => 'https://www.imooc.com', 'description' => 'IT技能学习平台', 'category' => '学习平台', 'icon_url' => 'fas fa-laptop-code'],
-            ['title' => '极客时间', 'url' => 'https://time.geekbang.org', 'description' => 'IT知识服务', 'category' => '学习平台', 'icon_url' => 'fas fa-brain'],
-            ['title' => '网易云课堂', 'url' => 'https://study.163.com', 'description' => '在线学习平台', 'category' => '学习平台', 'icon_url' => 'fas fa-graduation-cap'],
-            ['title' => '腾讯课堂', 'url' => 'https://ke.qq.com', 'description' => '在线教育平台', 'category' => '学习平台', 'icon_url' => 'fas fa-chalkboard-teacher'],
+            ['title' => 'Coursera', 'url' => 'https://www.coursera.org', 'description' => '在线课程平台', 'category' => '学习平台', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-graduation-cap'],
+            ['title' => 'edX', 'url' => 'https://www.edx.org', 'description' => '在线学习平台', 'category' => '学习平台', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-university'],
+            ['title' => 'Udemy', 'url' => 'https://www.udemy.com', 'description' => '在线课程市场', 'category' => '学习平台', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-laptop'],
+            ['title' => 'Khan Academy', 'url' => 'https://www.khanacademy.org', 'description' => '免费教育平台', 'category' => '学习平台', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-book-open'],
+            ['title' => 'Codecademy', 'url' => 'https://www.codecademy.com', 'description' => '编程学习平台', 'category' => '学习平台', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-code'],
+            ['title' => 'LeetCode', 'url' => 'https://leetcode.com', 'description' => '算法练习平台', 'category' => '学习平台', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-code'],
+            ['title' => '慕课网', 'url' => 'https://www.imooc.com', 'description' => 'IT技能学习平台', 'category' => '学习平台', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-laptop-code'],
+            ['title' => '极客时间', 'url' => 'https://time.geekbang.org', 'description' => 'IT知识服务', 'category' => '学习平台', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-brain'],
+            ['title' => '网易云课堂', 'url' => 'https://study.163.com', 'description' => '在线学习平台', 'category' => '学习平台', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-graduation-cap'],
+            ['title' => '腾讯课堂', 'url' => 'https://ke.qq.com', 'description' => '在线教育平台', 'category' => '学习平台', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-chalkboard-teacher'],
             
             // 新闻资讯 (10个)
-            ['title' => 'TechCrunch', 'url' => 'https://techcrunch.com', 'description' => '科技新闻网站', 'category' => '新闻资讯', 'icon_url' => 'fas fa-newspaper'],
-            ['title' => 'The Verge', 'url' => 'https://www.theverge.com', 'description' => '科技新闻和评论', 'category' => '新闻资讯', 'icon_url' => 'fas fa-laptop'],
-            ['title' => 'Ars Technica', 'url' => 'https://arstechnica.com', 'description' => '科技新闻和分析', 'category' => '新闻资讯', 'icon_url' => 'fas fa-microchip'],
-            ['title' => 'Engadget', 'url' => 'https://engadget.com', 'description' => '科技新闻和评测', 'category' => '新闻资讯', 'icon_url' => 'fas fa-mobile-alt'],
-            ['title' => '36氪', 'url' => 'https://36kr.com', 'description' => '科技创业资讯', 'category' => '新闻资讯', 'icon_url' => 'fas fa-rocket'],
-            ['title' => '虎嗅', 'url' => 'https://www.huxiu.com', 'description' => '科技商业资讯', 'category' => '新闻资讯', 'icon_url' => 'fas fa-chart-line'],
-            ['title' => '品玩', 'url' => 'https://www.pingwest.com', 'description' => '科技生活方式', 'category' => '新闻资讯', 'icon_url' => 'fas fa-globe'],
-            ['title' => '爱范儿', 'url' => 'https://www.ifanr.com', 'description' => '科技媒体', 'category' => '新闻资讯', 'icon_url' => 'fas fa-tablet-alt'],
-            ['title' => '少数派', 'url' => 'https://sspai.com', 'description' => '数字生活指南', 'category' => '新闻资讯', 'icon_url' => 'fas fa-keyboard'],
-            ['title' => 'CSDN', 'url' => 'https://www.csdn.net', 'description' => 'IT技术社区', 'category' => '新闻资讯', 'icon_url' => 'fas fa-code'],
+            ['title' => 'TechCrunch', 'url' => 'https://techcrunch.com', 'description' => '科技新闻网站', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-newspaper'],
+            ['title' => 'The Verge', 'url' => 'https://www.theverge.com', 'description' => '科技新闻和评论', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-laptop'],
+            ['title' => 'Ars Technica', 'url' => 'https://arstechnica.com', 'description' => '科技新闻和分析', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-microchip'],
+            ['title' => 'Engadget', 'url' => 'https://engadget.com', 'description' => '科技新闻和评测', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-mobile-alt'],
+            ['title' => '36氪', 'url' => 'https://36kr.com', 'description' => '科技创业资讯', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-rocket'],
+            ['title' => '虎嗅', 'url' => 'https://www.huxiu.com', 'description' => '科技商业资讯', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-chart-line'],
+            ['title' => '品玩', 'url' => 'https://www.pingwest.com', 'description' => '科技生活方式', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-globe'],
+            ['title' => '爱范儿', 'url' => 'https://www.ifanr.com', 'description' => '科技媒体', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-tablet-alt'],
+            ['title' => '少数派', 'url' => 'https://sspai.com', 'description' => '数字生活指南', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-keyboard'],
+            ['title' => 'CSDN', 'url' => 'https://www.csdn.net', 'description' => 'IT技术社区', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-code'],
             
             // 云服务 (10个)
-            ['title' => 'AWS', 'url' => 'https://aws.amazon.com', 'description' => '亚马逊云服务', 'category' => '云服务', 'icon_url' => 'fab fa-aws'],
-            ['title' => 'Microsoft Azure', 'url' => 'https://azure.microsoft.com', 'description' => '微软云服务', 'category' => '云服务', 'icon_url' => 'fab fa-microsoft'],
-            ['title' => 'Google Cloud', 'url' => 'https://cloud.google.com', 'description' => '谷歌云服务', 'category' => '云服务', 'icon_url' => 'fab fa-google'],
-            ['title' => '阿里云', 'url' => 'https://www.aliyun.com', 'description' => '阿里巴巴云服务', 'category' => '云服务', 'icon_url' => 'fas fa-cloud'],
-            ['title' => '腾讯云', 'url' => 'https://cloud.tencent.com', 'description' => '腾讯云服务', 'category' => '云服务', 'icon_url' => 'fas fa-cloud'],
-            ['title' => '华为云', 'url' => 'https://www.huaweicloud.com', 'description' => '华为云服务', 'category' => '云服务', 'icon_url' => 'fas fa-cloud'],
-            ['title' => '百度云', 'url' => 'https://cloud.baidu.com', 'description' => '百度云服务', 'category' => '云服务', 'icon_url' => 'fas fa-cloud'],
-            ['title' => 'DigitalOcean', 'url' => 'https://www.digitalocean.com', 'description' => '云服务器提供商', 'category' => '云服务', 'icon_url' => 'fas fa-server'],
-            ['title' => 'Vercel', 'url' => 'https://vercel.com', 'description' => '前端部署平台', 'category' => '云服务', 'icon_url' => 'fas fa-rocket'],
-            ['title' => 'Netlify', 'url' => 'https://www.netlify.com', 'description' => '静态网站托管', 'category' => '云服务', 'icon_url' => 'fas fa-globe'],
+            ['title' => 'AWS', 'url' => 'https://aws.amazon.com', 'description' => '亚马逊云服务', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-aws'],
+            ['title' => 'Microsoft Azure', 'url' => 'https://azure.microsoft.com', 'description' => '微软云服务', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-microsoft'],
+            ['title' => 'Google Cloud', 'url' => 'https://cloud.google.com', 'description' => '谷歌云服务', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-google'],
+            ['title' => '阿里云', 'url' => 'https://www.aliyun.com', 'description' => '阿里巴巴云服务', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-cloud'],
+            ['title' => '腾讯云', 'url' => 'https://cloud.tencent.com', 'description' => '腾讯云服务', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-cloud'],
+            ['title' => '华为云', 'url' => 'https://www.huaweicloud.com', 'description' => '华为云服务', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-cloud'],
+            ['title' => '百度云', 'url' => 'https://cloud.baidu.com', 'description' => '百度云服务', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-cloud'],
+            ['title' => 'DigitalOcean', 'url' => 'https://www.digitalocean.com', 'description' => '云服务器提供商', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-server'],
+            ['title' => 'Vercel', 'url' => 'https://vercel.com', 'description' => '前端部署平台', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-rocket'],
+            ['title' => 'Netlify', 'url' => 'https://www.netlify.com', 'description' => '静态网站托管', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-globe'],
             
             // 娱乐休闲 (10个)
-            ['title' => 'YouTube', 'url' => 'https://www.youtube.com', 'description' => '全球最大的视频网站', 'category' => '娱乐休闲', 'icon_url' => 'fab fa-youtube'],
-            ['title' => 'Bilibili', 'url' => 'https://www.bilibili.com', 'description' => '哔哩哔哩视频网站', 'category' => '娱乐休闲', 'icon_url' => 'fas fa-play-circle'],
-            ['title' => 'Netflix', 'url' => 'https://www.netflix.com', 'description' => '在线流媒体平台', 'category' => '娱乐休闲', 'icon_url' => 'fas fa-film'],
-            ['title' => 'Spotify', 'url' => 'https://www.spotify.com', 'description' => '音乐流媒体平台', 'category' => '娱乐休闲', 'icon_url' => 'fab fa-spotify'],
-            ['title' => 'Steam', 'url' => 'https://store.steampowered.com', 'description' => '游戏购买平台', 'category' => '娱乐休闲', 'icon_url' => 'fab fa-steam'],
-            ['title' => 'Epic Games', 'url' => 'https://www.epicgames.com', 'description' => '游戏平台', 'category' => '娱乐休闲', 'icon_url' => 'fas fa-gamepad'],
-            ['title' => '网易云音乐', 'url' => 'https://music.163.com', 'description' => '音乐流媒体', 'category' => '娱乐休闲', 'icon_url' => 'fas fa-music'],
-            ['title' => 'QQ音乐', 'url' => 'https://y.qq.com', 'description' => '音乐流媒体', 'category' => '娱乐休闲', 'icon_url' => 'fas fa-music'],
-            ['title' => '抖音', 'url' => 'https://www.douyin.com', 'description' => '短视频平台', 'category' => '娱乐休闲', 'icon_url' => 'fas fa-video'],
-            ['title' => '快手', 'url' => 'https://www.kuaishou.com', 'description' => '短视频平台', 'category' => '娱乐休闲', 'icon_url' => 'fas fa-video']
+            ['title' => 'YouTube', 'url' => 'https://www.youtube.com', 'description' => '全球最大的视频网站', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-youtube'],
+            ['title' => 'Bilibili', 'url' => 'https://www.bilibili.com', 'description' => '哔哩哔哩视频网站', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-play-circle'],
+            ['title' => 'Netflix', 'url' => 'https://www.netflix.com', 'description' => '在线流媒体平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-film'],
+            ['title' => 'Spotify', 'url' => 'https://www.spotify.com', 'description' => '音乐流媒体平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-spotify'],
+            ['title' => 'Steam', 'url' => 'https://store.steampowered.com', 'description' => '游戏购买平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-steam'],
+            ['title' => 'Epic Games', 'url' => 'https://www.epicgames.com', 'description' => '游戏平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-gamepad'],
+            ['title' => '网易云音乐', 'url' => 'https://music.163.com', 'description' => '音乐流媒体', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-music'],
+            ['title' => 'QQ音乐', 'url' => 'https://y.qq.com', 'description' => '音乐流媒体', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-music'],
+            ['title' => '抖音', 'url' => 'https://www.douyin.com', 'description' => '短视频平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-video'],
+            ['title' => '快手', 'url' => 'https://www.kuaishou.com', 'description' => '短视频平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fa-video']
         ];
 
         // 获取分类ID映射
@@ -509,14 +525,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             $categoryMap[$row['name']] = $row['id'];
         }
 
-        $stmt = $pdo->prepare("INSERT IGNORE INTO navigation_links (title, url, description, icon_url, category_id, order_index, is_active, click_count) VALUES (?, ?, ?, ?, ?, ?, 1, 0)");
+        $stmt = $pdo->prepare("INSERT IGNORE INTO navigation_links (title, url, description, icon_type, icon_fontawesome_color, icon_fontawesome, category_id, order_index, is_active, click_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 0)");
         foreach ($links as $index => $link) {
             $categoryId = $categoryMap[$link['category']] ?? null;
             $stmt->execute([
                 $link['title'], 
                 $link['url'], 
                 $link['description'], 
-                $link['icon_url'] ?? 'fas fa-link',
+                $link['icon_type'], 
+                $link['icon_fontawesome_color'], 
+                $link['icon_fontawesome'] ?? 'fa-link',
                 $categoryId, 
                 $index + 1
             ]);
