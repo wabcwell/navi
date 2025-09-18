@@ -5,7 +5,7 @@ $error = '';
 
 // 检查是否已登录
 if (User::checkLogin()) {
-    header('Location: ' . Settings::getAdminUrl() . '/dashboard.php');
+    header('Location: dashboard.php');
     exit();
 }
 
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $logs = new Logs();
             $logs->addLoginLog($user['id'], $user['username'], true, null, $_SERVER['REMOTE_ADDR'] ?? null);
             
-            header('Location: ' . Settings::getAdminUrl() . '/dashboard.php');
+            header('Location: dashboard.php');
             exit();
         } else {
             $error = '用户名或密码错误';
@@ -49,8 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理登录 - 导航网站</title>
-    <link href="<?php echo Settings::getAdminUrl(); ?>/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="<?php echo Settings::getAdminUrl(); ?>/assets/bootstrap/icons/bootstrap-icons.css" rel="stylesheet">
+    <link href="/admin/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/admin/assets/bootstrap/icons/bootstrap-icons.css" rel="stylesheet">
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

@@ -105,6 +105,9 @@ include '../templates/header.php';
             <a href="general.php" class="nav-link">
                 <i class="bi bi-gear"></i> 基本设置
             </a>
+            <a href="appearance.php" class="nav-link">
+                <i class="bi bi-palette"></i> 外观设置
+            </a>
             <a href="security.php" class="nav-link active">
                 <i class="bi bi-shield-lock"></i> 安全设置
             </a>

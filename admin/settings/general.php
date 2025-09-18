@@ -110,39 +110,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $settingsManager->set('site_logo_type', $site_logo_type);
     $settingsManager->set('site_logo_color', $site_logo_color);
-
-    // 处理背景图片设置
-    $background_type = $_POST['background_type'] ?? 'none';
-    $background_image = $settingsManager->get('background_image');
-    $background_color = $settingsManager->get('background_color');
-    $background_api = $settingsManager->get('background_api');
-    
-    // 处理背景图片上传
-    if ($background_type === 'image' && isset($_FILES['background_image_file']) && $_FILES['background_image_file']['error'] === UPLOAD_ERR_OK) {
-        $fileUpload = get_file_upload_manager('backgrounds');
-        $fileUpload->setAllowedTypes(['jpg', 'jpeg', 'png', 'gif', 'webp']);
-        $upload_result = $fileUpload->upload($_FILES['background_image_file']);
-        if ($upload_result['success']) {
-            // 删除旧背景图片
-            if ($background_image && strpos($background_image, 'http') !== 0) {
-                $old_bg_path = '../uploads/backgrounds/' . $background_image;
-                if (file_exists($old_bg_path)) {
-                    unlink($old_bg_path);
-                }
-            }
-            $background_image = $upload_result['file_name'];
-        } else {
-            $errors[] = $upload_result['error'];
-        }
-    } elseif ($background_type === 'api') {
-        $background_image = trim($_POST['background_api_url'] ?? '');
-    } elseif ($background_type === 'color') {
-        $background_color = trim($_POST['background_color_value'] ?? '#ffffff');
-        $background_image = '';
-    } elseif ($background_type === 'none') {
-        $background_image = '';
-        $background_color = '';
-    }
     
     // 如果没有错误，保存设置
     if (empty($errors)) {
@@ -160,10 +127,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $settingsManager->set('site_logo_color', $site_logo_color);
         $settingsManager->set('site_logo_image', $site_logo_image); // 保存最后一次上传的图片
         $settingsManager->set('site_logo_icon', $site_logo_icon); // 保存最后一次设置的图标
-        $settingsManager->set('background_type', $background_type);
-        $settingsManager->set('background_image', $background_image);
-        $settingsManager->set('background_color', $background_color);
-        $settingsManager->set('background_api', $background_api);
         
         // 页脚设置
         $settingsManager->set('footer_content', trim($_POST['footer_content'] ?? ''));
@@ -173,13 +136,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 上传设置
         $settingsManager->set('upload_max_size', max(1, min(100, intval($_POST['upload_max_size'] ?? 10))));
         $settingsManager->set('upload_allowed_types', trim($_POST['upload_allowed_types'] ?? 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar'));
-        
-        // 保存透明度设置
-        $settingsManager->set('bg-overlay', max(0, min(1, floatval($_POST['bg-overlay'] ?? 0.2))));
-        $settingsManager->set('header_bg_transparency', max(0, min(1, floatval($_POST['header_bg_transparency'] ?? 0.85))));
-        $settingsManager->set('category_bg_transparency', max(0, min(1, floatval($_POST['category_bg_transparency'] ?? 0.85))));
-        $settingsManager->set('links_area_transparency', max(0, min(1, floatval($_POST['links_area_transparency'] ?? 0.85))));
-        $settingsManager->set('link_card_transparency', max(0, min(1, floatval($_POST['link_card_transparency'] ?? 0.85))));
         
         $_SESSION['success'] = '网站设置更新成功';
         header('Location: general.php');
@@ -214,30 +170,7 @@ $settings = [
 $page_title = '网站设置';
 include '../templates/header.php'; ?>
 
-<style>
-.background-preview {
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    min-height: 200px;
-    border-radius: 0.375rem;
-}
 
-.color-preview {
-    min-height: 200px;
-    border-radius: 0.375rem;
-}
-
-.preview-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    color: #6c757d;
-    font-size: 14px;
-}
-</style>
 
 <?php if (isset($_SESSION['success'])): ?>
     <div class="alert alert-success alert-dismissible fade show">
@@ -263,10 +196,12 @@ include '../templates/header.php'; ?>
             <a href="general.php" class="nav-link active">
                 <i class="bi bi-gear"></i> 基本设置
             </a>
+            <a href="appearance.php" class="nav-link">
+                <i class="bi bi-palette"></i> 外观设置
+            </a>
             <a href="security.php" class="nav-link">
                 <i class="bi bi-shield-lock"></i> 安全设置
             </a>
-
         </div>
     </div>
 </div>
@@ -459,146 +394,7 @@ include '../templates/header.php'; ?>
 
                     </div>
 
-                    <!-- 背景图片设置模块 -->
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <hr>
-                            <h5 class="mb-3">背景图片设置</h5>
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-8">
-                            <div class="mb-3">
-                                <label class="form-label">背景类型</label>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="background_type" id="bg_none" 
-                                           value="none" <?php echo $settings['background_type'] === 'none' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="bg_none">
-                                        无背景
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="background_type" id="bg_image" 
-                                           value="image" <?php echo $settings['background_type'] === 'image' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="bg_image">
-                                        上传图片
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="background_type" id="bg_color" 
-                                           value="color" <?php echo $settings['background_type'] === 'color' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="bg_color">
-                                        纯色背景
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="background_type" id="bg_api" 
-                                           value="api" <?php echo $settings['background_type'] === 'api' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="bg_api">
-                                        第三方API
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div id="bg_image_section" class="mb-3" style="display: <?php echo $settings['background_type'] === 'image' ? 'block' : 'none'; ?>">
-                                <label for="background_image_file" class="form-label">选择背景图片</label>
-                                <input type="file" class="form-control" id="background_image_file" name="background_image_file" 
-                                       accept=".jpg,.jpeg,.png,.gif,.webp">
-                                <?php if ($settings['background_type'] === 'image' && $settings['background_image'] && strpos($settings['background_image'], 'http') !== 0): ?>
-                                    <div class="mt-2">
-                                        <img src="../../uploads/backgrounds/<?php echo $settings['background_image']; ?>" 
-                                             alt="当前背景" style="max-height: 150px;" class="img-thumbnail">
-                                        <input type="hidden" name="background_image_existing" value="<?php echo $settings['background_image']; ?>">
-                                    </div>
-                                <?php endif; ?>
-                                <div class="form-text">支持 JPG、PNG、GIF、WebP 格式</div>
-                            </div>
-
-                            <div id="bg_color_section" class="mb-3" style="display: <?php echo $settings['background_type'] === 'color' ? 'block' : 'none'; ?>">
-                                <label for="background_color_value" class="form-label">背景颜色</label>
-                                <input type="color" class="form-control form-control-color" id="background_color_value" 
-                                       name="background_color_value" value="<?php echo $settings['background_color']; ?>" style="width: 50px; height: 38px;">
-                                <input type="text" class="form-control mt-2" value="<?php echo $settings['background_color']; ?>" 
-                                       id="background_color_text" placeholder="#ffffff">
-                            </div>
-
-                            <div id="bg_api_section" class="mb-3" style="display: <?php echo $settings['background_type'] === 'api' ? 'block' : 'none'; ?>">
-                                <label for="background_api_url" class="form-label">API地址</label>
-                                <input type="url" class="form-control" id="background_api_url" name="background_api_url" 
-                                       value="<?php echo $settings['background_type'] === 'api' ? htmlspecialchars($settings['background_image']) : ''; ?>"
-                                       placeholder="https://source.unsplash.com/1920x1080/?nature">
-                                <div class="form-text">
-                                    支持 Unsplash、Lorem Picsum 等图片API<br>
-                                    示例：<code>https://source.unsplash.com/1920x1080/?nature,water</code>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0">实时预览</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div id="background_preview" class="border rounded p-3" style="min-height: 200px; position: relative;">
-                                        <div class="text-center text-muted" id="preview_placeholder">
-                                            <i class="bi bi-image" style="font-size: 48px;"></i>
-                                            <p class="mt-2 mb-0">背景预览</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-12">
-                            <hr>
-                            <h5 class="mb-3">首页透明度设置</h5>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="bg-overlay" class="form-label">整体背景透明度</label>
-                               <input type="range" class="form-range" id="bg-overlay" name="bg-overlay"
-                                      min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('bg-overlay', 0.2); ?>">
-                               <div class="form-text">整个网站背景的遮罩透明度: <span id="bg-overlay_value"><?php echo round($settingsManager->get('bg-overlay', 0.2) * 100); ?>%</span></div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="header_bg_transparency" class="form-label">标题背景透明度</label>
-                                <input type="range" class="form-range" id="header_bg_transparency" name="header_bg_transparency" 
-                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('header_bg_transparency', 0.85); ?>">
-                                <div class="form-text">Logo和标题所在区域的透明度: <span id="header_transparency_value"><?php echo round($settingsManager->get('header_bg_transparency', 0.85) * 100); ?>%</span></div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="category_bg_transparency" class="form-label">分类背景透明度</label>
-                                <input type="range" class="form-range" id="category_bg_transparency" name="category_bg_transparency" 
-                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('category_bg_transparency', 0.85); ?>">
-                                <div class="form-text">分类名称所在背景的透明度: <span id="category_transparency_value"><?php echo round($settingsManager->get('category_bg_transparency', 0.85) * 100); ?>%</span></div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="links_area_transparency" class="form-label">链接区域背景透明度</label>
-                                <input type="range" class="form-range" id="links_area_transparency" name="links_area_transparency" 
-                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('links_area_transparency', 0.85); ?>">
-                                <div class="form-text">链接区域整体的背景透明度: <span id="links_area_transparency_value"><?php echo round($settingsManager->get('links_area_transparency', 0.85) * 100); ?>%</span></div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="link_card_transparency" class="form-label">链接卡片透明度</label>
-                                <input type="range" class="form-range" id="link_card_transparency" name="link_card_transparency" 
-                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('link_card_transparency', 0.85); ?>">
-                                <div class="form-text">单个链接卡片本身的透明度: <span id="link_card_transparency_value"><?php echo round($settingsManager->get('link_card_transparency', 0.85) * 100); ?>%</span></div>
-                            </div>
-                        </div>
-                    </div>
 
                     <div class="row">
                         <div class="col-12">
@@ -1016,151 +812,7 @@ function toggleLogoType() {
             }
         });
 
-// 透明度滑块实时更新（直接显示透明度值）
-function initTransparencySliders() {
-    // 定义滑块ID和对应的显示值span ID映射
-    const transparencySliders = [
-        { sliderId: 'bg-overlay', valueId: 'bg-overlay_value' },
-        { sliderId: 'header_bg_transparency', valueId: 'header_transparency_value' },
-        { sliderId: 'category_bg_transparency', valueId: 'category_transparency_value' },
-        { sliderId: 'links_area_transparency', valueId: 'links_area_transparency_value' },
-        { sliderId: 'link_card_transparency', valueId: 'link_card_transparency_value' }
-    ];
 
-    transparencySliders.forEach(item => {
-        const slider = document.getElementById(item.sliderId);
-        const valueDisplay = document.getElementById(item.valueId);
-        
-        if (slider && valueDisplay) {
-            // 初始化显示值
-            const initialValue = parseFloat(slider.value);
-            valueDisplay.textContent = Math.round(initialValue * 100) + '%';
-
-            // 添加滑动事件监听
-            slider.addEventListener('input', function() {
-                // 直接显示透明度值
-                const transparency = parseFloat(this.value);
-                valueDisplay.textContent = Math.round(transparency * 100) + '%';
-            });
-        }
-    });
-}
-
-// 确保DOM加载完成后执行初始化
-document.addEventListener('DOMContentLoaded', initTransparencySliders);
-</script>
-
-<script>
-function updateBackgroundPreview() {
-    const type = document.querySelector('input[name="background_type"]:checked').value;
-    const preview = document.getElementById('background_preview');
-    
-    preview.style.backgroundImage = '';
-    preview.style.backgroundColor = '';
-    preview.innerHTML = '';
-    
-    switch(type) {
-        case 'image':
-            const imageUrl = document.getElementById('background_image_existing')?.value || '';
-            if (imageUrl) {
-                preview.style.backgroundImage = `url('../../uploads/backgrounds/${imageUrl}')`;
-            } else {
-                const fileInput = document.getElementById('background_image_file');
-                if (fileInput.files && fileInput.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        preview.style.backgroundImage = `url('${e.target.result}')`;
-                    };
-                    reader.readAsDataURL(fileInput.files[0]);
-                } else {
-                    preview.innerHTML = '<div class="preview-content">暂无背景图片</div>';
-                }
-            }
-            break;
-        case 'color':
-            const color = document.getElementById('background_color_value').value;
-            preview.style.backgroundColor = color;
-            break;
-        case 'api':
-            const apiUrl = document.getElementById('background_api_url').value;
-            if (apiUrl) {
-                preview.style.backgroundImage = `url('${apiUrl}')`;
-            } else {
-                preview.innerHTML = '<div class="preview-content">请输入API地址</div>';
-            }
-            break;
-        case 'none':
-            preview.style.backgroundColor = '#f8f9fa';
-            preview.innerHTML = '<div class="preview-content">无背景</div>';
-            break;
-    }
-}
-
-function handleImageUpload(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById('background_preview').style.backgroundImage = `url('${e.target.result}')`;
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-function toggleBackgroundFields() {
-    const type = document.querySelector('input[name="background_type"]:checked').value;
-    
-    document.getElementById('bg_image_section').style.display = type === 'image' ? 'block' : 'none';
-    document.getElementById('bg_color_section').style.display = type === 'color' ? 'block' : 'none';
-    document.getElementById('bg_api_section').style.display = type === 'api' ? 'block' : 'none';
-    
-    updateBackgroundPreview();
-}
-
-// 初始化
-document.addEventListener('DOMContentLoaded', function() {
-    toggleBackgroundFields();
-    
-    // 监听背景类型变化
-    document.querySelectorAll('input[name="background_type"]').forEach(radio => {
-        radio.addEventListener('change', toggleBackgroundFields);
-    });
-    
-    // 监听颜色变化
-    document.getElementById('background_color_value').addEventListener('input', updateBackgroundPreview);
-    document.getElementById('background_color_text').addEventListener('input', function() {
-        document.getElementById('background_color_value').value = this.value;
-        updateBackgroundPreview();
-    });
-    
-    // 监听API地址变化
-    document.getElementById('background_api_url').addEventListener('input', updateBackgroundPreview);
-    
-    // 监听图片上传
-    document.getElementById('background_image_file').addEventListener('change', handleImageUpload);
-    
-    // 初始化预览
-    updateBackgroundPreview();
-});
-
-// 图片预览功能
-function previewImage(input, previewId) {
-    const preview = document.getElementById(previewId);
-    const container = document.getElementById(previewId + '_container');
-    
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            container.style.display = 'block';
-        }
-        
-        reader.readAsDataURL(input.files[0]);
-    } else {
-        container.style.display = 'none';
-    }
-}
 </script>
 
 <?php include '../templates/footer.php'; ?>
