@@ -42,10 +42,10 @@ $footer_content = $settings['footer_content'];
     <link rel="stylesheet" href="admin/assets/fontawesome/css/all.min.css">
     <style>
         :root {
-            --header-bg-opacity: <?php echo htmlspecialchars(1 - floatval($header_bg_opacity)); ?>;
-            --category-bg-opacity: <?php echo htmlspecialchars(1 - floatval($category_bg_opacity)); ?>;
-            --links-area-opacity: <?php echo htmlspecialchars(1 - floatval($links_area_opacity)); ?>;
-            --link-card-opacity: <?php echo htmlspecialchars(1 - floatval($link_card_opacity)); ?>;
+            --header-bg-opacity: <?php echo htmlspecialchars(floatval($header_bg_opacity)); ?>;
+            --category-bg-opacity: <?php echo htmlspecialchars(floatval($category_bg_opacity)); ?>;
+            --links-area-opacity: <?php echo htmlspecialchars(floatval($links_area_opacity)); ?>;
+            --link-card-opacity: <?php echo htmlspecialchars(floatval($link_card_opacity)); ?>;
         }
     </style>
 </head>
@@ -87,25 +87,20 @@ $footer_content = $settings['footer_content'];
                 <section class="category-section">
                     <div class="category-header" style="--category-color: <?php echo htmlspecialchars($category['color'] ?: '#007bff'); ?>">
                         <div class="card-icon">
-                            <?php if ($category['icon']): ?>
-                                <?php 
-                                $icon = trim($category['icon']);
-                                if (preg_match('/^(fa-|fas\s|far\s|fab\s)/i', $icon)): 
-                                    $displayIcon = $icon;
-                                    if (!preg_match('/^(fas|far|fab)\s/i', $icon)) {
-                                        $displayIcon = 'fas ' . $icon;
-                                    }
-                                    $iconColor = $category['icon_color'] ?? $category['color'];
-                                ?>
-                                    <i class="<?php echo htmlspecialchars($displayIcon); ?>" style="color: <?php echo htmlspecialchars($iconColor); ?>"></i>
-                                <?php elseif (strpos($icon, 'bi-') === 0): ?>
-                                    <?php $iconColor = $category['icon_color'] ?? $category['color']; ?>
-                                    <i class="<?php echo htmlspecialchars($icon); ?>" style="color: <?php echo htmlspecialchars($iconColor); ?>"></i>
-                                <?php else: ?>
-                                    <img src="/uploads/categories/<?php echo $category['icon']; ?>" alt="<?php echo htmlspecialchars($category['name']); ?>" style="width: 100%; height: 100%; object-fit: contain;">
-                                <?php endif; ?>
+                            <?php 
+                            // 根据icon_type字段显示不同的图标
+                            $iconType = $category['icon_type'] ?? 'fontawesome';
+                            
+                            if ($iconType === 'fontawesome' && !empty($category['icon_fontawesome'])): 
+                                $iconColor = $category['icon_fontawesome_color'] ?? $category['color'];
+                            ?>
+                                <i class="<?php echo htmlspecialchars($category['icon_fontawesome']); ?>" style="color: <?php echo htmlspecialchars($iconColor); ?>"></i>
+                            <?php elseif ($iconType === 'upload' && !empty($category['icon_upload'])): ?>
+                                 <img src="<?php echo htmlspecialchars($category['icon_upload']); ?>" alt="<?php echo htmlspecialchars($category['name']); ?>" style="width: 100%; height: 100%; object-fit: contain;">
+                            <?php elseif ($iconType === 'url' && !empty($category['icon_url'])): ?>
+                                <img src="<?php echo htmlspecialchars($category['icon_url']); ?>" alt="<?php echo htmlspecialchars($category['name']); ?>" style="width: 100%; height: 100%; object-fit: contain;">
                             <?php else: ?>
-                                <?php $iconColor = $category['icon_color'] ?? $category['color']; ?>
+                                <?php $iconColor = $category['icon_fontawesome_color'] ?? $category['color']; ?>
                                 <i class="fas fa-folder" style="color: <?php echo htmlspecialchars($iconColor); ?>"></i>
                             <?php endif; ?>
                         </div>
@@ -125,38 +120,81 @@ $footer_content = $settings['footer_content'];
                                data-id="<?php echo $link['id']; ?>"
                                title="<?php echo htmlspecialchars($link['description']); ?>">
                                 <div class="link-icon">
-                                    <?php if ($link['icon_url']): ?>
-                                        <?php 
-                                        $icon = trim($link['icon_url']);
-                                        $parts = explode('|', $icon);
-                                        $icon_class = trim($parts[0]);
-                                        
-                                        if (preg_match('/^(fa-|fas\s|far\s|fab\s)/i', $icon_class)): 
-                                            $displayIcon = $icon_class;
-                                            if (!preg_match('/^(fas|far|fab)\s/i', $icon_class)) {
-                                                $displayIcon = 'fas ' . $icon_class;
-                                            }
-                                        ?>
-                                            <i class="<?php echo htmlspecialchars($displayIcon); ?>"></i>
-                                        <?php elseif (strpos($icon_class, 'bi-') === 0): ?>
-                                            <i class="<?php echo htmlspecialchars($icon_class); ?>"></i>
-                                        <?php else: ?>
-                                            <img src="<?php 
-                                            $icon_path = $icon_class;
-                                            if (!filter_var($icon_path, FILTER_VALIDATE_URL) && !empty($icon_path)) {
-                                                echo 'uploads/links/' . htmlspecialchars($icon_path);
+                                    <?php 
+                                    // 根据icon_type字段显示不同类型的图标
+                                    $iconType = $link['icon_type'] ?? 'none';
+                                    
+                                    switch ($iconType) {
+                                        case 'fontawesome':
+                                            // 显示FontAwesome图标
+                                            $iconClass = $link['icon_fontawesome'] ?? '';
+                                            $iconColor = $link['icon_fontawesome_color'] ?? '#007bff';
+                                            
+                                            if ($iconClass) {
+                                                // 确保有正确的前缀
+                                                if (!preg_match('/^(fas|far|fab)\s/i', $iconClass)) {
+                                                    $iconClass = 'fas ' . $iconClass;
+                                                }
+                                                ?>
+                                                <i class="<?php echo htmlspecialchars($iconClass); ?>" style="color: <?php echo htmlspecialchars($iconColor); ?>"></i>
+                                                <?php
                                             } else {
-                                                echo htmlspecialchars($icon_path);
+                                                // 没有FontAwesome图标时显示默认图标
+                                                ?>
+                                                <i class="fas fa-external-link-alt"></i>
+                                                <?php
                                             }
-                                        ?>" 
-                                                 alt="<?php echo htmlspecialchars($link['title']); ?>" 
-                                                 style="width: 20px; height: 20px; object-fit: contain;"
-                                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                            <i class="fas fa-external-link-alt" style="display: none; font-size: 0.875rem;"></i>
-                                        <?php endif; ?>
-                                    <?php else: ?>
-                                        <i class="fas fa-external-link-alt"></i>
-                                    <?php endif; ?>
+                                            break;
+                                            
+                                        case 'upload':
+                                            // 显示上传的图片
+                                            $iconUpload = $link['icon_upload'] ?? '';
+                                            
+                                            if ($iconUpload) {
+                                                ?>
+                                                <img src="<?php echo htmlspecialchars($iconUpload); ?>" 
+                                                     alt="<?php echo htmlspecialchars($link['title']); ?>" 
+                                                     style="width: 20px; height: 20px; object-fit: contain;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                <i class="fas fa-external-link-alt" style="display: none; font-size: 0.875rem;"></i>
+                                                <?php
+                                            } else {
+                                                // 没有上传图片时显示默认图标
+                                                ?>
+                                                <i class="fas fa-external-link-alt"></i>
+                                                <?php
+                                            }
+                                            break;
+                                            
+                                        case 'url':
+                                            // 显示URL图片
+                                            $iconUrl = $link['icon_url'] ?? '';
+                                            
+                                            if ($iconUrl) {
+                                                ?>
+                                                <img src="<?php echo htmlspecialchars($iconUrl); ?>" 
+                                                     alt="<?php echo htmlspecialchars($link['title']); ?>" 
+                                                     style="width: 20px; height: 20px; object-fit: contain;"
+                                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                                <i class="fas fa-external-link-alt" style="display: none; font-size: 0.875rem;"></i>
+                                                <?php
+                                            } else {
+                                                // 没有URL图片时显示默认图标
+                                                ?>
+                                                <i class="fas fa-external-link-alt"></i>
+                                                <?php
+                                            }
+                                            break;
+                                            
+                                        case 'none':
+                                        default:
+                                            // 显示预设的默认图片
+                                            ?>
+                                            <i class="fas fa-external-link-alt"></i>
+                                            <?php
+                                            break;
+                                    }
+                                    ?>
                                 </div>
                                 <div class="link-content">
                                     <h3><?php echo htmlspecialchars($link['title']); ?></h3>

@@ -16,25 +16,25 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// 加载背景设置和网站信息
+// 获取前台数据
 try {
-    // 获取设置管理实例
-    $settingsManager = get_settings_manager();
+    // 获取前台数据管理实例
+    $frontendData = get_frontend_data_manager();
+    $pageData = $frontendData->getHomePageData();
     
-    // 加载背景设置
-    $background_type = $settingsManager->get('background_type', 'color');
-    $background_color = $settingsManager->get('background_color', '#f3f4f6');
-    $background_image = $settingsManager->get('background_image', '');
-    $background_api = $settingsManager->get('background_api', 'https://picsum.photos/1920/1080');
-    $background_opacity = $settingsManager->get('background_opacity', '1');
-    
-    // 加载网站信息和透明度设置
-    $site_name = $settingsManager->get('site_name', '我的导航网站');
-    $site_description = $settingsManager->get('site_description', '一个简洁美观的导航网站');
-    $header_bg_opacity = $settingsManager->get('header_bg_opacity', '0.85');
-    $category_bg_opacity = $settingsManager->get('category_bg_opacity', '0.85');
-    $links_area_opacity = $settingsManager->get('links_area_opacity', '0.85');
-    $link_card_opacity = $settingsManager->get('link_card_opacity', '0.85');
+    // 从数据中提取设置
+    $settings = $pageData['settings'];
+    $background_type = $settings['background_type'];
+    $background_color = $settings['background_color'];
+    $background_image = $settings['background_image'];
+    $background_api = $settings['background_api'];
+    $background_opacity = $settings['background_opacity'];
+    $site_name = $settings['site_name'];
+    $site_description = $settings['site_description'];
+    $header_bg_opacity = $settings['header_bg_opacity'];
+    $category_bg_opacity = $settings['category_bg_opacity'];
+    $links_area_opacity = $settings['links_area_opacity'];
+    $link_card_opacity = $settings['link_card_opacity'];
     
 } catch (PDOException $e) {
     // 如果数据库连接失败，使用默认设置
