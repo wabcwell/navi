@@ -117,6 +117,7 @@ body.has-bg-image .header::before {
     max-width: 400px;
 }
 
+/* 搜索输入框样式 */
 .search-input {
     width: 100%;
     padding: 0.5rem 1rem;
@@ -127,11 +128,13 @@ body.has-bg-image .header::before {
     color: var(--text-primary);
     outline: none;
     transition: all 0.2s;
+    opacity: 0.65; /* 设置透明度为80% */
 }
 
 .search-input:focus {
     border-color: var(--accent-color);
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    opacity: 1; /* 聚焦时不透明 */
 }
 
 /* 主内容区域 */
