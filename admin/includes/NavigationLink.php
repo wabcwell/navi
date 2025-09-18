@@ -25,7 +25,7 @@ public function __construct($database = null) {
      * @return array 链接数组
      */
     public function getAllLinks($activeOnly = true) {
-        $sql = "SELECT * FROM navigation_links";
+        $sql = "SELECT id, title, url, description, category_id, icon_type, icon_fontawesome, icon_fontawesome_color, icon_url, icon_upload, icon_iconfont, order_index, is_active, click_count, created_at, updated_at FROM navigation_links";
         $params = [];
         
         if ($activeOnly) {
@@ -49,7 +49,7 @@ public function __construct($database = null) {
      * @return array|null 链接数据或null
      */
     public function getLinkById($id) {
-        $sql = "SELECT * FROM navigation_links WHERE id = ?";
+        $sql = "SELECT id, title, url, description, category_id, icon_type, icon_fontawesome, icon_fontawesome_color, icon_url, icon_upload, icon_iconfont, order_index, is_active, click_count, created_at, updated_at FROM navigation_links WHERE id = ?";
         
         try {
             $stmt = $this->db->query($sql, [$id]);
@@ -67,7 +67,7 @@ public function __construct($database = null) {
      * @return array 链接数组
      */
     public function getLinksByCategory($categoryId, $activeOnly = true) {
-        $sql = "SELECT * FROM navigation_links WHERE category_id = ?";
+        $sql = "SELECT id, title, url, description, category_id, icon_type, icon_fontawesome, icon_fontawesome_color, icon_url, icon_upload, icon_iconfont, order_index, is_active, click_count, created_at, updated_at FROM navigation_links WHERE category_id = ?";
         $params = [$categoryId];
         
         if ($activeOnly) {
@@ -107,6 +107,7 @@ public function __construct($database = null) {
             'icon_fontawesome_color' => '',
             'icon_url' => '',
             'icon_upload' => '',
+            'icon_iconfont' => '',
             'order_index' => 0,
             'is_active' => 1,
             'click_count' => 0,
@@ -185,7 +186,7 @@ public function __construct($database = null) {
      * @return array 匹配的链接数组
      */
     public function searchLinks($keyword) {
-        $sql = "SELECT * FROM navigation_links 
+        $sql = "SELECT id, title, url, description, category_id, icon_type, icon_fontawesome, icon_fontawesome_color, icon_url, icon_upload, icon_iconfont, order_index, is_active, click_count, created_at, updated_at FROM navigation_links 
                 WHERE is_active = 1 
                 AND (title LIKE ? OR description LIKE ? OR url LIKE ?)
                 ORDER BY order_index ASC, id ASC";
@@ -270,7 +271,7 @@ public function __construct($database = null) {
      * @return array 链接数据
      */
     public function getLinks($limit, $offset, $whereSql = '', $params = []) {
-        $sql = "SELECT l.id, l.title, l.url, l.description, l.category_id, l.icon_type, l.icon_fontawesome, l.icon_fontawesome_color, l.icon_url, l.icon_upload, l.order_index, l.is_active, l.click_count, l.created_at, l.updated_at, c.name as category_name 
+        $sql = "SELECT l.id, l.title, l.url, l.description, l.category_id, l.icon_type, l.icon_fontawesome, l.icon_fontawesome_color, l.icon_url, l.icon_upload, l.icon_iconfont, l.order_index, l.is_active, l.click_count, l.created_at, l.updated_at, c.name as category_name 
                 FROM navigation_links l 
                 LEFT JOIN categories c ON l.category_id = c.id 
                 $whereSql 

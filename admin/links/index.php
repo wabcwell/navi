@@ -326,6 +326,22 @@ include '../templates/header.php';
                                             }
                                             break;
                                             
+                                        case 'iconfont':
+                                            // 显示iconfont图标
+                                            if (!empty($link['icon_iconfont'])): 
+                                                $iconColor = $link['icon_iconfont_color'] ?? '#007bff';
+                                                ?>
+                                                <svg class="icon" aria-hidden="true" style="width: 1.5rem; height: 1.5rem; fill: <?php echo htmlspecialchars($iconColor); ?>;">
+                                                    <use xlink:href="#<?php echo htmlspecialchars($link['icon_iconfont']); ?>"></use>
+                                                </svg>
+                                            <?php else: ?>
+                                                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" 
+                                                     style="width: 32px; height: 32px;">
+                                                    <i class="bi bi-link-45deg" style="font-size: 1.2rem;"></i>
+                                                </div>
+                                            <?php endif;
+                                            break;
+                                            
                                         case 'none':
                                         default:
                                             // 显示默认图标

@@ -63,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'icon_type' => $_POST['icon_type'] ?? 'none',
         'icon_fontawesome' => $_POST['icon_fontawesome'] ?? '',
         'icon_fontawesome_color' => $_POST['icon_fontawesome_color'] ?? '#007bff',
+        'icon_iconfont' => $_POST['iconfont_icon'] ?? '', // Iconfont图标
         'icon_url' => $_POST['icon_url'] ?? '',
         'icon_upload' => $_POST['uploaded_icon_path'] ?? '', // 从隐藏字段获取上传的图标路径
         'order_index' => intval($_POST['order_index'] ?? 0),
@@ -130,25 +131,32 @@ function handleFileUpload($file, $type) {
 }
 ?>
 
-<?php include '../templates/header.php'; ?>
-<div class="container-fluid">
-    <div class="row">
-        <?php include '../templates/sidebar.php'; ?>
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">编辑链接</h1>
-                <div class="btn-toolbar mb-2 mb-md-0">
-                    <a href="index.php" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-arrow-left"></i> 返回列表
-                    </a>
-                </div>
-            </div>
+<?php 
+$page_title = '编辑链接';
+include '../templates/header.php'; 
+?>
 
-            <?php if (isset($error)): ?>
-                <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
-            <?php endif; ?>
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="../dashboard.php">仪表盘</a></li>
+        <li class="breadcrumb-item"><a href="index.php">链接管理</a></li>
+        <li class="breadcrumb-item active">编辑链接</li>
+    </ol>
+</nav>
 
-            <form id="linkForm" method="POST" enctype="multipart/form-data">
+<div class="d-flex justify-content-end mb-4">
+    <a href="index.php" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> 返回列表
+    </a>
+</div>
+
+<?php if (isset($error)): ?>
+    <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+<?php endif; ?>
+
+<div class="card">
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data" id="linkForm">
                 <!-- 第1行：链接标题 -->
                 <div class="mb-3">
                     <label for="title" class="form-label">链接标题 *</label>
@@ -213,6 +221,9 @@ function handleFileUpload($file, $type) {
                                     <input type="radio" class="btn-check" name="icon_type" id="icon_type_fontawesome" value="fontawesome" <?php echo ($link['icon_type'] ?? 'none') === 'fontawesome' ? 'checked' : ''; ?>>
                                     <label class="btn btn-outline-primary" for="icon_type_fontawesome">Font Awesome</label>
                                     
+                                    <input type="radio" class="btn-check" name="icon_type" id="icon_type_iconfont" value="iconfont" <?php echo ($link['icon_type'] ?? 'none') === 'iconfont' ? 'checked' : ''; ?>>
+                                    <label class="btn btn-outline-primary" for="icon_type_iconfont">Iconfont</label>
+                                    
                                     <input type="radio" class="btn-check" name="icon_type" id="icon_type_upload" value="upload" <?php echo ($link['icon_type'] ?? 'none') === 'upload' ? 'checked' : ''; ?>>
                                     <label class="btn btn-outline-primary" for="icon_type_upload">上传图片</label>
                                     
@@ -231,6 +242,8 @@ function handleFileUpload($file, $type) {
                                         echo htmlspecialchars($link['icon_url']);
                                     } elseif ($link['icon_type'] === 'fontawesome' && !empty($link['icon_fontawesome'])) {
                                         echo htmlspecialchars($link['icon_fontawesome']);
+                                    } elseif ($link['icon_type'] === 'iconfont' && !empty($link['icon_iconfont'])) {
+                                        echo htmlspecialchars($link['icon_iconfont']);
                                     } else {
                                         echo '';
                                     }
@@ -240,6 +253,7 @@ function handleFileUpload($file, $type) {
                                 <!-- 添加final_icon和final_icon_type隐藏字段 -->
                                 <input type="hidden" id="final_icon" name="final_icon" value="">
                                 <input type="hidden" id="final_icon_type" name="final_icon_type" value="<?php echo $link['icon_type'] ?? 'none'; ?>">
+                                <input type="hidden" id="iconfont_value" name="iconfont_value" value="<?php echo htmlspecialchars($link['icon_iconfont'] ?? ''); ?>">
                                 
                                 <!-- Font Awesome 图标选择 -->
                                 <div id="fontawesome_section" class="icon-section" style="display: none;">
@@ -261,6 +275,15 @@ function handleFileUpload($file, $type) {
                                                    value="<?php echo htmlspecialchars($link['icon_fontawesome_color'] ?? '#007bff'); ?>" style="height: 38px;">
                                         </div>
                                     </div>
+                                </div>
+
+                                <!-- Iconfont 图标输入 -->
+                                <div id="iconfont_section" class="icon-section" style="display: none;">
+                                    <label for="iconfont_icon" class="form-label">Iconfont 图标</label>
+                                    <input type="text" class="form-control" id="iconfont_icon" name="iconfont_icon" 
+                                           placeholder="输入图标名称，如: icon-a-appround51"
+                                           value="<?php echo htmlspecialchars($link['icon_iconfont'] ?? ''); ?>">
+                                    <small class="form-text text-muted">输入iconfont图标类名，如: icon-a-appround51</small>
                                 </div>
 
                                 <!-- 上传图片 -->
@@ -298,6 +321,10 @@ function handleFileUpload($file, $type) {
                             <div id="iconPreview" class="mb-2">
                                 <?php if (!empty($link['icon_fontawesome'])): ?>
                                     <i class="fas <?php echo $link['icon_fontawesome']; ?>" style="font-size: 3rem; color: <?php echo htmlspecialchars($link['icon_fontawesome_color'] ?? '#007bff'); ?>"></i>
+                                <?php elseif (!empty($link['icon_iconfont'])): ?>
+                                    <svg class="icon" aria-hidden="true" style="font-size: 3em;">
+                                        <use xlink:href="#<?php echo htmlspecialchars($link['icon_iconfont']); ?>"></use>
+                                    </svg>
                                 <?php elseif (!empty($link['icon_url'])): ?>
                                     <img src="<?php echo htmlspecialchars($link['icon_url']); ?>" class="image-preview" style="max-width: 100px; max-height: 100px; border-radius: 8px;">
                                 <?php elseif (!empty($link['icon_upload'])): ?>
@@ -347,6 +374,7 @@ const fontAwesomeIcons = <?php echo json_encode(getFontAwesomeIcons()); ?>;
 const iconParams = {
     icon_fontawesome: document.getElementById('icon_fontawesome')?.value || '',
     icon_fontawesome_color: document.getElementById('icon_color')?.value || '#000000',
+    icon_iconfont: document.getElementById('iconfont_icon')?.value || '',
     icon_upload: document.getElementById('uploaded_icon_path')?.value || '',
     icon_url: document.getElementById('icon_url')?.value || ''
 };
@@ -509,6 +537,17 @@ function updatePreview() {
             }
             break;
             
+        case 'iconfont':
+            const iconfontIconElement = document.getElementById('iconfont_icon');
+            const iconfontValue = iconfontIconElement ? iconfontIconElement.value : '';
+            
+            if (iconfontValue) {
+                previewContainer.innerHTML = `<svg class="icon" aria-hidden="true" style="font-size: 3em;"><use xlink:href="#${iconfontValue}"></use></svg>`;
+            } else {
+                previewContainer.innerHTML = '<div class="text-muted"><i class="fas fa-icons fa-3x"></i><p class="mt-2 mb-0">请输入Iconfont类名</p></div>';
+            }
+            break;
+            
         default:
             previewContainer.innerHTML = '<div class="text-muted"><i class="fas fa-ban fa-3x"></i><p class="mt-2 mb-0">无图标</p></div>';
     }
@@ -582,6 +621,14 @@ document.addEventListener('DOMContentLoaded', function() {
             updatePreview();
         });
     }
+
+    const iconfontIcon = document.getElementById('iconfont_icon');
+    if (iconfontIcon) {
+        iconfontIcon.addEventListener('input', function() {
+            iconParams.icon_iconfont = this.value;
+            updatePreview();
+        });
+    }
 });
 
 // 监听表单提交
@@ -619,6 +666,11 @@ if (linkForm) {
             iconUrl.value = iconParams.icon_url || '';
         }
         
+        const iconfontIcon = document.getElementById('iconfont_icon');
+        if (iconfontIcon) {
+            iconfontIcon.value = iconParams.icon_iconfont || '';
+        }
+        
         // 验证当前选中的标签页
         if (selectedIconType === 'url' && (!iconParams.icon_url || !iconParams.icon_url.trim())) {
             e.preventDefault();
@@ -629,6 +681,12 @@ if (linkForm) {
         if (selectedIconType === 'upload' && (!iconParams.icon_upload || !iconParams.icon_upload.trim())) {
             e.preventDefault();
             alert('请上传图片');
+            return false;
+        }
+        
+        if (selectedIconType === 'iconfont' && (!iconParams.icon_iconfont || !iconParams.icon_iconfont.trim())) {
+            e.preventDefault();
+            alert('请输入Iconfont图标类名');
             return false;
         }
         
@@ -749,5 +807,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+
+    </div>
+</div>
 
 <?php include '../templates/footer.php'; ?>

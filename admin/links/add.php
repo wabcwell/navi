@@ -112,6 +112,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (!isset($_POST['action']) || $_POST
             }
             break;
             
+        case 'iconfont':
+            $icon_iconfont = trim($_POST['icon_iconfont'] ?? '');
+            if ($icon_iconfont) {
+                $icon_filename = $icon_iconfont;
+            } else {
+                $errors[] = '请输入Iconfont图标类名';
+            }
+            break;
+            
         case 'upload':
             // 检查是否有已上传的图片路径
             if (isset($_POST['uploaded_icon_path']) && !empty($_POST['uploaded_icon_path'])) {
@@ -150,6 +159,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (!isset($_POST['action']) || $_POST
                 'icon_type' => $_POST['final_icon_type'] ?? 'none',
                 'icon_fontawesome' => $_POST['icon_fontawesome'] ?? '',
                 'icon_fontawesome_color' => $_POST['icon_fontawesome_color'] ?? '',
+                'icon_iconfont' => $_POST['icon_iconfont'] ?? '',
                 'icon_url' => $_POST['icon_url_input'] ?? '',
                 'icon_upload' => $_POST['uploaded_icon_path'] ?? '',
                 'order_index' => $order_index,
@@ -270,6 +280,9 @@ include '../templates/header.php';
                                     <input type="radio" class="btn-check" name="icon_type" id="icon_type_fontawesome" value="fontawesome" <?php echo ($_POST['icon_type'] ?? 'fontawesome') === 'fontawesome' ? 'checked' : ''; ?>>
                                     <label class="btn btn-outline-primary" for="icon_type_fontawesome">Font Awesome</label>
                                     
+                                    <input type="radio" class="btn-check" name="icon_type" id="icon_type_iconfont" value="iconfont" <?php echo ($_POST['icon_type'] ?? 'fontawesome') === 'iconfont' ? 'checked' : ''; ?>>
+                                    <label class="btn btn-outline-primary" for="icon_type_iconfont">Iconfont</label>
+                                    
                                     <input type="radio" class="btn-check" name="icon_type" id="icon_type_upload" value="upload" <?php echo ($_POST['icon_type'] ?? 'fontawesome') === 'upload' ? 'checked' : ''; ?>>
                                     <label class="btn btn-outline-primary" for="icon_type_upload">上传图片</label>
                                     
@@ -304,6 +317,14 @@ include '../templates/header.php';
                                 <input type="hidden" id="icon_fontawesome_color" name="icon_fontawesome_color" value="">
                             </div>
 
+                            <!-- Iconfont 图标输入 -->
+                            <div id="iconfont_section" style="display: none;">
+                                <label for="iconfont_icon" class="form-label">Iconfont 图标</label>
+                                <input type="text" class="form-control" id="iconfont_icon" name="iconfont_icon" 
+                                       placeholder="输入图标名称，如: icon-a-appround51" value="icon-a-appround51">
+                                <small class="form-text text-muted">输入iconfont图标类名，如: icon-a-appround51</small>
+                            </div>
+
                             <!-- 图片上传 -->
                             <div id="upload_section" style="display: none;">
                                 <label for="icon_upload_file" class="form-label">上传图标</label>
@@ -320,6 +341,8 @@ include '../templates/header.php';
                                 <input type="hidden" id="uploaded_icon_path" name="uploaded_icon_path" value="">
                                 <!-- 隐藏字段用于保存最终的图标类型 -->
                                 <input type="hidden" id="final_icon_type" name="final_icon_type" value="">
+                                <!-- 隐藏字段用于保存Iconfont图标 -->
+                                <input type="hidden" id="icon_iconfont" name="icon_iconfont" value="">
                             </div>
 
                             <!-- URL输入 -->
@@ -385,6 +408,7 @@ include '../templates/header.php';
 let iconParams = {
     icon_fontawesome: '<?php echo htmlspecialchars($default_icon ?? "fas fa-link"); ?>',
     icon_fontawesome_color: '<?php echo htmlspecialchars($default_color ?? "#000000"); ?>',
+    icon_iconfont: 'icon-a-appround51',
     icon_upload: '',
     icon_url: ''
 };
@@ -407,6 +431,22 @@ function updatePreview() {
             const iconClass = iconParams.icon_fontawesome || 'fas fa-link';
             const iconColor = iconParams.icon_fontawesome_color || '#000000';
             previewContainer.innerHTML = `<i class="${iconClass}" style="color: ${iconColor}; font-size: 3rem;"></i>`;
+            break;
+            
+        case 'iconfont':
+            const iconfontValue = iconParams.icon_iconfont || 'icon-a-appround51';
+            previewContainer.innerHTML = `<svg class="icon" aria-hidden="true" style="font-size: 3em;"><use xlink:href="#${iconfontValue}"></use></svg>`;
+            
+            // 确保iconfont SVG被正确渲染
+            setTimeout(() => {
+                const svg = previewContainer.querySelector('svg');
+                if (svg) {
+                    const use = svg.querySelector('use');
+                    if (use && !use.getAttribute('xlink:href').startsWith('#')) {
+                        use.setAttribute('xlink:href', '#' + iconfontValue);
+                    }
+                }
+            }, 100);
             break;
             
         case 'upload':
@@ -542,6 +582,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化图标显示
     const iconSections = {
         fontawesome: document.getElementById('fontawesome_section'),
+        iconfont: document.getElementById('iconfont_section'),
         upload: document.getElementById('upload_section'),
         url: document.getElementById('url_section'),
         none: document.getElementById('none_section')
@@ -551,7 +592,7 @@ document.addEventListener('DOMContentLoaded', function() {
     Object.values(iconSections).forEach(section => section.style.display = 'none');
     
     // 显示默认选中区域
-    const selectedType = '<?php echo ($_POST['icon_type'] ?? 'fontawesome'); ?>';
+    const selectedType = '<?php echo ($_POST["icon_type"] ?? "fontawesome"); ?>';
     if (iconSections[selectedType]) {
         iconSections[selectedType].style.display = 'block';
     }
@@ -560,6 +601,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化表单字段值
     document.getElementById('icon_fontawesome_input').value = iconParams.icon_fontawesome;
     document.getElementById('icon_fontawesome_color_input').value = iconParams.icon_fontawesome_color;
+    document.getElementById('iconfont_icon').value = iconParams.icon_iconfont;
     
     // 初始化图标预览
     updatePreview();
@@ -588,6 +630,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // 监听Font Awesome图标和颜色变化
     document.getElementById('icon_fontawesome_input').addEventListener('input', function() {
         iconParams.icon_fontawesome = this.value;
+        updatePreview();
+    });
+    
+    // 监听Iconfont图标变化
+    document.getElementById('iconfont_icon').addEventListener('input', function() {
+        iconParams.icon_iconfont = this.value;
         updatePreview();
     });
     
@@ -632,6 +680,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // 同步所有图标参数到隐藏字段（实现第7点要求）
             document.getElementById('icon_fontawesome').value = iconParams.icon_fontawesome || '';
             document.getElementById('icon_fontawesome_color').value = iconParams.icon_fontawesome_color || '';
+            document.getElementById('icon_iconfont').value = iconParams.icon_iconfont || '';
             document.getElementById('uploaded_icon_path').value = iconParams.icon_upload || '';
             document.getElementById('icon_url_input').value = iconParams.icon_url || '';
             
