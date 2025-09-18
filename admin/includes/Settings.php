@@ -69,9 +69,9 @@ class Settings {
      */
     public function get($key, $default = null) {
         try {
-            $stmt = $this->database->query("SELECT value FROM settings WHERE key_name = ?", [$key]);
+            $stmt = $this->database->query("SELECT setting_value FROM settings WHERE setting_key = ?", [$key]);
             $result = $stmt->fetch();
-            return $result ? $result['value'] : $default;
+            return $result ? $result['setting_value'] : $default;
         } catch (Exception $e) {
             return $default;
         }
@@ -104,10 +104,10 @@ class Settings {
             
             if ($existing !== null) {
                 // 更新现有记录
-                return $this->database->update('settings', ['value' => $value], 'key_name = ?', [$key]) > 0;
+                return $this->database->update('settings', ['setting_value' => $value], 'setting_key = ?', [$key]) > 0;
             } else {
                 // 插入新记录
-                return $this->database->insert('settings', ['key_name' => $key, 'value' => $value]) > 0;
+                return $this->database->insert('settings', ['setting_key' => $key, 'setting_value' => $value]) > 0;
             }
         } catch (Exception $e) {
             return false;
