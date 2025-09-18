@@ -20,11 +20,12 @@ function verify_admin_password($password) {
     }
     
     // 回退到从settings表获取密码
-    $admin_password = get_site_setting('admin_password');
+    $settingsManager = get_settings_manager();
+    $admin_password = $settingsManager->get('admin_password');
     if (!$admin_password) {
         // 首次安装，使用默认密码
         $admin_password = password_hash('admin123', PASSWORD_DEFAULT);
-        set_site_setting('admin_password', $admin_password);
+        $settingsManager->set('admin_password', $admin_password);
     }
     return password_verify($password, $admin_password);
 }

@@ -320,7 +320,8 @@ function handle_file_upload($file, $sub_dir = '', $allowed_types = ['image/jpeg'
     }
     
     // 获取允许的文件类型
-    $allowed_types_str = get_site_setting('upload_allowed_types', 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar');
+    $settingsManager = get_settings_manager();
+    $allowed_types_str = $settingsManager->get('upload_allowed_types', 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar');
     $allowed_extensions = array_map('trim', explode(',', strtolower($allowed_types_str)));
     
     // 检查文件扩展名
@@ -367,7 +368,7 @@ function handle_file_upload($file, $sub_dir = '', $allowed_types = ['image/jpeg'
     }
     
     // 检查文件大小
-    $max_size_mb = get_site_setting('upload_max_size', 10);
+    $max_size_mb = $settingsManager->get('upload_max_size', 10);
     $max_size_bytes = $max_size_mb * 1024 * 1024;
     if ($file['size'] > $max_size_bytes) {
         $result['error'] = '文件大小不能超过' . $max_size_mb . 'MB';

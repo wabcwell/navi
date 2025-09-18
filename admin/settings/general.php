@@ -8,6 +8,7 @@ if (!is_logged_in()) {
 }
 
 $pdo = get_db_connection();
+$settingsManager = get_settings_manager();
 
 // 处理表单提交
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -45,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // 处理网站图标上传
-    $site_icon = get_site_setting('site_icon');
+    $site_icon = $settingsManager->get('site_icon');
     if (isset($_FILES['site_icon']) && $_FILES['site_icon']['error'] === UPLOAD_ERR_OK) {
         $fileUpload = get_file_upload_manager('settings');
         $fileUpload->setAllowedTypes(['jpg', 'jpeg', 'png', 'ico']);
@@ -66,10 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 处理网站Logo设置
     $site_logo_type = $_POST['site_logo_type'] ?? 'image';
-    $site_logo = get_site_setting('site_logo');
-    $site_logo_image = get_site_setting('site_logo_image', ''); // 最后一次上传的图片
-    $site_logo_icon = get_site_setting('site_logo_icon', 'fas fa-home'); // 最后一次设置的图标
-    $site_logo_color = get_site_setting('site_logo_color', '#007bff');
+    $site_logo = $settingsManager->get('site_logo');
+    $site_logo_image = $settingsManager->get('site_logo_image', ''); // 最后一次上传的图片
+    $site_logo_icon = $settingsManager->get('site_logo_icon', 'fas fa-home'); // 最后一次设置的图标
+    $site_logo_color = $settingsManager->get('site_logo_color', '#007bff');
 
     // 处理删除Logo
     if (isset($_POST['remove_logo']) && $_POST['remove_logo'] === 'on') {
@@ -108,14 +109,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $site_logo = '';
     }
 
-    set_site_setting('site_logo_type', $site_logo_type);
-    set_site_setting('site_logo_color', $site_logo_color);
+    $settingsManager->set('site_logo_type', $site_logo_type);
+    $settingsManager->set('site_logo_color', $site_logo_color);
 
     // 处理背景图片设置
     $background_type = $_POST['background_type'] ?? 'none';
-    $background_image = get_site_setting('background_image');
-    $background_color = get_site_setting('background_color');
-    $background_api = get_site_setting('background_api');
+    $background_image = $settingsManager->get('background_image');
+    $background_color = $settingsManager->get('background_color');
+    $background_api = $settingsManager->get('background_api');
     
     // 处理背景图片上传
     if ($background_type === 'image' && isset($_FILES['background_image_file']) && $_FILES['background_image_file']['error'] === UPLOAD_ERR_OK) {
@@ -146,39 +147,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // 如果没有错误，保存设置
     if (empty($errors)) {
-        set_site_setting('site_name', $site_name);
-        set_site_setting('site_description', $site_description);
-        set_site_setting('site_keywords', $site_keywords);
-        set_site_setting('site_url', $site_url);
+        $settingsManager->set('site_name', $site_name);
+        $settingsManager->set('site_description', $site_description);
+        $settingsManager->set('site_keywords', $site_keywords);
+        $settingsManager->set('site_url', $site_url);
 
-        set_site_setting('items_per_page', $items_per_page);
-        set_site_setting('maintenance_mode', $maintenance_mode);
-        set_site_setting('maintenance_message', $maintenance_message);
-        set_site_setting('site_icon', $site_icon);
-        set_site_setting('site_logo', $site_logo);
-        set_site_setting('site_logo_type', $site_logo_type);
-        set_site_setting('site_logo_color', $site_logo_color);
-        set_site_setting('site_logo_image', $site_logo_image); // 保存最后一次上传的图片
-        set_site_setting('site_logo_icon', $site_logo_icon); // 保存最后一次设置的图标
-        set_site_setting('background_type', $background_type);
-        set_site_setting('background_image', $background_image);
-        set_site_setting('background_color', $background_color);
-        set_site_setting('background_api', $background_api);
+        $settingsManager->set('items_per_page', $items_per_page);
+        $settingsManager->set('maintenance_mode', $maintenance_mode);
+        $settingsManager->set('maintenance_message', $maintenance_message);
+        $settingsManager->set('site_icon', $site_icon);
+        $settingsManager->set('site_logo', $site_logo);
+        $settingsManager->set('site_logo_type', $site_logo_type);
+        $settingsManager->set('site_logo_color', $site_logo_color);
+        $settingsManager->set('site_logo_image', $site_logo_image); // 保存最后一次上传的图片
+        $settingsManager->set('site_logo_icon', $site_logo_icon); // 保存最后一次设置的图标
+        $settingsManager->set('background_type', $background_type);
+        $settingsManager->set('background_image', $background_image);
+        $settingsManager->set('background_color', $background_color);
+        $settingsManager->set('background_api', $background_api);
         
         // 页脚设置
-        set_site_setting('footer_content', trim($_POST['footer_content'] ?? ''));
+        $settingsManager->set('footer_content', trim($_POST['footer_content'] ?? ''));
 
-        set_site_setting('show_footer', isset($_POST['show_footer']) ? 1 : 0);
+        $settingsManager->set('show_footer', isset($_POST['show_footer']) ? 1 : 0);
         
         // 上传设置
-        set_site_setting('upload_max_size', max(1, min(100, intval($_POST['upload_max_size'] ?? 10))));
-        set_site_setting('upload_allowed_types', trim($_POST['upload_allowed_types'] ?? 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar'));
+        $settingsManager->set('upload_max_size', max(1, min(100, intval($_POST['upload_max_size'] ?? 10))));
+        $settingsManager->set('upload_allowed_types', trim($_POST['upload_allowed_types'] ?? 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar'));
         
         // 保存透明度设置
-        set_site_setting('header_bg_opacity', max(0, min(1, floatval($_POST['header_bg_opacity'] ?? 0.85))));
-        set_site_setting('category_bg_opacity', max(0, min(1, floatval($_POST['category_bg_opacity'] ?? 0.85))));
-        set_site_setting('links_area_opacity', max(0, min(1, floatval($_POST['links_area_opacity'] ?? 0.85))));
-        set_site_setting('link_card_opacity', max(0, min(1, floatval($_POST['link_card_opacity'] ?? 0.85))));
+        $settingsManager->set('header_bg_opacity', max(0, min(1, floatval($_POST['header_bg_opacity'] ?? 0.85))));
+        $settingsManager->set('category_bg_opacity', max(0, min(1, floatval($_POST['category_bg_opacity'] ?? 0.85))));
+        $settingsManager->set('links_area_opacity', max(0, min(1, floatval($_POST['links_area_opacity'] ?? 0.85))));
+        $settingsManager->set('link_card_opacity', max(0, min(1, floatval($_POST['link_card_opacity'] ?? 0.85))));
         
         $_SESSION['success'] = '网站设置更新成功';
         header('Location: general.php');
@@ -188,26 +189,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // 获取当前设置
 $settings = [
-    'site_name' => get_site_setting('site_name', '导航站'),
-    'site_description' => get_site_setting('site_description', '一个简洁的导航网站'),
-    'site_keywords' => get_site_setting('site_keywords', '导航,网站导航,网址导航'),
-    'site_url' => get_site_setting('site_url', ''),
+    'site_name' => $settingsManager->get('site_name', '导航站'),
+    'site_description' => $settingsManager->get('site_description', '一个简洁的导航网站'),
+    'site_keywords' => $settingsManager->get('site_keywords', '导航,网站导航,网址导航'),
+    'site_url' => $settingsManager->get('site_url', ''),
 
-    'items_per_page' => get_site_setting('items_per_page', 20),
-    'maintenance_mode' => get_site_setting('maintenance_mode', 0),
-    'maintenance_message' => get_site_setting('maintenance_message', '网站正在维护中，请稍后再访问'),
-    'site_icon' => get_site_setting('site_icon'),
-    'site_logo' => get_site_setting('site_logo'),
-    'site_logo_type' => get_site_setting('site_logo_type', 'image'),
-    'site_logo_image' => get_site_setting('site_logo_image', ''),
-    'site_logo_icon' => get_site_setting('site_logo_icon', 'fas fa-home'),
-    'site_logo_color' => get_site_setting('site_logo_color', '#007bff'),
-    'background_type' => get_site_setting('background_type', 'color'),
-    'background_image' => get_site_setting('background_image', ''),
-    'background_color' => get_site_setting('background_color', '#f8f9fa'),
-    'background_api' => get_site_setting('background_api', ''),
-    'footer_content' => get_site_setting('footer_content', '© 2024 导航站. All rights reserved.'),
-    'show_footer' => get_site_setting('show_footer', 1),
+    'items_per_page' => $settingsManager->get('items_per_page', 20),
+    'maintenance_mode' => $settingsManager->get('maintenance_mode', 0),
+    'maintenance_message' => $settingsManager->get('maintenance_message', '网站正在维护中，请稍后再访问'),
+    'site_icon' => $settingsManager->get('site_icon'),
+    'site_logo' => $settingsManager->get('site_logo'),
+    'site_logo_type' => $settingsManager->get('site_logo_type', 'image'),
+    'site_logo_image' => $settingsManager->get('site_logo_image', ''),
+    'site_logo_icon' => $settingsManager->get('site_logo_icon', 'fas fa-home'),
+    'site_logo_color' => $settingsManager->get('site_logo_color', '#007bff'),
+    'background_type' => $settingsManager->get('background_type', 'color'),
+    'background_image' => $settingsManager->get('background_image', ''),
+    'background_color' => $settingsManager->get('background_color', '#f8f9fa'),
+    'background_api' => $settingsManager->get('background_api', ''),
+    'footer_content' => $settingsManager->get('footer_content', '© 2024 导航站. All rights reserved.'),
+    'show_footer' => $settingsManager->get('show_footer', 1),
 ];
 
 $page_title = '网站设置';
@@ -281,7 +282,7 @@ include '../templates/header.php'; ?>
                             <h5 class="mb-3">网站信息</h5>
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -299,7 +300,7 @@ include '../templates/header.php'; ?>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
@@ -414,7 +415,7 @@ include '../templates/header.php'; ?>
                                     <div class="col-md-4">
                                         <label for="site_logo_color" class="form-label">图标颜色</label>
                                         <input type="color" class="form-control form-control-color w-100" id="site_logo_color" name="site_logo_color" 
-                                               value="<?php echo get_site_setting('site_logo_color', '#007bff'); ?>" 
+                                               value="<?php echo $settingsManager->get('site_logo_color', '#007bff'); ?>" 
                                                style="height: 38px;" onchange="updateLogoPreview()">
                                     </div>
                                 </div>
@@ -443,7 +444,7 @@ include '../templates/header.php'; ?>
                                         <?php elseif ($settings['site_logo_type'] === 'icon'): ?>
                                             <?php if (isset($settings['site_logo_icon']) && $settings['site_logo_icon']): ?>
                                                 <i class="<?php echo htmlspecialchars($settings['site_logo_icon']); ?>" 
-                                                   style="font-size: 40px; color: <?php echo get_site_setting('site_logo_color', '#007bff'); ?>"></i>
+                                                   style="font-size: 40px; color: <?php echo $settingsManager->get('site_logo_color', '#007bff'); ?>"></i>
                                             <?php else: ?>
                                                 <i class="fas fa-home" style="font-size: 40px; color: #007bff;"></i>
                                             <?php endif; ?>
@@ -563,15 +564,15 @@ include '../templates/header.php'; ?>
                             <div class="mb-3">
                                 <label for="header_bg_opacity" class="form-label">标题背景透明度</label>
                                 <input type="range" class="form-range" id="header_bg_opacity" name="header_bg_opacity" 
-                                       min="0" max="1" step="0.05" value="<?php echo get_site_setting('header_bg_opacity', 0.85); ?>">
-                                <div class="form-text">Logo和标题所在区域的透明度: <span id="header_opacity_value"><?php echo round(get_site_setting('header_bg_opacity', 0.85) * 100); ?>%</span></div>
+                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('header_bg_opacity', 0.85); ?>">
+                                <div class="form-text">Logo和标题所在区域的透明度: <span id="header_opacity_value"><?php echo round($settingsManager->get('header_bg_opacity', 0.85) * 100); ?>%</span></div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="category_bg_opacity" class="form-label">分类背景透明度</label>
                                 <input type="range" class="form-range" id="category_bg_opacity" name="category_bg_opacity" 
-                                       min="0" max="1" step="0.05" value="<?php echo get_site_setting('category_bg_opacity', 0.85); ?>">
-                                <div class="form-text">分类名称所在背景的透明度: <span id="category_opacity_value"><?php echo round(get_site_setting('category_bg_opacity', 0.85) * 100); ?>%</span></div>
+                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('category_bg_opacity', 0.85); ?>">
+                                <div class="form-text">分类名称所在背景的透明度: <span id="category_opacity_value"><?php echo round($settingsManager->get('category_bg_opacity', 0.85) * 100); ?>%</span></div>
                             </div>
                         </div>
 
@@ -579,15 +580,15 @@ include '../templates/header.php'; ?>
                             <div class="mb-3">
                                 <label for="links_area_opacity" class="form-label">链接区域背景透明度</label>
                                 <input type="range" class="form-range" id="links_area_opacity" name="links_area_opacity" 
-                                       min="0" max="1" step="0.05" value="<?php echo get_site_setting('links_area_opacity', 0.85); ?>">
-                                <div class="form-text">链接区域整体的背景透明度: <span id="links_area_opacity_value"><?php echo round(get_site_setting('links_area_opacity', 0.85) * 100); ?>%</span></div>
+                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('links_area_opacity', 0.85); ?>">
+                                <div class="form-text">链接区域整体的背景透明度: <span id="links_area_opacity_value"><?php echo round($settingsManager->get('links_area_opacity', 0.85) * 100); ?>%</span></div>
                             </div>
 
                             <div class="mb-3">
                                 <label for="link_card_opacity" class="form-label">链接卡片透明度</label>
                                 <input type="range" class="form-range" id="link_card_opacity" name="link_card_opacity" 
-                                       min="0" max="1" step="0.05" value="<?php echo get_site_setting('link_card_opacity', 0.85); ?>">
-                                <div class="form-text">单个链接卡片本身的透明度: <span id="link_card_opacity_value"><?php echo round(get_site_setting('link_card_opacity', 0.85) * 100); ?>%</span></div>
+                                       min="0" max="1" step="0.05" value="<?php echo $settingsManager->get('link_card_opacity', 0.85); ?>">
+                                <div class="form-text">单个链接卡片本身的透明度: <span id="link_card_opacity_value"><?php echo round($settingsManager->get('link_card_opacity', 0.85) * 100); ?>%</span></div>
                             </div>
                         </div>
                     </div>
@@ -692,7 +693,7 @@ include '../templates/header.php'; ?>
                             <div class="mb-3">
                                 <label for="upload_max_size" class="form-label">最大上传大小 (MB)</label>
                                 <input type="number" class="form-control" id="upload_max_size" name="upload_max_size" 
-                                       value="<?php echo get_site_setting('upload_max_size', 10); ?>" 
+                                       value="<?php echo $settingsManager->get('upload_max_size', 10); ?>" 
                                        min="1" max="100" required>
                                 <div class="form-text">单个文件的最大上传大小，1-100MB</div>
                             </div>
@@ -702,7 +703,7 @@ include '../templates/header.php'; ?>
                             <div class="mb-3">
                                 <label for="upload_allowed_types" class="form-label">允许的文件类型</label>
                                 <input type="text" class="form-control" id="upload_allowed_types" name="upload_allowed_types" 
-                                       value="<?php echo htmlspecialchars(get_site_setting('upload_allowed_types', 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar')); ?>" required>
+                                       value="<?php echo htmlspecialchars($settingsManager->get('upload_allowed_types', 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar')); ?>" required>
                                 <div class="form-text">用逗号分隔的文件扩展名，如：jpg,png,pdf</div>
                             </div>
                         </div>
@@ -996,8 +997,6 @@ function toggleLogoType() {
                     
                     footerPreview.innerHTML = content || '<span class="text-muted">暂无内容</span>';
                 });
-                
-
                 
                 // 显示/隐藏页脚切换
                 const showFooter = document.getElementById('show_footer');

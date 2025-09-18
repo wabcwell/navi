@@ -2,29 +2,32 @@
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../admin/includes/load.php';
 
+// 获取设置管理实例
+$settingsManager = get_settings_manager();
+
 // 获取设置
-$site_name = get_site_setting('site_name', '导航');
-$site_description = get_site_setting('site_description', '我的导航网站');
-$site_logo_type = get_site_setting('site_logo_type', 'icon');
-$site_logo = get_site_setting('site_logo', 'fas fa-compass');
-$site_logo_color = get_site_setting('site_logo_color', '#007bff');
+$site_name = $settingsManager->get('site_name', '导航');
+$site_description = $settingsManager->get('site_description', '我的导航网站');
+$site_logo_type = $settingsManager->get('site_logo_type', 'icon');
+$site_logo = $settingsManager->get('site_logo', 'fas fa-compass');
+$site_logo_color = $settingsManager->get('site_logo_color', '#007bff');
 
 // 背景设置
-$background_type = get_site_setting('background_type', 'color');
-$background_color = get_site_setting('background_color', '#f8fafc');
-$background_image = get_site_setting('background_image', '');
-$background_api = get_site_setting('background_api', 'https://picsum.photos/1920/1080');
-$background_opacity = get_site_setting('background_opacity', '1');
+$background_type = $settingsManager->get('background_type', 'color');
+$background_color = $settingsManager->get('background_color', '#f8fafc');
+$background_image = $settingsManager->get('background_image', '');
+$background_api = $settingsManager->get('background_api', 'https://picsum.photos/1920/1080');
+$background_opacity = $settingsManager->get('background_opacity', '1');
 
 // 透明度设置
-$header_bg_opacity = get_site_setting('header_bg_opacity', '0.9');
-$category_bg_opacity = get_site_setting('category_bg_opacity', '0.8');
-$links_area_opacity = get_site_setting('links_area_opacity', '0.7');
-$link_card_opacity = get_site_setting('link_card_opacity', '0.8');
+$header_bg_opacity = $settingsManager->get('header_bg_opacity', '0.9');
+$category_bg_opacity = $settingsManager->get('category_bg_opacity', '0.8');
+$links_area_opacity = $settingsManager->get('links_area_opacity', '0.7');
+$link_card_opacity = $settingsManager->get('link_card_opacity', '0.8');
 
 // 页脚设置
-$show_footer = get_site_setting('show_footer', '1') == '1';
-$footer_content = get_site_setting('footer_content', '&copy; 2024 导航网站. All rights reserved.');
+$show_footer = $settingsManager->get('show_footer', '1') == '1';
+$footer_content = $settingsManager->get('footer_content', '&copy; 2024 导航网站. All rights reserved.');
 
 // 获取数据库连接
 $pdo = get_db_connection();
