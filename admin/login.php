@@ -51,6 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>管理登录 - 导航网站</title>
     <link href="/admin/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="/admin/assets/bootstrap/icons/bootstrap-icons.css" rel="stylesheet">
+    <!-- 网站图标 -->
+    <?php 
+    $site_icon = Settings::getSiteSetting('site_icon');
+    if (!empty($site_icon)): 
+    ?>
+    <link rel="icon" type="image/x-icon" href="<?php echo htmlspecialchars($site_icon); ?>">
+    <link rel="shortcut icon" type="image/x-icon" href="<?php echo htmlspecialchars($site_icon); ?>">
+    <?php endif; ?>
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

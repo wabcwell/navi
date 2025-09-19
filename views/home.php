@@ -41,6 +41,11 @@ $overlay = $settings['bg-overlay'] ?? 0.2;
     <title><?php echo htmlspecialchars($site_name); ?></title>
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="admin/assets/fontawesome/css/all.min.css">
+    <!-- 网站图标 -->
+    <?php if (!empty($settings['site_icon'])): ?>
+    <link rel="icon" type="image/x-icon" href="<?php echo htmlspecialchars($settings['site_icon']); ?>">
+    <link rel="shortcut icon" type="image/x-icon" href="<?php echo htmlspecialchars($settings['site_icon']); ?>">
+    <?php endif; ?>
     <!-- Iconfont -->
     <script src="<?php echo htmlspecialchars($settings['iconfont'] ?? ''); ?>"></script>
     <style>

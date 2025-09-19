@@ -13,6 +13,14 @@
 <link href="/admin/assets/fontawesome/css/all.min.css" rel="stylesheet">
     <!-- Iconfont -->
     <script src="<?php echo Settings::getIconfontUrl(); ?>"></script>
+    <!-- 网站图标 -->
+    <?php 
+    $site_icon = Settings::getSiteSetting('site_icon');
+    if (!empty($site_icon)): 
+    ?>
+    <link rel="icon" type="image/x-icon" href="<?php echo htmlspecialchars($site_icon); ?>">
+    <link rel="shortcut icon" type="image/x-icon" href="<?php echo htmlspecialchars($site_icon); ?>">
+    <?php endif; ?>
     <!-- 左侧导航样式 -->
     <link href="/admin/assets/css/sidebar.css" rel="stylesheet">
     <style>
