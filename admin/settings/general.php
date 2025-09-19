@@ -1,10 +1,56 @@
 <?php
 require_once '../includes/load.php';
+require_once '../includes/fontawesome-icons.php';
 
 // 检查登录状态
 if (!User::checkLogin()) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit();
+}
+
+// 处理AJAX文件上传
+if (isset($_GET['ajax_upload']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+    
+    try {
+        // 检查是否是AJAX请求
+        if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || $_SERVER['HTTP_X_REQUESTED_WITH'] !== 'XMLHttpRequest') {
+            throw new Exception('无效的请求类型');
+        }
+        
+        // 验证文件上传
+        if (!isset($_FILES['site_logo'])) {
+            throw new Exception('未找到上传文件');
+        }
+        
+        if ($_FILES['site_logo']['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception('文件上传失败，错误代码: ' . $_FILES['site_logo']['error']);
+        }
+        
+        // 获取文件上传管理器
+        $uploadManager = get_file_upload_manager('settings');
+        
+        // 处理文件上传
+        $uploadResult = $uploadManager->upload($_FILES['site_logo']);
+        
+        if ($uploadResult['success']) {
+            echo json_encode([
+                'success' => true,
+                'message' => '文件上传成功',
+                'path' => $uploadResult['file_url'],
+                'filename' => $uploadResult['file_name']
+            ]);
+        } else {
+            throw new Exception($uploadResult['error']);
+        }
+        
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+    exit;
 }
 
 $settingsManager = get_settings_manager();
@@ -72,7 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $site_logo_color = $settingsManager->get('site_logo_color', '#007bff');
 
     // 处理删除Logo
-    if (isset($_POST['remove_logo']) && $_POST['remove_logo'] === 'on') {
+    if (isset($_POST['remove_logo']) && $_POST['remove_logo'] === '1') {
         if ($site_logo && !str_starts_with($site_logo, 'fas ')) {
             $old_logo_path = '../uploads/settings/' . $site_logo;
             if (file_exists($old_logo_path)) {
@@ -84,27 +130,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $site_logo_icon = '';
     }
 
-    if ($site_logo_type === 'image') {
-        if (isset($_FILES['site_logo']) && $_FILES['site_logo']['error'] === UPLOAD_ERR_OK) {
+    // 使用新的final_logo和final_logo_type字段
+    $final_logo = $_POST['final_logo'] ?? '';
+    $final_logo_type = $_POST['final_logo_type'] ?? $site_logo_type;
+
+    if ($final_logo_type === 'image') {
+        if (!empty($final_logo)) {
+            $site_logo = $final_logo;
+            $site_logo_image = $final_logo;
+        } elseif (isset($_FILES['site_logo']) && $_FILES['site_logo']['error'] === UPLOAD_ERR_OK) {
             $fileUpload = get_file_upload_manager('settings');
             $fileUpload->setAllowedTypes(['jpg', 'jpeg', 'png']);
-        $upload_result = $fileUpload->upload($_FILES['site_logo']);
+            $upload_result = $fileUpload->upload($_FILES['site_logo']);
             if ($upload_result['success']) {
                 $site_logo = $upload_result['file_name'];
-                $site_logo_image = '/uploads/settings/' . $upload_result['file_name']; // 保存相对于根目录的路径
+                $site_logo_image = '/uploads/settings/' . $upload_result['file_name'];
             } else {
                 $errors[] = $upload_result['error'];
             }
         } else {
-            // 使用最后一次上传的图片
             $site_logo = $site_logo_image;
         }
-    } elseif ($site_logo_type === 'icon') {
+    } elseif ($final_logo_type === 'icon') {
         $site_logo_icon = trim($_POST['site_logo_icon'] ?? '');
         $site_logo_color = trim($_POST['site_logo_color'] ?? '#007bff');
-        $site_logo = $site_logo_icon; // 使用最后一次设置的图标
+        $site_logo = $site_logo_icon;
     } else {
-        // 无Logo
         $site_logo = '';
     }
 
@@ -302,96 +353,102 @@ include '../templates/header.php'; ?>
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-7">
-                            <div class="mb-3">
-                                <label class="form-label">Logo类型</label>
-                                <div class="btn-group w-100" role="group">
-                                    <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_image" 
-                                           value="image" <?php echo (!isset($settings['site_logo_type']) || empty($settings['site_logo_type']) || $settings['site_logo_type'] === 'image') ? 'checked' : ''; ?>
-                                           onchange="toggleLogoType()">
-                                    <label class="btn btn-outline-primary" for="logo_type_image">上传图片</label>
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">网站Logo</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-7">
+                                    <!-- 图标类型选择 -->
+                                    <div class="btn-group w-100 mb-3" role="group">
+                                        <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_image" value="image" <?php echo (!isset($settings['site_logo_type']) || empty($settings['site_logo_type']) || $settings['site_logo_type'] === 'image') ? 'checked' : ''; ?>>
+                                        <label class="btn btn-outline-primary" for="logo_type_image">上传图片</label>
+                                        
+                                        <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_icon" value="icon" <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'icon') ? 'checked' : ''; ?>>
+                                        <label class="btn btn-outline-primary" for="logo_type_icon">Font Awesome</label>
+                                        
+                                        <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_none" value="none" <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'none') ? 'checked' : ''; ?>>
+                                        <label class="btn btn-outline-primary" for="logo_type_none">无Logo</label>
+                                    </div>
                                     
-                                    <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_icon" 
-                                           value="icon" <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'icon') ? 'checked' : ''; ?>
-                                           onchange="toggleLogoType()">
-                                    <label class="btn btn-outline-primary" for="logo_type_icon">Font Awesome</label>
+                                    <!-- 隐藏字段 -->
+                                    <input type="hidden" name="current_logo" value="<?php 
+                                        if ($settings['site_logo_type'] === 'image' && !empty($settings['site_logo'])) {
+                                            echo htmlspecialchars($settings['site_logo']);
+                                        } elseif ($settings['site_logo_type'] === 'icon' && !empty($settings['site_logo_icon'])) {
+                                            echo htmlspecialchars($settings['site_logo_icon']);
+                                        } else {
+                                            echo '';
+                                        }
+                                    ?>">
+                                    <input type="hidden" name="remove_logo" value="0">
+                                    <input type="hidden" id="uploaded_logo_path" name="uploaded_logo_path" value="<?php echo htmlspecialchars($settings['site_logo'] ?? ''); ?>">
+                                    <!-- 添加final_logo和final_logo_type隐藏字段 -->
+                                    <input type="hidden" id="final_logo" name="final_logo" value="">
+                                    <input type="hidden" id="final_logo_type" name="final_logo_type" value="<?php echo $settings['site_logo_type'] ?? 'image'; ?>">
                                     
-                                    <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_none" 
-                                           value="none" <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'none') ? 'checked' : ''; ?>
-                                           onchange="toggleLogoType()">
-                                    <label class="btn btn-outline-primary" for="logo_type_none">无Logo</label>
-                                </div>
-                            </div>
-
-                            <!-- 图片上传区域 -->
-                            <div id="logo_image_section" style="display: <?php echo (empty($settings['site_logo_type']) || $settings['site_logo_type'] === 'image') ? 'block' : 'none'; ?>">
-                                <label for="site_logo" class="form-label">上传Logo</label>
-                                <input type="file" class="form-control" id="site_logo" name="site_logo" 
-                                       accept=".png,.jpg,.jpeg" onchange="previewLogoImage(this)">
-                                <div class="form-text">支持 JPG、PNG格式，建议尺寸 200×50 像素</div>
-                            </div>
-
-                            <!-- Font Awesome图标区域 -->
-                            <div id="logo_icon_section" style="display: <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'icon') ? 'block' : 'none'; ?>">
-                                <div class="row">
-                                    <div class="col-md-8">
-                                        <label for="site_logo_icon" class="form-label">图标类名</label>
+                                    <!-- 图片上传 -->
+                                    <div id="logo_image_section" class="logo-section" style="display: none;">
+                                        <label for="site_logo" class="form-label">上传Logo</label>
                                         <div class="input-group">
-                                            <input type="text" class="form-control" id="site_logo_icon" name="site_logo_icon" 
-                                                   value="<?php echo htmlspecialchars($settings['site_logo_icon'] ?? 'fas fa-home'); ?>"
-                                                   placeholder="例如：fas fa-home" onchange="updateLogoPreview()">
-                                            <button type="button" class="btn btn-outline-secondary" id="openLogoIconPicker">
-                                                <i class="fas fa-icons"></i>
+                                            <input type="file" class="form-control" id="site_logo" name="site_logo" 
+                                                   accept="image/png,image/jpg,image/jpeg"
+                                                   onchange="this.nextElementSibling.value = this.files[0]?.name || '';">
+                                            <button type="button" class="btn btn-outline-primary" id="upload_logo_btn">
+                                                <i class="bi bi-upload"></i> 上传
                                             </button>
                                         </div>
-                                        <div class="form-text">输入Font Awesome图标类名</div>
+                                        <input type="text" class="form-control mt-2" id="uploaded_logo_display" 
+                                               placeholder="已上传文件路径" readonly style="background-color: #f8f9fa;"
+                                               value="<?php echo !empty($settings['site_logo_image']) ? htmlspecialchars(basename($settings['site_logo_image'])) : ''; ?>">
+                                        <small class="form-text text-muted">支持 JPG、PNG格式，建议尺寸 200×50 像素</small>
+                                        <div id="upload_logo_status" class="mt-2"></div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <label for="site_logo_color" class="form-label">图标颜色</label>
-                                        <input type="color" class="form-control form-control-color w-100" id="site_logo_color" name="site_logo_color" 
-                                               value="<?php echo $settingsManager->get('site_logo_color', '#007bff'); ?>" 
-                                               style="height: 38px;" onchange="updateLogoPreview()">
+
+                                    <!-- Font Awesome 图标选择 -->
+                                    <div id="logo_icon_section" class="logo-section" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <label for="site_logo_icon" class="form-label">选择图标</label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control" id="site_logo_icon" name="site_logo_icon" 
+                                                           placeholder="点击选择图标" readonly
+                                                           value="<?php echo htmlspecialchars($settings['site_logo_icon'] ?? 'fas fa-home'); ?>">
+                                                    <button type="button" class="btn btn-outline-secondary" id="openLogoIconPicker">
+                                                        <i class="fas fa-icons"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="site_logo_color" class="form-label">图标颜色</label>
+                                                <input type="color" class="form-control form-control-color w-100" id="site_logo_color" name="site_logo_color" 
+                                                       value="<?php echo htmlspecialchars($settings['site_logo_color'] ?? '#007bff'); ?>" style="height: 38px;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Logo预览 -->
+                                <div class="col-md-5">
+                                    <label class="form-label">Logo预览</label>
+                                    <div class="logo-preview-container text-center">
+                                        <div id="logoPreview" class="mb-2">
+                                            <?php if (!empty($settings['site_logo_icon']) && $settings['site_logo_type'] === 'icon'): ?>
+                                                <i class="<?php echo htmlspecialchars($settings['site_logo_icon']); ?>" style="font-size: 3rem; color: <?php echo htmlspecialchars($settings['site_logo_color'] ?? '#007bff'); ?>"></i>
+                                            <?php elseif (!empty($settings['site_logo']) && $settings['site_logo_type'] === 'image'): ?>
+                                                <img src="<?php echo htmlspecialchars(str_replace('../uploads/', '/uploads/', $settings['site_logo'])); ?>" class="image-preview" style="max-width: 100px; max-height: 100px; border-radius: 8px;">
+                                            <?php else: ?>
+                                                <div class="text-muted">
+                                                    <i class="fas fa-image" style="font-size: 2rem;"></i>
+                                                    <p class="mt-2 mb-0">暂无Logo</p>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="col-md-5">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h6 class="mb-0">Logo预览</h6>
-                                </div>
-                                <div class="card-body text-center" style="min-height: 120px;">
-                                    <div id="logoPreviewContainer" 
-                                         data-image-preview="<?php echo htmlspecialchars(str_replace('../uploads/', '/uploads/', $settings['site_logo_image'] ?? '')); ?>"
-                                         data-icon-preview="<?php echo htmlspecialchars($settings['site_logo_icon'] ?? 'fas fa-home'); ?>"
-                                         data-icon-color-preview="<?php echo htmlspecialchars($settings['site_logo_color'] ?? '#007bff'); ?>">
-                                        <?php 
-                                        // 根据当前选择的类型显示对应的预览
-                                        if (empty($settings['site_logo_type']) || $settings['site_logo_type'] === 'image'): ?>
-                                            <?php if (isset($settings['site_logo_image']) && $settings['site_logo_image']): ?>
-                                                <img src="<?php echo htmlspecialchars(str_replace('../uploads/', '/uploads/', $settings['site_logo_image'])); ?>" 
-                                                     alt="Logo预览" style="max-height: 80px;" class="img-thumbnail">
-                                            <?php else: ?>
-                                                <p class="text-muted">暂无图片Logo</p>
-                                            <?php endif; ?>
-                                        <?php elseif ($settings['site_logo_type'] === 'icon'): ?>
-                                            <?php if (isset($settings['site_logo_icon']) && $settings['site_logo_icon']): ?>
-                                                <i class="<?php echo htmlspecialchars($settings['site_logo_icon']); ?>" 
-                                                   style="font-size: 40px; color: <?php echo $settingsManager->get('site_logo_color', '#007bff'); ?>"></i>
-                                            <?php else: ?>
-                                                <i class="fas fa-home" style="font-size: 40px; color: #007bff;"></i>
-                                            <?php endif; ?>
-                                        <?php else: ?>
-                                            <p class="text-muted">无Logo</p>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
                     </div>
 
 
@@ -566,7 +623,36 @@ function toggleLogoType() {
 
 
 
-// Logo类型切换功能
+// 图片预览函数
+        function previewImage(input, previewId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById(previewId);
+                    if (preview) {
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                        // 显示预览容器
+                        const container = preview.parentElement;
+                        if (container && container.id.includes('_container')) {
+                            container.style.display = 'block';
+                        }
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Logo图标参数对象
+        let logoIconParams = {
+            type: '<?php echo $settings['site_logo_type'] ?? 'image'; ?>',
+            icon: '<?php echo htmlspecialchars($settings['site_logo_icon'] ?? 'fas fa-home'); ?>',
+            color: '<?php echo htmlspecialchars($settings['site_logo_color'] ?? '#007bff'); ?>',
+            image: '<?php echo htmlspecialchars($settings['site_logo'] ?? ''); ?>',
+            uploadedPath: '<?php echo htmlspecialchars($settings['site_logo'] ?? ''); ?>'
+        };
+
+        // Logo类型切换功能
         function toggleLogoType() {
             const imageRadio = document.getElementById('logo_type_image');
             const iconRadio = document.getElementById('logo_type_icon');
@@ -587,7 +673,7 @@ function toggleLogoType() {
 
         // 更新Logo预览
         function updateLogoPreview() {
-            const container = document.getElementById('logoPreviewContainer');
+            const container = document.getElementById('logoPreview');
             if (!container) return;
 
             const imageRadio = document.getElementById('logo_type_image');
@@ -597,122 +683,135 @@ function toggleLogoType() {
             let html = '';
 
             if (imageRadio && imageRadio.checked) {
-                // 图片类型：只显示图片选项的上传预览 - 完全独立的数据
-                const imagePreview = container.dataset.imagePreview;
-                if (imagePreview) {
-                    html = `<img src="${imagePreview}" alt="Logo预览" style="max-height: 80px;" class="img-thumbnail">`;
+                const imagePath = logoIconParams.uploadedPath || logoIconParams.image;
+                if (imagePath) {
+                    html = `<img src="${imagePath.replace('../uploads/', '/uploads/')}" class="image-preview" style="max-width: 100px; max-height: 100px; border-radius: 8px;">`;
                 } else {
-                    html = '<p class="text-muted">暂无图片Logo</p>';
+                    html = '<div class="text-muted"><i class="fas fa-image" style="font-size: 2rem;"></i><p class="mt-2 mb-0">暂无Logo</p></div>';
                 }
             } else if (iconRadio && iconRadio.checked) {
-                // 图标类型：只显示图标选项的设置预览 - 完全独立的数据
-                const iconPreview = container.dataset.iconPreview || 'fas fa-home';
-                const iconColorPreview = container.dataset.iconColorPreview || '#007bff';
-                
-                const iconClassInput = document.getElementById('site_logo_icon');
-                const iconColorInput = document.getElementById('site_logo_color');
-                
-                const iconClass = iconClassInput ? iconClassInput.value : iconPreview;
-                const iconColor = iconColorInput ? iconColorInput.value : iconColorPreview;
-                
-                html = `<i class="${iconClass}" style="font-size: 40px; color: ${iconColor};"></i>`;
+                const iconClass = document.getElementById('site_logo_icon').value || logoIconParams.icon;
+                const iconColor = document.getElementById('site_logo_color').value || logoIconParams.color;
+                html = `<i class="${iconClass}" style="font-size: 3rem; color: ${iconColor};"></i>`;
             } else if (noneRadio && noneRadio.checked) {
-                // 无Logo类型：显示无Logo状态
-                html = '<p class="text-muted">无Logo</p>';
+                html = '<div class="text-muted"><i class="fas fa-image" style="font-size: 2rem;"></i><p class="mt-2 mb-0">暂无Logo</p></div>';
             }
 
             container.innerHTML = html;
-        }
-
-        // 图片预览功能
-        function previewLogoImage(input) {
-            const container = document.getElementById('logoPreviewContainer');
-            if (!container || !input.files || !input.files[0]) return;
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                // 更新预览区域显示新上传的图片 - 只存储到图片专用数据
-                container.innerHTML = `<img src="${e.target.result}" alt="Logo预览" style="max-height: 80px;" class="img-thumbnail">`;
-                // 存储到图片专用的数据属性，与图标数据完全隔离
-                container.dataset.imagePreview = e.target.result; // 使用DataURL作为临时预览
-            };
-            reader.readAsDataURL(input.files[0]);
+            // 更新隐藏字段
+            document.getElementById('final_logo_type').value = logoIconParams.type;
+            if (imageRadio && imageRadio.checked) {
+                document.getElementById('final_logo').value = logoIconParams.uploadedPath || logoIconParams.image;
+            } else if (iconRadio && iconRadio.checked) {
+                document.getElementById('final_logo').value = document.getElementById('site_logo_icon').value;
+            }
         }
 
-        // Font Awesome 图标选择器
-        function openLogoIconPicker() {
-            // 移除已存在的模态框
-            const existingModal = document.getElementById('logoIconModal');
-            if (existingModal) {
-                const modalInstance = bootstrap.Modal.getInstance(existingModal);
-                if (modalInstance) {
-                    modalInstance.hide();
-                }
-                existingModal.remove();
+        // Logo图片上传
+        function uploadLogo() {
+            const fileInput = document.getElementById('site_logo');
+            const statusDiv = document.getElementById('upload_logo_status');
+            
+            if (!fileInput.files || !fileInput.files[0]) {
+                statusDiv.innerHTML = '<div class="alert alert-warning">请选择要上传的文件</div>';
+                return;
             }
             
-            const modalDiv = document.createElement('div');
-            modalDiv.id = 'logoIconModal';
-            modalDiv.className = 'modal fade';
-            modalDiv.setAttribute('tabindex', '-1');
-            modalDiv.setAttribute('aria-hidden', 'true');
+            const formData = new FormData();
+            formData.append('site_logo', fileInput.files[0]);
             
-            const modalContent = document.createElement('div');
-            modalContent.className = 'modal-dialog modal-lg';
-            modalContent.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">选择 Font Awesome 图标</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <input type="text" class="form-control" id="logoIconSearch" placeholder="搜索图标..." autocomplete="off">
+            statusDiv.innerHTML = '<div class="alert alert-info">正在上传...</div>';
+            
+            fetch('?ajax_upload=1', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    logoIconParams.uploadedPath = data.path;
+                    document.getElementById('uploaded_logo_path').value = data.path;
+                    document.getElementById('uploaded_logo_display').value = data.filename;
+                    statusDiv.innerHTML = '<div class="alert alert-success">上传成功！</div>';
+                    updateLogoPreview();
+                } else {
+                    statusDiv.innerHTML = '<div class="alert alert-danger">上传失败：' + data.message + '</div>';
+                }
+            })
+            .catch(error => {
+                statusDiv.innerHTML = '<div class="alert alert-danger">上传出错：' + error.message + '</div>';
+            });
+        }
+
+        // 打开Logo图标选择器
+        function openLogoIconPicker() {
+            const modal = document.createElement('div');
+            modal.className = 'modal fade';
+            modal.innerHTML = `
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">选择Font Awesome图标</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
-                        <div class="row g-2" id="logoIconGrid" style="max-height: 400px; overflow-y: auto;">
-                            ${getFontAwesomeIcons().map(icon => `
-                                <div class="col-2">
-                                    <button type="button" class="btn btn-outline-secondary w-100 logo-icon-btn" 
-                                            onclick="selectLogoIcon('${icon}')" title="${icon}">
-                                        <i class="fas fa-${icon} fa-lg"></i>
-                                    </button>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="iconSearch" placeholder="搜索图标...">
+                            </div>
+                            <div class="icon-grid" id="iconGrid" style="max-height: 400px; overflow-y: auto;">
+                                <?php
+                                $icons = getFontAwesomeIcons();
+                                foreach ($icons as $icon):
+                                ?>
+                                <div class="icon-item" data-icon="fas fa-<?php echo htmlspecialchars($icon); ?>" style="cursor: pointer; padding: 10px; text-align: center; display: inline-block; width: 80px;">
+                                    <i class="fas fa-<?php echo htmlspecialchars($icon); ?> fa-2x"></i><br><small><?php echo htmlspecialchars($icon); ?></small>
                                 </div>
-                            `).join('')}
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                         </div>
                     </div>
                 </div>
             `;
-            modalDiv.appendChild(modalContent);
-            document.body.appendChild(modalDiv);
+            document.body.appendChild(modal);
             
-            // 创建模态框实例
-            const modalInstance = new bootstrap.Modal(modalDiv, {
-                backdrop: 'static',
-                keyboard: true,
-                focus: true
+            const bsModal = new bootstrap.Modal(modal);
+            bsModal.show();
+            
+            // 图标选择事件
+            modal.querySelectorAll('.icon-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const icon = this.getAttribute('data-icon');
+                    document.getElementById('site_logo_icon').value = icon;
+                    updateLogoPreview();
+                    bsModal.hide();
+                    document.body.removeChild(modal);
+                });
             });
-            modalInstance.show();
             
             // 搜索功能
-            const searchInput = modalDiv.querySelector('#logoIconSearch');
-            if (searchInput) {
-                searchInput.addEventListener('input', function() {
-                    const searchTerm = this.value.toLowerCase();
-                    const buttons = modalDiv.querySelectorAll('.logo-icon-btn');
-                    buttons.forEach(btn => {
-                        const iconName = btn.getAttribute('title');
-                        btn.parentElement.style.display = iconName.includes(searchTerm) ? 'block' : 'none';
-                    });
-                });
-            }
-            
-            // 清理事件监听
-            modalDiv.addEventListener('hidden.bs.modal', function() {
-                setTimeout(() => {
-                    if (modalDiv.parentNode) {
-                        modalDiv.remove();
+            modal.querySelector('#iconSearch').addEventListener('input', function() {
+                const search = this.value.toLowerCase();
+                modal.querySelectorAll('.icon-item').forEach(item => {
+                    const iconName = item.getAttribute('data-icon').toLowerCase();
+                    const smallText = item.querySelector('small').textContent.toLowerCase();
+                    if (iconName.includes(search) || smallText.includes(search)) {
+                        item.style.display = 'inline-block';
+                    } else {
+                        item.style.display = 'none';
                     }
-                }, 50);
+                });
+            });
+            
+            // 模态框关闭时清理
+            modal.addEventListener('hidden.bs.modal', function() {
+                document.body.removeChild(modal);
             });
         }
 
@@ -783,6 +882,29 @@ function toggleLogoType() {
             const iconPickerBtn = document.getElementById('openLogoIconPicker');
             if (iconPickerBtn) {
                 iconPickerBtn.addEventListener('click', openLogoIconPicker);
+            }
+            
+            // 上传按钮事件
+            const uploadBtn = document.getElementById('upload_logo_btn');
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', uploadLogo);
+            }
+            
+            // 表单提交前同步数据
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const logoType = document.querySelector('input[name="site_logo_type"]:checked').value;
+                    document.getElementById('final_logo_type').value = logoType;
+                    
+                    if (logoType === 'image') {
+                        document.getElementById('final_logo').value = document.getElementById('uploaded_logo_path').value;
+                    } else if (logoType === 'icon') {
+                        document.getElementById('final_logo').value = document.getElementById('site_logo_icon').value;
+                    } else {
+                        document.getElementById('final_logo').value = '';
+                    }
+                });
             }
             
             // 页脚预览功能

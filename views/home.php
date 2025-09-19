@@ -59,7 +59,7 @@ $overlay = $settings['bg-overlay'] ?? 0.2;
             <div>
                 <h1>
                     <?php if ($site_logo_type === 'image' && $site_logo): ?>
-                        <img src="uploads/settings/<?php echo htmlspecialchars($site_logo); ?>" 
+                        <img src="<?php echo htmlspecialchars($site_logo); ?>" 
                              alt="<?php echo htmlspecialchars($site_name); ?>" 
                              style="max-height: 40px; max-width: 200px; vertical-align: middle; margin-right: 10px;">
                     <?php elseif ($site_logo_type === 'icon' && $site_logo): ?>
