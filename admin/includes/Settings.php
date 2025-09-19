@@ -111,8 +111,9 @@ class Settings {
             $existing = $this->get($key);
             
             if ($existing !== null) {
-                // 更新现有记录
-                return $this->database->update('settings', ['setting_value' => $value], 'setting_key = ?', [$key]) > 0;
+                // 更新现有记录 - 即使rowCount为0也视为成功（值相同的情况）
+                $this->database->update('settings', ['setting_value' => $value], 'setting_key = ?', [$key]);
+                return true;
             } else {
                 // 插入新记录
                 return $this->database->insert('settings', ['setting_key' => $key, 'setting_value' => $value]) > 0;

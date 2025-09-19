@@ -8,7 +8,58 @@ if (!User::checkLogin()) {
     exit();
 }
 
-// 处理AJAX文件上传
+// 处理AJAX图标上传
+if (isset($_GET['ajax_upload_icon']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    header('Content-Type: application/json; charset=utf-8');
+    
+    try {
+        // 检查是否是AJAX请求
+        if (!isset($_SERVER['HTTP_X_REQUESTED_WITH']) || $_SERVER['HTTP_X_REQUESTED_WITH'] !== 'XMLHttpRequest') {
+            throw new Exception('无效的请求类型');
+        }
+        
+        // 验证文件上传
+        if (!isset($_FILES['site_icon'])) {
+            throw new Exception('未找到上传文件');
+        }
+        
+        if ($_FILES['site_icon']['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception('文件上传失败，错误代码: ' . $_FILES['site_icon']['error']);
+        }
+        
+        // 获取文件上传管理器
+        $uploadManager = get_file_upload_manager('settings');
+        $uploadManager->setAllowedTypes(['ico', 'png', 'jpg', 'jpeg']);
+        
+        // 处理文件上传
+        $uploadResult = $uploadManager->upload($_FILES['site_icon']);
+        
+        if ($uploadResult['success']) {
+            // 获取设置管理器并保存新图标
+            $settingsManager = get_settings_manager();
+            
+            // 保存新图标到数据库（存储完整路径）
+            $settingsManager->set('site_icon', '/uploads/settings/' . $uploadResult['file_name']);
+            
+            echo json_encode([
+                'success' => true,
+                'message' => '图标上传成功',
+                'path' => $uploadResult['file_url']
+            ]);
+        } else {
+            throw new Exception($uploadResult['error']);
+        }
+        
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
+// 处理AJAX Logo上传
 if (isset($_GET['ajax_upload']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
     
@@ -90,21 +141,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = '允许的文件类型不能为空';
     }
     
-    // 处理网站图标上传
+    // 处理网站图标
     $site_icon = $settingsManager->get('site_icon');
+    
+    // 处理网站图标上传
     if (isset($_FILES['site_icon']) && $_FILES['site_icon']['error'] === UPLOAD_ERR_OK) {
         $fileUpload = get_file_upload_manager('settings');
         $fileUpload->setAllowedTypes(['jpg', 'jpeg', 'png', 'ico']);
         $upload_result = $fileUpload->upload($_FILES['site_icon']);
         if ($upload_result['success']) {
-            // 删除旧图标
-            if ($site_icon) {
-                $old_icon_path = '../uploads/settings/' . $site_icon;
-                if (file_exists($old_icon_path)) {
-                    unlink($old_icon_path);
-                }
-            }
-            $site_icon = $upload_result['file_name'];
+            $site_icon = '/uploads/settings/' . $upload_result['file_name'];
         } else {
             $errors[] = $upload_result['error'];
         }
@@ -143,7 +189,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fileUpload->setAllowedTypes(['jpg', 'jpeg', 'png']);
             $upload_result = $fileUpload->upload($_FILES['site_logo']);
             if ($upload_result['success']) {
-                $site_logo = $upload_result['file_name'];
+                $site_logo = '/uploads/settings/' . $upload_result['file_name'];
                 $site_logo_image = '/uploads/settings/' . $upload_result['file_name'];
             } else {
                 $errors[] = $upload_result['error'];
@@ -164,29 +210,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // 如果没有错误，保存设置
     if (empty($errors)) {
-        $settingsManager->set('site_name', $site_name);
-        $settingsManager->set('site_description', $site_description);
-        $settingsManager->set('site_keywords', $site_keywords);
-        $settingsManager->set('site_url', $site_url);
+        // 调试信息
+        error_log("开始保存设置...");
+        error_log("site_icon值: " . $site_icon);
+        
+        $result1 = $settingsManager->set('site_name', $site_name);
+        $result2 = $settingsManager->set('site_description', $site_description);
+        $result3 = $settingsManager->set('site_keywords', $site_keywords);
+        $result4 = $settingsManager->set('site_url', $site_url);
 
-        $settingsManager->set('items_per_page', $items_per_page);
-        $settingsManager->set('maintenance_mode', $maintenance_mode);
-        $settingsManager->set('maintenance_message', $maintenance_message);
-        $settingsManager->set('site_icon', $site_icon);
-        $settingsManager->set('site_logo', $site_logo);
-        $settingsManager->set('site_logo_type', $site_logo_type);
-        $settingsManager->set('site_logo_color', $site_logo_color);
-        $settingsManager->set('site_logo_image', $site_logo_image); // 保存最后一次上传的图片
-        $settingsManager->set('site_logo_icon', $site_logo_icon); // 保存最后一次设置的图标
+        $result5 = $settingsManager->set('items_per_page', $items_per_page);
+        $result6 = $settingsManager->set('maintenance_mode', $maintenance_mode);
+        $result7 = $settingsManager->set('maintenance_message', $maintenance_message);
+        $result8 = $settingsManager->set('site_icon', $site_icon);
+        $result9 = $settingsManager->set('site_logo', $site_logo);
+        $result10 = $settingsManager->set('site_logo_type', $site_logo_type);
+        $result11 = $settingsManager->set('site_logo_color', $site_logo_color);
+        $result12 = $settingsManager->set('site_logo_image', $site_logo_image); // 保存最后一次上传的图片
+        $result13 = $settingsManager->set('site_logo_icon', $site_logo_icon); // 保存最后一次设置的图标
         
         // 页脚设置
-        $settingsManager->set('footer_content', trim($_POST['footer_content'] ?? ''));
+        $result14 = $settingsManager->set('footer_content', trim($_POST['footer_content'] ?? ''));
 
-        $settingsManager->set('show_footer', isset($_POST['show_footer']) ? 1 : 0);
+        $result15 = $settingsManager->set('show_footer', isset($_POST['show_footer']) ? 1 : 0);
         
         // 上传设置
-        $settingsManager->set('upload_max_size', max(1, min(100, intval($_POST['upload_max_size'] ?? 10))));
-        $settingsManager->set('upload_allowed_types', trim($_POST['upload_allowed_types'] ?? 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar'));
+        $result16 = $settingsManager->set('upload_max_size', max(1, min(100, intval($_POST['upload_max_size'] ?? 10))));
+        $result17 = $settingsManager->set('upload_allowed_types', trim($_POST['upload_allowed_types'] ?? 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar'));
+        
+        error_log("设置保存结果: site_icon=" . ($result8 ? '成功' : '失败'));
         
         $_SESSION['success'] = '网站设置更新成功';
         header('Location: general.php');
@@ -316,32 +368,42 @@ include '../templates/header.php'; ?>
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-7">
                             <div class="mb-3">
                                 <label for="site_icon" class="form-label">网站图标</label>
-                                <input type="file" class="form-control" id="site_icon" name="site_icon" 
-                                       accept=".ico,.png,.jpg,.jpeg" onchange="previewImage(this, 'icon_preview')">
-                                <div class="mt-2" id="icon_preview_container" style="display: none;">
-                                    <img id="icon_preview" src="#" alt="图标预览" style="width: 32px; height: 32px; border: 1px solid #ddd; border-radius: 4px;">
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="site_icon" name="site_icon" 
+                                           accept=".ico,.png,.jpg,.jpeg"
+                                           onchange="this.nextElementSibling.value = this.files[0]?.name || '';">
+                                    <button type="button" class="btn btn-outline-primary" id="upload_icon_btn">
+                                        <i class="bi bi-upload"></i> 上传
+                                    </button>
                                 </div>
-                                <?php if ($settings['site_icon']): ?>
-                                    <div class="mt-2">
-                                        <img src="../uploads/settings/<?php echo $settings['site_icon']; ?>" 
-                                             class="image-preview" style="width: 32px; height: 32px; border: 1px solid #ddd; border-radius: 4px;">
-                                        <div class="form-check mt-2">
-                                            <input class="form-check-input" type="checkbox" id="remove_icon" name="remove_icon">
-                                            <label class="form-check-label" for="remove_icon">
-                                                删除图标
-                                            </label>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-                                <div class="form-text">建议尺寸：32×32像素，支持ICO、PNG、JPG格式</div>
+                                <!-- 已上传文件路径显示 - 已移除 */ -->
+                                <small class="form-text text-muted">建议尺寸：32×32像素，支持ICO、PNG、JPG格式</small>
+                                <div id="upload_icon_status" class="mt-2"></div>
                             </div>
                         </div>
                         
-                        <div class="col-md-6">
-                            <!-- Logo预览区域 -->
+                        <div class="col-md-5">
+                            <!-- 图标预览区域 -->
+                            <div class="mb-3">
+                                <label class="form-label">图标预览</label>
+                                <div class="icon-preview-container text-center">
+                                    <div id="icon_preview_container" style="display: <?php echo !empty($settings['site_icon']) ? 'block' : 'none'; ?>;">
+                                        <img id="icon_preview" 
+                                             src="<?php echo !empty($settings['site_icon']) ? '/uploads/settings/' . htmlspecialchars($settings['site_icon']) : '#'; ?>" 
+                                             alt="图标预览" 
+                                             style="width: 32px; height: 32px; border: 1px solid #ddd; border-radius: 4px;">
+                                    </div>
+                                    <?php if (empty($settings['site_icon'])): ?>
+                                        <div class="text-muted">
+                                            <i class="fas fa-image" style="font-size: 2rem;"></i>
+                                            <p class="mt-2 mb-0">暂无图标</p>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -394,9 +456,7 @@ include '../templates/header.php'; ?>
                                         <i class="bi bi-upload"></i> 上传
                                     </button>
                                 </div>
-                                <input type="text" class="form-control mt-2" id="uploaded_logo_display" 
-                                       placeholder="已上传文件路径" readonly style="background-color: #f8f9fa;"
-                                       value="<?php echo !empty($settings['site_logo_image']) ? htmlspecialchars(basename($settings['site_logo_image'])) : ''; ?>">
+                                <!-- 已上传文件路径显示 - 已移除 */ -->
                                 <small class="form-text text-muted">支持 JPG、PNG格式，建议尺寸 200×50 像素</small>
                                 <div id="upload_logo_status" class="mt-2"></div>
                             </div>
@@ -438,7 +498,8 @@ include '../templates/header.php'; ?>
                                             <i class="fas fa-image" style="font-size: 2rem;"></i>
                                             <p class="mt-2 mb-0">暂无Logo</p>
                                         </div>
-                                    <?php endif; ?>
+                                    <?php endif; 
+                                    ?>
                                 </div>
                             </div>
                         </div>
@@ -591,6 +652,14 @@ document.getElementById('maintenance_mode').addEventListener('change', function(
 });
 
 document.getElementById('site_icon').addEventListener('change', function() {
+    // 更新文件名显示
+    const fileName = this.files[0]?.name || '';
+    const uploadedIconDisplay = document.getElementById('uploaded_icon_display');
+    if (uploadedIconDisplay) {
+        uploadedIconDisplay.value = fileName;
+    }
+    
+    // 预览图片
     previewImage(this, 'iconPreview');
 });
 
@@ -728,7 +797,6 @@ function toggleLogoType() {
                 if (data.success) {
                     logoIconParams.uploadedPath = data.path;
                     document.getElementById('uploaded_logo_path').value = data.path;
-                    document.getElementById('uploaded_logo_display').value = data.filename;
                     statusDiv.innerHTML = '<div class="alert alert-success">上传成功！</div>';
                     updateLogoPreview();
                 } else {
@@ -831,34 +899,76 @@ function toggleLogoType() {
             }
         }
 
-        // Font Awesome 图标列表
-        function getFontAwesomeIcons() {
-            return [
-                'home', 'building', 'store', 'warehouse', 'industry', 'city', 'map-marker-alt',
-                'user', 'users', 'user-friends', 'user-tie', 'user-graduate', 'user-cog',
-                'heart', 'star', 'bookmark', 'thumbs-up', 'award', 'trophy', 'medal',
-                'cog', 'tools', 'wrench', 'hammer', 'screwdriver', 'cogs', 'sliders-h',
-                'chart-bar', 'chart-line', 'chart-pie', 'analytics', 'poll', 'tachometer-alt',
-                'shopping-cart', 'shopping-bag', 'gift', 'credit-card', 'money-bill-wave',
-                'camera', 'image', 'images', 'photo-video', 'film', 'music', 'play',
-                'book', 'books', 'graduation-cap', 'school', 'university', 'chalkboard-teacher',
-                'laptop', 'desktop', 'tablet-alt', 'mobile-alt', 'server', 'database',
-                'globe', 'network-wired', 'wifi', 'broadcast-tower', 'satellite',
-                'car', 'bus', 'train', 'plane', 'ship', 'rocket', 'bicycle',
-                'coffee', 'utensils', 'pizza-slice', 'ice-cream', 'cocktail',
-                'gamepad', 'dice', 'puzzle-piece', 'chess', 'headphones',
-                'envelope', 'phone', 'fax', 'mail-bulk', 'paper-plane',
-                'lock', 'key', 'shield-alt', 'fire-extinguisher', 'first-aid',
-                'calendar', 'clock', 'stopwatch', 'hourglass-half', 'bell',
-                'lightbulb', 'eye', 'search', 'filter', 'sort', 'download', 'upload',
-                'folder', 'folder-open', 'file', 'file-alt', 'file-code', 'file-text', 'archive'
-            ];
+        // 图标上传函数
+        function uploadIcon() {
+            const fileInput = document.getElementById('site_icon');
+            if (!fileInput.files || !fileInput.files[0]) {
+                alert('请先选择要上传的图标文件');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('site_icon', file);
+            
+            // 显示上传状态
+            const statusDiv = document.getElementById('upload_icon_status');
+            statusDiv.innerHTML = '<div class="alert alert-info">正在上传图标...</div>';
+            
+            fetch('?ajax_upload_icon=1', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 显示预览 - 使用数据库路径
+                    const previewImg = document.getElementById('icon_preview');
+                    const previewContainer = document.getElementById('icon_preview_container');
+                    if (previewImg && previewContainer) {
+                        previewImg.src = data.path; // data.path 应该包含完整的上传路径
+                        previewContainer.style.display = 'block';
+                    }
+                    
+                    // 更新状态
+                    statusDiv.innerHTML = '<div class="alert alert-success">图标上传成功！</div>';
+                    
+                    // 3秒后移除状态提示
+                    setTimeout(() => {
+                        statusDiv.innerHTML = '';
+                    }, 3000);
+                } else {
+                    statusDiv.innerHTML = '<div class="alert alert-danger">上传失败：' + data.message + '</div>';
+                }
+            })
+            .catch(error => {
+                statusDiv.innerHTML = '<div class="alert alert-danger">上传出错：' + error.message + '</div>';
+            });
         }
+
+        // 使用包含文件中的图标列表函数
 
         // 初始化Logo设置
         document.addEventListener('DOMContentLoaded', function() {
             toggleLogoType();
             updateLogoPreview();
+            
+            // 初始化网站图标预览 - 直接读取数据库中的图标
+            const siteIconPath = '<?php echo !empty($settings["site_icon"]) ? htmlspecialchars($settings["site_icon"]) : ""; ?>';
+            const siteIconFilename = '<?php echo !empty($settings["site_icon"]) ? htmlspecialchars(basename($settings["site_icon"])) : ""; ?>';
+            
+            if (siteIconPath && siteIconFilename) {
+                // 显示图标预览
+                const iconPreview = document.getElementById('icon_preview');
+                const iconPreviewContainer = document.getElementById('icon_preview_container');
+                if (iconPreview && iconPreviewContainer) {
+                    iconPreview.src = siteIconPath;
+                    iconPreviewContainer.style.display = 'block';
+                }
+            }
             
             const logoTypeRadios = document.querySelectorAll('input[name="site_logo_type"]');
             logoTypeRadios.forEach(radio => {
@@ -881,6 +991,12 @@ function toggleLogoType() {
             const uploadBtn = document.getElementById('upload_logo_btn');
             if (uploadBtn) {
                 uploadBtn.addEventListener('click', uploadLogo);
+            }
+            
+            // 图标上传按钮事件
+            const iconUploadBtn = document.getElementById('upload_icon_btn');
+            if (iconUploadBtn) {
+                iconUploadBtn.addEventListener('click', uploadIcon);
             }
             
             // 表单提交前同步数据
@@ -926,8 +1042,6 @@ function toggleLogoType() {
                 }
             }
         });
-
-
-</script>
+    </script>
 
 <?php include '../templates/footer.php'; ?>
