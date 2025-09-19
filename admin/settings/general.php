@@ -353,99 +353,92 @@ include '../templates/header.php'; ?>
                         </div>
                     </div>
 
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">网站Logo</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-7">
-                                    <!-- 图标类型选择 -->
-                                    <div class="btn-group w-100 mb-3" role="group">
-                                        <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_image" value="image" <?php echo (!isset($settings['site_logo_type']) || empty($settings['site_logo_type']) || $settings['site_logo_type'] === 'image') ? 'checked' : ''; ?>>
-                                        <label class="btn btn-outline-primary" for="logo_type_image">上传图片</label>
-                                        
-                                        <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_icon" value="icon" <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'icon') ? 'checked' : ''; ?>>
-                                        <label class="btn btn-outline-primary" for="logo_type_icon">Font Awesome</label>
-                                        
-                                        <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_none" value="none" <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'none') ? 'checked' : ''; ?>>
-                                        <label class="btn btn-outline-primary" for="logo_type_none">无Logo</label>
-                                    </div>
-                                    
-                                    <!-- 隐藏字段 -->
-                                    <input type="hidden" name="current_logo" value="<?php 
-                                        if ($settings['site_logo_type'] === 'image' && !empty($settings['site_logo'])) {
-                                            echo htmlspecialchars($settings['site_logo']);
-                                        } elseif ($settings['site_logo_type'] === 'icon' && !empty($settings['site_logo_icon'])) {
-                                            echo htmlspecialchars($settings['site_logo_icon']);
-                                        } else {
-                                            echo '';
-                                        }
-                                    ?>">
-                                    <input type="hidden" name="remove_logo" value="0">
-                                    <input type="hidden" id="uploaded_logo_path" name="uploaded_logo_path" value="<?php echo htmlspecialchars($settings['site_logo'] ?? ''); ?>">
-                                    <!-- 添加final_logo和final_logo_type隐藏字段 -->
-                                    <input type="hidden" id="final_logo" name="final_logo" value="">
-                                    <input type="hidden" id="final_logo_type" name="final_logo_type" value="<?php echo $settings['site_logo_type'] ?? 'image'; ?>">
-                                    
-                                    <!-- 图片上传 -->
-                                    <div id="logo_image_section" class="logo-section" style="display: none;">
-                                        <label for="site_logo" class="form-label">上传Logo</label>
+                    <div class="row">
+                        <div class="col-md-7">
+                            <!-- 图标类型选择 -->
+                            <div class="btn-group w-100 mb-3" role="group">
+                                <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_image" value="image" <?php echo (!isset($settings['site_logo_type']) || empty($settings['site_logo_type']) || $settings['site_logo_type'] === 'image') ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary" for="logo_type_image">上传图片</label>
+                                
+                                <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_icon" value="icon" <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'icon') ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary" for="logo_type_icon">Font Awesome</label>
+                                
+                                <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_none" value="none" <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'none') ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary" for="logo_type_none">无Logo</label>
+                            </div>
+                            
+                            <!-- 隐藏字段 -->
+                            <input type="hidden" name="current_logo" value="<?php 
+                                if ($settings['site_logo_type'] === 'image' && !empty($settings['site_logo'])) {
+                                    echo htmlspecialchars($settings['site_logo']);
+                                } elseif ($settings['site_logo_type'] === 'icon' && !empty($settings['site_logo_icon'])) {
+                                    echo htmlspecialchars($settings['site_logo_icon']);
+                                } else {
+                                    echo '';
+                                }
+                            ?>">
+                            <input type="hidden" name="remove_logo" value="0">
+                            <input type="hidden" id="uploaded_logo_path" name="uploaded_logo_path" value="<?php echo htmlspecialchars($settings['site_logo'] ?? ''); ?>">
+                            <!-- 添加final_logo和final_logo_type隐藏字段 -->
+                            <input type="hidden" id="final_logo" name="final_logo" value="">
+                            <input type="hidden" id="final_logo_type" name="final_logo_type" value="<?php echo $settings['site_logo_type'] ?? 'image'; ?>">
+                            
+                            <!-- 图片上传 -->
+                            <div id="logo_image_section" class="logo-section" style="display: none;">
+                                <label for="site_logo" class="form-label">上传Logo</label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="site_logo" name="site_logo" 
+                                           accept="image/png,image/jpg,image/jpeg"
+                                           onchange="this.nextElementSibling.value = this.files[0]?.name || '';">
+                                    <button type="button" class="btn btn-outline-primary" id="upload_logo_btn">
+                                        <i class="bi bi-upload"></i> 上传
+                                    </button>
+                                </div>
+                                <input type="text" class="form-control mt-2" id="uploaded_logo_display" 
+                                       placeholder="已上传文件路径" readonly style="background-color: #f8f9fa;"
+                                       value="<?php echo !empty($settings['site_logo_image']) ? htmlspecialchars(basename($settings['site_logo_image'])) : ''; ?>">
+                                <small class="form-text text-muted">支持 JPG、PNG格式，建议尺寸 200×50 像素</small>
+                                <div id="upload_logo_status" class="mt-2"></div>
+                            </div>
+
+                            <!-- Font Awesome 图标选择 -->
+                            <div id="logo_icon_section" class="logo-section" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <label for="site_logo_icon" class="form-label">选择图标</label>
                                         <div class="input-group">
-                                            <input type="file" class="form-control" id="site_logo" name="site_logo" 
-                                                   accept="image/png,image/jpg,image/jpeg"
-                                                   onchange="this.nextElementSibling.value = this.files[0]?.name || '';">
-                                            <button type="button" class="btn btn-outline-primary" id="upload_logo_btn">
-                                                <i class="bi bi-upload"></i> 上传
+                                            <input type="text" class="form-control" id="site_logo_icon" name="site_logo_icon" 
+                                                   placeholder="点击选择图标" readonly
+                                                   value="<?php echo htmlspecialchars($settings['site_logo_icon'] ?? 'fas fa-home'); ?>">
+                                            <button type="button" class="btn btn-outline-secondary" id="openLogoIconPicker">
+                                                <i class="fas fa-icons"></i>
                                             </button>
                                         </div>
-                                        <input type="text" class="form-control mt-2" id="uploaded_logo_display" 
-                                               placeholder="已上传文件路径" readonly style="background-color: #f8f9fa;"
-                                               value="<?php echo !empty($settings['site_logo_image']) ? htmlspecialchars(basename($settings['site_logo_image'])) : ''; ?>">
-                                        <small class="form-text text-muted">支持 JPG、PNG格式，建议尺寸 200×50 像素</small>
-                                        <div id="upload_logo_status" class="mt-2"></div>
                                     </div>
-
-                                    <!-- Font Awesome 图标选择 -->
-                                    <div id="logo_icon_section" class="logo-section" style="display: none;">
-                                        <div class="row">
-                                            <div class="col-md-8">
-                                                <label for="site_logo_icon" class="form-label">选择图标</label>
-                                                <div class="input-group">
-                                                    <input type="text" class="form-control" id="site_logo_icon" name="site_logo_icon" 
-                                                           placeholder="点击选择图标" readonly
-                                                           value="<?php echo htmlspecialchars($settings['site_logo_icon'] ?? 'fas fa-home'); ?>">
-                                                    <button type="button" class="btn btn-outline-secondary" id="openLogoIconPicker">
-                                                        <i class="fas fa-icons"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label for="site_logo_color" class="form-label">图标颜色</label>
-                                                <input type="color" class="form-control form-control-color w-100" id="site_logo_color" name="site_logo_color" 
-                                                       value="<?php echo htmlspecialchars($settings['site_logo_color'] ?? '#007bff'); ?>" style="height: 38px;">
-                                            </div>
-                                        </div>
+                                    <div class="col-md-4">
+                                        <label for="site_logo_color" class="form-label">图标颜色</label>
+                                        <input type="color" class="form-control form-control-color w-100" id="site_logo_color" name="site_logo_color" 
+                                               value="<?php echo htmlspecialchars($settings['site_logo_color'] ?? '#007bff'); ?>" style="height: 38px;">
                                     </div>
                                 </div>
+                            </div>
+                        </div>
 
-                                <!-- Logo预览 -->
-                                <div class="col-md-5">
-                                    <label class="form-label">Logo预览</label>
-                                    <div class="logo-preview-container text-center">
-                                        <div id="logoPreview" class="mb-2">
-                                            <?php if (!empty($settings['site_logo_icon']) && $settings['site_logo_type'] === 'icon'): ?>
-                                                <i class="<?php echo htmlspecialchars($settings['site_logo_icon']); ?>" style="font-size: 3rem; color: <?php echo htmlspecialchars($settings['site_logo_color'] ?? '#007bff'); ?>"></i>
-                                            <?php elseif (!empty($settings['site_logo']) && $settings['site_logo_type'] === 'image'): ?>
-                                                <img src="<?php echo htmlspecialchars(str_replace('../uploads/', '/uploads/', $settings['site_logo'])); ?>" class="image-preview" style="max-width: 100px; max-height: 100px; border-radius: 8px;">
-                                            <?php else: ?>
-                                                <div class="text-muted">
-                                                    <i class="fas fa-image" style="font-size: 2rem;"></i>
-                                                    <p class="mt-2 mb-0">暂无Logo</p>
-                                                </div>
-                                            <?php endif; ?>
+                        <!-- Logo预览 -->
+                        <div class="col-md-5">
+                            <label class="form-label">Logo预览</label>
+                            <div class="logo-preview-container text-center">
+                                <div id="logoPreview" class="mb-2">
+                                    <?php if (!empty($settings['site_logo_icon']) && $settings['site_logo_type'] === 'icon'): ?>
+                                        <i class="<?php echo htmlspecialchars($settings['site_logo_icon']); ?>" style="font-size: 3rem; color: <?php echo htmlspecialchars($settings['site_logo_color'] ?? '#007bff'); ?>"></i>
+                                    <?php elseif (!empty($settings['site_logo']) && $settings['site_logo_type'] === 'image'): ?>
+                                        <img src="<?php echo htmlspecialchars(str_replace('../uploads/', '/uploads/', $settings['site_logo'])); ?>" class="image-preview" style="max-width: 100px; max-height: 100px; border-radius: 8px;">
+                                    <?php else: ?>
+                                        <div class="text-muted">
+                                            <i class="fas fa-image" style="font-size: 2rem;"></i>
+                                            <p class="mt-2 mb-0">暂无Logo</p>
                                         </div>
-                                    </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
