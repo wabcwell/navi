@@ -140,120 +140,123 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
         // 创建数据表
         $sql = "
         CREATE TABLE IF NOT EXISTS categories (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
-            slug VARCHAR(255),
-            description TEXT,
-            color VARCHAR(7) DEFAULT '#007bff',
-            icon_fontawesome VARCHAR(50) DEFAULT NULL,
-            icon_fontawesome_color VARCHAR(7) DEFAULT NULL,
-            icon_upload VARCHAR(500) DEFAULT NULL,
-            icon_url VARCHAR(500) DEFAULT NULL,
-            icon_type ENUM('fontawesome','upload','url','none','iconfont') DEFAULT 'fontawesome',
-            icon_iconfont VARCHAR(100) DEFAULT NULL,
-            order_index INT DEFAULT 0,
-            is_active TINYINT(1) DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            UNIQUE KEY name (name),
-            UNIQUE KEY unique_name (name),
-            UNIQUE KEY slug (slug)
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+            id INT NOT NULL AUTO_INCREMENT,
+            name VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            slug VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+            color VARCHAR(7) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '#007bff',
+            icon_fontawesome VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            icon_fontawesome_color VARCHAR(7) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            icon_upload VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            icon_url VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            icon_type ENUM('fontawesome','upload','url','none','iconfont') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'fontawesome',
+            icon_iconfont VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            order_index INT NULL DEFAULT 0,
+            is_active TINYINT(1) NULL DEFAULT 1,
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`) USING BTREE,
+            UNIQUE INDEX `name`(`name` ASC) USING BTREE,
+            UNIQUE INDEX `unique_name`(`name` ASC) USING BTREE,
+            UNIQUE INDEX `slug`(`slug` ASC) USING BTREE
+        ) ENGINE=InnoDB AUTO_INCREMENT = 72 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
         CREATE TABLE IF NOT EXISTS navigation_links (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            title VARCHAR(200) NOT NULL,
-            url VARCHAR(500) NOT NULL,
-            description TEXT,
+            id INT NOT NULL AUTO_INCREMENT,
+            title VARCHAR(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            url VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            description TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
             category_id INT NOT NULL,
-            icon_url VARCHAR(500) DEFAULT NULL,
-            icon_type ENUM('fontawesome','upload','url','none','iconfont') DEFAULT 'none',
-            icon_iconfont VARCHAR(100) DEFAULT NULL,
-            icon_upload VARCHAR(500) DEFAULT NULL,
-            icon_fontawesome_color VARCHAR(20) DEFAULT NULL,
-            icon_fontawesome VARCHAR(100) DEFAULT NULL,
-            order_index INT DEFAULT 0,
-            is_active TINYINT(1) DEFAULT 1,
-            click_count INT DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            icon_url VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            icon_type ENUM('fontawesome','upload','url','none','iconfont') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'none',
+            icon_iconfont VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            icon_upload VARCHAR(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            icon_fontawesome_color VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            icon_fontawesome VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            order_index INT NULL DEFAULT 0,
+            is_active TINYINT(1) NULL DEFAULT 1,
+            click_count INT NULL DEFAULT 0,
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`) USING BTREE,
             INDEX `category_id`(`category_id` ASC) USING BTREE,
             CONSTRAINT `navigation_links_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ) ENGINE=InnoDB AUTO_INCREMENT = 187 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
         CREATE TABLE IF NOT EXISTS settings (
             id INT NOT NULL AUTO_INCREMENT,
-            setting_key VARCHAR(100) NOT NULL,
-            setting_value TEXT,
-            setting_type VARCHAR(50) DEFAULT 'string',
-            description VARCHAR(255) DEFAULT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            setting_key VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            setting_value TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+            setting_type VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'string',
+            description VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (`id`) USING BTREE,
             UNIQUE INDEX `setting_key`(`setting_key` ASC) USING BTREE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ) ENGINE=InnoDB AUTO_INCREMENT = 2062 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
         CREATE TABLE IF NOT EXISTS users (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            username VARCHAR(50) NOT NULL,
-            email VARCHAR(100) NOT NULL,
-            password VARCHAR(255) NOT NULL,
-            real_name VARCHAR(50),
-            role ENUM('user','editor','admin') DEFAULT 'user',
+            id INT NOT NULL AUTO_INCREMENT,
+            username VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            email VARCHAR(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            password VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            real_name VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            role ENUM('user','editor','admin') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT 'user',
             status TINYINT(1) NULL DEFAULT 1,
             login_count INT NULL DEFAULT 0,
-            last_login DATETIME,
-            last_ip VARCHAR(45),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            last_login DATETIME NULL DEFAULT NULL,
+            last_ip VARCHAR(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`) USING BTREE,
             UNIQUE INDEX `username`(`username` ASC) USING BTREE,
             UNIQUE INDEX `email`(`email` ASC) USING BTREE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ) ENGINE=InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
         CREATE TABLE IF NOT EXISTS error_logs (
             id INT NOT NULL AUTO_INCREMENT,
-            level VARCHAR(20) NOT NULL,
-            message TEXT NOT NULL,
-            file VARCHAR(255),
-            line INT,
-            context TEXT,
-            user_id INT,
-            ip_address VARCHAR(45),
-            user_agent TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            level VARCHAR(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            message TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            file VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            line INT NULL DEFAULT NULL,
+            context TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+            user_id INT NULL DEFAULT NULL,
+            ip_address VARCHAR(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            user_agent TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (`id`) USING BTREE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ) ENGINE=InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
         CREATE TABLE IF NOT EXISTS login_logs (
             id INT NOT NULL AUTO_INCREMENT,
-            user_id INT,
-            username VARCHAR(50),
-            ip_address VARCHAR(45),
-            user_agent TEXT,
-            login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            user_id INT NULL DEFAULT NULL,
+            username VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            ip_address VARCHAR(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            user_agent TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+            login_time TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
             success TINYINT(1) NULL DEFAULT 0,
-            failure_reason VARCHAR(255),
+            failure_reason VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
             PRIMARY KEY (`id`) USING BTREE
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ) ENGINE=InnoDB AUTO_INCREMENT = 43 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci ROW_FORMAT = Dynamic;
 
         CREATE TABLE IF NOT EXISTS operation_logs (
             id INT NOT NULL AUTO_INCREMENT,
             userid INT NOT NULL,
-            operation_module ENUM('分类', '链接', '用户', '文件') NOT NULL,
-            operation_type ENUM('新增', '删除', '编辑') NOT NULL,
-            categorie_id INT DEFAULT NULL,
-            categorie_name VARCHAR(255) DEFAULT NULL,
-            link_id INT DEFAULT NULL,
-            link_name VARCHAR(255) DEFAULT NULL,
-            files TEXT DEFAULT NULL,
-            operated_id INT DEFAULT NULL,
-            operated_name VARCHAR(255) DEFAULT NULL,
-            operation_time TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
-            ip_address VARCHAR(45) DEFAULT NULL,
-            operation_details JSON DEFAULT NULL,
-            status ENUM('成功', '失败') DEFAULT '成功',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            operation_module VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            operation_type VARCHAR(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+            categorie_id INT NULL DEFAULT NULL,
+            categorie_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            link_id INT NULL DEFAULT NULL,
+            link_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            files TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL,
+            operated_id INT NULL DEFAULT NULL,
+            operated_name VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            operation_time TIMESTAMP(3) NULL DEFAULT CURRENT_TIMESTAMP(3),
+            ip_address VARCHAR(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL,
+            operation_details JSON NULL,
+            status ENUM('成功','失败') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT '成功',
+            created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             PRIMARY KEY (`id`) USING BTREE,
             INDEX `idx_userid`(`userid` ASC) USING BTREE,
             INDEX `idx_operation_module`(`operation_module` ASC) USING BTREE,
@@ -263,20 +266,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             INDEX `idx_link_id`(`link_id` ASC) USING BTREE,
             INDEX `idx_operated_id`(`operated_id` ASC) USING BTREE,
             CONSTRAINT `operation_logs_ibfk_1` FOREIGN KEY (`userid`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ) ENGINE=InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '操作日志表 - 记录用户操作历史' ROW_FORMAT = Dynamic;
 
-        CREATE TABLE IF NOT EXISTS user_preferences (
-            id INT NOT NULL AUTO_INCREMENT,
-            user_id INT NOT NULL,
-            preference_key VARCHAR(100) NOT NULL,
-            preference_value TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (`id`) USING BTREE,
-            UNIQUE INDEX `unique_user_preference`(`user_id` ASC, `preference_key` ASC) USING BTREE,
-            INDEX `user_id`(`user_id` ASC) USING BTREE,
-            CONSTRAINT `user_preferences_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
         ";
 
         $pdo->exec($sql);
