@@ -92,7 +92,14 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/settings/') !== false ? 'active' : ''; ?>" 
+                <a class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/settings/logs.php') !== false ? 'active' : ''; ?>" 
+                   href="/admin/settings/logs.php">
+                    <i class="bi bi-journal-text"></i>
+                    <span>操作记录</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/settings/') !== false && strpos($_SERVER['REQUEST_URI'], '/settings/logs.php') === false ? 'active' : ''; ?>" 
                    href="/admin/settings/general.php">
                     <i class="bi bi-gear"></i>
                     <span>系统设置</span>

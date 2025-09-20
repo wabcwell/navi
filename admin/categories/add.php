@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $icon_data = [];
         
         switch ($icon_type) {
-            case 'font':
+            case 'fontawesome':
                 // 保存完整的图标类名（带fa-前缀）
                 $icon_name = trim($_POST['font_icon']);
                 $icon_data['icon_fontawesome'] = $icon_name;
@@ -208,7 +208,7 @@ include '../templates/header.php';
                         
                         <!-- 图标类型选择 -->
                         <div class="btn-group w-100 mb-3" role="group">
-                            <input type="radio" class="btn-check" name="icon_type" id="icon_type_font" value="font" checked>
+                            <input type="radio" class="btn-check" name="icon_type" id="icon_type_font" value="fontawesome" checked>
                             <label class="btn btn-outline-primary" for="icon_type_font">Font Awesome</label>
                             
                             <input type="radio" class="btn-check" name="icon_type" id="icon_type_iconfont" value="iconfont">
@@ -290,7 +290,7 @@ include '../templates/header.php';
                         
                         <!-- 隐藏字段 -->
                         <input type="hidden" id="final_icon" name="final_icon" value="">
-                        <input type="hidden" id="final_icon_type" name="final_icon_type" value="font">
+                        <input type="hidden" id="final_icon_type" name="final_icon_type" value="fontawesome">
                         <input type="hidden" id="uploaded_icon_path" name="uploaded_icon_path" value="">
                         <!-- 添加缺失的隐藏字段以存储各个图标的值 -->
                         <input type="hidden" id="icon_fontawesome" name="icon_fontawesome" value="">
@@ -396,7 +396,7 @@ function updateIconPreview() {
     const previewText = document.getElementById('icon_preview_text');
     
     switch(iconType) {
-        case 'font':
+        case 'fontawesome':
             const iconValue = document.getElementById('font_icon').value || 'fa-folder';
             // 使用完整的图标类名（带fa-前缀）
             const iconName = iconValue.replace(/^fa-/, '');
@@ -703,7 +703,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
     
     // 根据当前选中的标签页设置最终值
     switch(iconType) {
-        case 'font':
+        case 'fontawesome':
             const iconValue = iconParams.icon_fontawesome;
             const iconColor = iconParams.icon_fontawesome_color;
             document.getElementById('final_icon').value = JSON.stringify({

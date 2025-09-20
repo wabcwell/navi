@@ -50,11 +50,24 @@ try {
 $stmt = $pdo->query("SELECT * FROM login_logs ORDER BY login_time DESC LIMIT 5");
 $login_logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 最近添加的链接
-$stmt = $pdo->query("SELECT l.*, c.name as category_name FROM navigation_links l 
-                    LEFT JOIN categories c ON l.category_id = c.id 
-                    ORDER BY l.created_at DESC LIMIT 5");
-$recent_links = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// 最近操作活动（从operation_logs获取分类和链接的新增操作）
+$stmt = $pdo->prepare("
+    SELECT 
+        operation_module,
+        operation_type,
+        operation_time,
+        operation_details,
+        userid,
+        u.username
+    FROM operation_logs ol
+    LEFT JOIN users u ON ol.userid = u.id
+    WHERE operation_module IN ('分类', '链接') 
+    AND operation_type = '新增'
+    ORDER BY operation_time DESC 
+    LIMIT 10
+");
+$stmt->execute();
+$recent_activities = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $page_title = '仪表盘';
 include 'templates/header.php';
@@ -141,31 +154,73 @@ include 'templates/header.php';
                 </h5>
             </div>
             <div class="card-body">
-                <h6>最近添加的链接</h6>
-                <?php if ($recent_links): ?>
+                <h6>最近操作活动</h6>
+                <?php if ($recent_activities): ?>
                     <div class="list-group list-group-flush">
-                        <?php foreach ($recent_links as $link): ?>
+                        <?php foreach ($recent_activities as $activity): ?>
+                            <?php
+                            // 解析操作详情
+                            $details = json_decode($activity['operation_details'], true) ?? [];
+                            $description = '';
+                            
+                            if ($activity['operation_module'] === '分类') {
+                                // 从多个可能的字段中获取分类名称
+                                if (isset($details['name']) && !empty($details['name'])) {
+                                    $description = htmlspecialchars($details['name']);
+                                } elseif (isset($details['category_name']) && !empty($details['category_name'])) {
+                                    $description = htmlspecialchars($details['category_name']);
+                                } elseif (isset($details['after']['name']) && !empty($details['after']['name'])) {
+                                    $description = htmlspecialchars($details['after']['name']);
+                                } elseif (isset($details['link_data']['name']) && !empty($details['link_data']['name'])) {
+                                    $description = htmlspecialchars($details['link_data']['name']);
+                                } else {
+                                    $description = '新分类';
+                                }
+                            } elseif ($activity['operation_module'] === '链接') {
+                                // 从多个可能的字段中获取链接名称
+                                if (isset($details['title']) && !empty($details['title'])) {
+                                    $description = htmlspecialchars($details['title']);
+                                } elseif (isset($details['link_name']) && !empty($details['link_name'])) {
+                                    $description = htmlspecialchars($details['link_name']);
+                                } elseif (isset($details['after']['title']) && !empty($details['after']['title'])) {
+                                    $description = htmlspecialchars($details['after']['title']);
+                                } elseif (isset($details['link_data']['title']) && !empty($details['link_data']['title'])) {
+                                    $description = htmlspecialchars($details['link_data']['title']);
+                                } else {
+                                    $description = '新链接';
+                                }
+                            }
+                            
+                            // 获取操作图标（只显示新增操作）
+                            $icon = 'bi-plus-circle text-success';
+                            ?>
                             <div class="list-group-item">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <strong><?php echo htmlspecialchars($link['title']); ?></strong>
-                                        <br>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <i class="bi <?php echo $icon; ?> me-2"></i>
+                                            <strong><?php echo $activity['operation_type'] . ' ' . $activity['operation_module']; ?></strong>
+                                            <span class="mx-1">-</span>
+                                            <span class="text-truncate"><?php echo $description; ?></span>
+                                        </div>
                                         <small class="text-muted">
-                                            <?php echo htmlspecialchars($link['category_name']); ?> • 
-                                            <?php echo date('Y-m-d H:i', strtotime($link['created_at'])); ?>
+                                            <?php echo htmlspecialchars($activity['username'] ?? '系统'); ?> • 
+                                            <?php echo date('Y-m-d H:i', strtotime($activity['operation_time'])); ?>
                                         </small>
                                     </div>
-                                    <div>
-                                        <a href="<?php echo $link['url']; ?>" target="_blank" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
+                                    <div class="ms-2">
+                                        <?php if ($activity['operation_module'] === '链接' && isset($details['url'])): ?>
+                                            <a href="<?php echo htmlspecialchars($details['url']); ?>" target="_blank" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
-                    <p class="text-muted">暂无最近添加的链接</p>
+                    <p class="text-muted">暂无最近操作记录</p>
                 <?php endif; ?>
             </div>
         </div>

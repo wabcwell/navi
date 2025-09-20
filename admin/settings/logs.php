@@ -216,16 +216,7 @@ $page_title = '系统日志';
 include '../templates/header.php';
 ?>
 
-<div class="page-header">
-    <h1>系统日志</h1>
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="../dashboard.php">仪表盘</a></li>
-            <li class="breadcrumb-item"><a href="general.php">网站设置</a></li>
-            <li class="breadcrumb-item active">系统日志</li>
-        </ol>
-    </nav>
-</div>
+
 
 <div class="mb-4">
     <button type="button" class="btn btn-danger" onclick="clearAllLogs()">

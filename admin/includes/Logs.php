@@ -187,8 +187,35 @@ public function __construct($database = null) {
      * 
      * @param array $logData 日志数据数组
      * @return int 插入记录的ID
+     * @throws Exception 当参数无效时抛出异常
      */
     public function addOperationLog($logData) {
+        // 代码层面约束：定义允许的模块和操作类型
+        $allowedModules = ['分类', '链接', '用户', '文件', '设置'];
+        $allowedTypes = ['新增', '删除', '编辑'];
+        $allowedStatus = ['成功', '失败'];
+        
+        // 验证 operation_module
+        if (isset($logData['operation_module'])) {
+            if (!in_array($logData['operation_module'], $allowedModules)) {
+                throw new Exception("无效的操作模块: " . $logData['operation_module'] . "。允许的模块: " . implode(', ', $allowedModules));
+            }
+        }
+        
+        // 验证 operation_type
+        if (isset($logData['operation_type'])) {
+            if (!in_array($logData['operation_type'], $allowedTypes)) {
+                throw new Exception("无效的操作类型: " . $logData['operation_type'] . "。允许的类型: " . implode(', ', $allowedTypes));
+            }
+        }
+        
+        // 验证 status
+        if (isset($logData['status'])) {
+            if (!in_array($logData['status'], $allowedStatus)) {
+                throw new Exception("无效的状态: " . $logData['status'] . "。允许的状态: " . implode(', ', $allowedStatus));
+            }
+        }
+        
         // 设置默认值
         $defaults = [
             'operation_time' => date('Y-m-d H:i:s.u'),
