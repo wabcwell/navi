@@ -130,7 +130,7 @@ $overlay = $settings['bg-overlay'] ?? 0.2;
                                 <i class="fas fa-folder" style="color: <?php echo htmlspecialchars($iconColor); ?>"></i>
                             <?php endif; ?>
                         </div>
-                        <?php echo htmlspecialchars($category['name']); ?>
+                        <a href="categorie.php?id=<?php echo $category['id']; ?>" target="_blank" style="color: inherit; text-decoration: none;"><?php echo htmlspecialchars($category['name']); ?></a>
                         <span class="count"><?php echo $category['link_count']; ?></span>
                     </div>
                     
