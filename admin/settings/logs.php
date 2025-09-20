@@ -237,7 +237,6 @@ include '../templates/header.php';
             <input type="hidden" name="type" value="<?php echo $log_type; ?>">
             
             <div class="col-md-3">
-                <label class="form-label">搜索内容</label>
                 <input type="text" class="form-control" name="search" 
                        value="<?php echo htmlspecialchars($search); ?>" 
                        placeholder="<?php echo $log_type === 'operation' ? '搜索操作详情或用户ID' : '搜索日志内容或用户名'; ?>">
@@ -245,9 +244,8 @@ include '../templates/header.php';
             
             <?php if ($log_type === 'operation'): ?>
             <div class="col-md-2">
-                <label class="form-label">操作模块</label>
                 <select class="form-select" name="operation_module">
-                    <option value="">全部</option>
+                    <option value="">全部模块</option>
                     <option value="分类" <?php echo (isset($_GET['operation_module']) && $_GET['operation_module'] === '分类') ? 'selected' : ''; ?>>分类</option>
                     <option value="链接" <?php echo (isset($_GET['operation_module']) && $_GET['operation_module'] === '链接') ? 'selected' : ''; ?>>链接</option>
                     <option value="用户" <?php echo (isset($_GET['operation_module']) && $_GET['operation_module'] === '用户') ? 'selected' : ''; ?>>用户</option>
@@ -257,9 +255,8 @@ include '../templates/header.php';
             <?php endif; ?>
             
             <div class="col-md-2">
-                <label class="form-label">选择月份</label>
                 <select class="form-select" name="selected_month">
-                    <option value="">全部</option>
+                    <option value="">全部月份</option>
                     <?php
                     // 生成最近12个月的选项
                     for ($i = 0; $i < 12; $i++) {
