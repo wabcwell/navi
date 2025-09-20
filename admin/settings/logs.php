@@ -19,8 +19,18 @@ $offset = ($page - 1) * $per_page;
 
 // 搜索参数
 $search = $_GET['search'] ?? '';
-$date_from = $_GET['date_from'] ?? '';
-$date_to = $_GET['date_to'] ?? '';
+$selected_month = $_GET['selected_month'] ?? '';
+$date_from = '';
+$date_to = '';
+
+// 如果选择了月份，设置对应的开始和结束日期
+if ($selected_month) {
+    $date_from = $selected_month . '-01';
+    // 获取该月的最后一天
+    $last_day = date('Y-m-t', strtotime($date_from));
+    $date_to = $last_day;
+}
+
 $operation_module = $_GET['operation_module'] ?? '';
 $operation_type = $_GET['operation_type'] ?? '';
 
@@ -80,7 +90,7 @@ try {
     $logsManager = get_logs_manager();
     switch ($log_type) {
         case 'login':
-            $logs = $logsManager->getLoginLogs($per_page, $offset, 'created_at', 'DESC');
+            $logs = $logsManager->getLoginLogs($per_page, $offset, 'login_time', 'DESC');
             break;
         case 'error':
             $logs = $logsManager->getErrorLogs($per_page, $offset, 'created_at', 'DESC');
@@ -178,51 +188,11 @@ if (isset($_POST['clear_logs'])) {
     exit();
 }
 
-// 获取日志统计
-$stats = [
-    'today' => 0,
-    'week' => 0,
-    'month' => 0,
-    'total' => $total_records
-];
 
-try {
-    $logsManager = get_logs_manager();
-    
-    if ($log_type === 'operation') {
-        // 操作日志使用新的统计方法
-        $stats['today'] = $logsManager->getOperationLogStats($search, $operation_module, $operation_type, date('Y-m-d'), date('Y-m-d'))['total'];
-        $stats['week'] = $logsManager->getOperationLogStats($search, $operation_module, $operation_type, date('Y-m-d', strtotime('-7 days')), date('Y-m-d'))['total'];
-        $stats['month'] = $logsManager->getOperationLogStats($search, $operation_module, $operation_type, date('Y-m-d', strtotime('-30 days')), date('Y-m-d'))['total'];
-    } else {
-        // 其他日志使用原有方法
-        $today_stats = $logsManager->getLogStats($table, date('Y-m-d'), date('Y-m-d'));
-        $stats['today'] = $today_stats['total'];
-        
-        $week_stats = $logsManager->getLogStats($table, date('Y-m-d', strtotime('-7 days')), date('Y-m-d'));
-        $stats['week'] = $week_stats['total'];
-        
-        $month_stats = $logsManager->getLogStats($table, date('Y-m-d', strtotime('-30 days')), date('Y-m-d'));
-        $stats['month'] = $month_stats['total'];
-    }
-} catch (Exception $e) {
-    // 如果获取统计信息失败，保持默认值为0
-    $stats['today'] = 0;
-    $stats['week'] = 0;
-    $stats['month'] = 0;
-}
 
 $page_title = '系统日志';
 include '../templates/header.php';
 ?>
-
-
-
-<div class="mb-4">
-    <button type="button" class="btn btn-danger" onclick="clearAllLogs()">
-        <i class="bi bi-trash"></i> 清空日志
-    </button>
-</div>
 
 <?php if (isset($_SESSION['success'])): ?>
     <div class="alert alert-success alert-dismissible fade show">
@@ -239,64 +209,34 @@ include '../templates/header.php';
 <?php endif; ?>
 
 <!-- 日志类型切换 -->
-<ul class="nav nav-tabs mb-4">
-    <li class="nav-item">
-        <a class="nav-link <?php echo $log_type === 'login' ? 'active' : ''; ?>" 
-           href="?type=login">登录日志</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link <?php echo $log_type === 'error' ? 'active' : ''; ?>" 
-           href="?type=error">错误日志</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link <?php echo $log_type === 'operation' ? 'active' : ''; ?>" 
-           href="?type=operation">操作日志</a>
-    </li>
-</ul>
-
-<!-- 统计信息 -->
 <div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title"><?php echo $stats['today']; ?></h5>
-                <p class="card-text text-muted">今日记录</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title"><?php echo $stats['week']; ?></h5>
-                <p class="card-text text-muted">本周记录</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title"><?php echo $stats['month']; ?></h5>
-                <p class="card-text text-muted">本月记录</p>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <h5 class="card-title"><?php echo $stats['total']; ?></h5>
-                <p class="card-text text-muted">总记录数</p>
-            </div>
+    <div class="col-12">
+        <div class="nav nav-pills">
+            <a class="nav-link <?php echo $log_type === 'login' ? 'active' : ''; ?>" 
+               href="?type=login">
+                <i class="bi bi-box-arrow-in-right"></i> 登录日志
+            </a>
+            <a class="nav-link <?php echo $log_type === 'error' ? 'active' : ''; ?>" 
+               href="?type=error">
+                <i class="bi bi-exclamation-triangle"></i> 错误日志
+            </a>
+            <a class="nav-link <?php echo $log_type === 'operation' ? 'active' : ''; ?>" 
+               href="?type=operation">
+                <i class="bi bi-gear"></i> 操作日志
+            </a>
         </div>
     </div>
 </div>
 
+
+
 <!-- 搜索和筛选 -->
 <div class="card mb-4">
     <div class="card-body">
-        <form method="GET" class="row g-3">
+        <form method="GET" class="row g-3 align-items-end">
             <input type="hidden" name="type" value="<?php echo $log_type; ?>">
             
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <label class="form-label">搜索内容</label>
                 <input type="text" class="form-control" name="search" 
                        value="<?php echo htmlspecialchars($search); ?>" 
@@ -307,7 +247,7 @@ include '../templates/header.php';
             <div class="col-md-2">
                 <label class="form-label">操作模块</label>
                 <select class="form-select" name="operation_module">
-                    <option value="">全部模块</option>
+                    <option value="">全部</option>
                     <option value="分类" <?php echo (isset($_GET['operation_module']) && $_GET['operation_module'] === '分类') ? 'selected' : ''; ?>>分类</option>
                     <option value="链接" <?php echo (isset($_GET['operation_module']) && $_GET['operation_module'] === '链接') ? 'selected' : ''; ?>>链接</option>
                     <option value="用户" <?php echo (isset($_GET['operation_module']) && $_GET['operation_module'] === '用户') ? 'selected' : ''; ?>>用户</option>
@@ -318,7 +258,7 @@ include '../templates/header.php';
             <div class="col-md-2">
                 <label class="form-label">操作类型</label>
                 <select class="form-select" name="operation_type">
-                    <option value="">全部类型</option>
+                    <option value="">全部</option>
                     <option value="新增" <?php echo (isset($_GET['operation_type']) && $_GET['operation_type'] === '新增') ? 'selected' : ''; ?>>新增</option>
                     <option value="删除" <?php echo (isset($_GET['operation_type']) && $_GET['operation_type'] === '删除') ? 'selected' : ''; ?>>删除</option>
                     <option value="编辑" <?php echo (isset($_GET['operation_type']) && $_GET['operation_type'] === '编辑') ? 'selected' : ''; ?>>编辑</option>
@@ -326,25 +266,34 @@ include '../templates/header.php';
             </div>
             <?php endif; ?>
             
-            <div class="col-md-3">
-                <label class="form-label">开始日期</label>
-                <input type="date" class="form-control" name="date_from" 
-                       value="<?php echo htmlspecialchars($date_from); ?>">
+            <div class="col-md-2">
+                <label class="form-label">选择月份</label>
+                <select class="form-select" name="selected_month">
+                    <option value="">全部</option>
+                    <?php
+                    // 生成最近12个月的选项
+                    for ($i = 0; $i < 12; $i++) {
+                        $month = date('Y-m', strtotime("-$i months"));
+                        $month_text = date('Y年m月', strtotime("-$i months"));
+                        $selected = ($selected_month === $month) ? 'selected' : '';
+                        echo "<option value=\"$month\" $selected>$month_text</option>";
+                    }
+                    ?>
+                </select>
             </div>
             
             <div class="col-md-3">
-                <label class="form-label">结束日期</label>
-                <input type="date" class="form-control" name="date_to" 
-                       value="<?php echo htmlspecialchars($date_to); ?>">
-            </div>
-            
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary me-2">
-                    <i class="bi bi-search"></i> 搜索
-                </button>
-                <a href="?type=<?php echo $log_type; ?>" class="btn btn-secondary">
-                    <i class="bi bi-arrow-clockwise"></i> 重置
-                </a>
+                <div class="d-flex gap-1">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-search"></i> 搜索
+                    </button>
+                    <a href="?type=<?php echo $log_type; ?>" class="btn btn-secondary">
+                        <i class="bi bi-arrow-clockwise"></i> 重置
+                    </a>
+                    <button type="button" class="btn btn-danger" onclick="clearAllLogs()">
+                        <i class="bi bi-trash"></i> 清空
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -384,7 +333,13 @@ include '../templates/header.php';
                                            class="form-check-input log-checkbox">
                                 </td>
                                 <td>
-                                    <small><?php echo date('Y-m-d H:i:s', strtotime($log['created_at'])); ?></small>
+                                    <small><?php 
+                                        $time_field = 'created_at';
+                                        if ($log_type === 'login') {
+                                            $time_field = 'login_time';
+                                        }
+                                        echo date('Y-m-d H:i:s', strtotime($log[$time_field] ?? 'now')); 
+                                    ?></small>
                                 </td>
                                 <td>
                                     <span class="badge bg-secondary">
@@ -491,11 +446,14 @@ include '../templates/header.php';
 
 <script>
 // 全选/取消全选
-document.getElementById('selectAll').addEventListener('change', function() {
-    const checkboxes = document.querySelectorAll('.log-checkbox');
-    checkboxes.forEach(checkbox => checkbox.checked = this.checked);
-    updateBatchDeleteButton();
-});
+const selectAllCheckbox = document.getElementById('selectAll');
+if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.log-checkbox');
+        checkboxes.forEach(checkbox => checkbox.checked = this.checked);
+        updateBatchDeleteButton();
+    });
+}
 
 // 监听单个复选框变化
 document.querySelectorAll('.log-checkbox').forEach(checkbox => {

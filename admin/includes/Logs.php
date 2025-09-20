@@ -450,13 +450,21 @@ public function __construct($database = null) {
         $where_conditions = [];
         $params = [];
         
+        // 根据不同表确定时间字段
+        $time_field = 'created_at'; // 默认时间字段
+        if ($table === 'login_logs') {
+            $time_field = 'login_time';
+        } elseif ($table === 'error_logs') {
+            $time_field = 'created_at';
+        }
+        
         if ($date_from) {
-            $where_conditions[] = "created_at >= :date_from";
+            $where_conditions[] = "{$time_field} >= :date_from";
             $params['date_from'] = $date_from . ' 00:00:00';
         }
         
         if ($date_to) {
-            $where_conditions[] = "created_at <= :date_to";
+            $where_conditions[] = "{$time_field} <= :date_to";
             $params['date_to'] = $date_to . ' 23:59:59';
         }
         
