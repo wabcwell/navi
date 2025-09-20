@@ -248,4 +248,52 @@ class Settings {
             return false;
         }
     }
+    
+    /**
+     * 验证site_logo_type的值是否有效
+     * @param string $type Logo类型
+     * @return bool 是否有效
+     */
+    public function isValidSiteLogoType($type) {
+        $validTypes = ['image', 'icon', 'iconfont'];
+        return in_array($type, $validTypes);
+    }
+    
+    /**
+     * 获取有效的site_logo_type选项
+     * @return array 有效选项列表
+     */
+    public function getValidSiteLogoTypes() {
+        return ['image', 'icon', 'iconfont'];
+    }
+    
+    /**
+     * 设置site_logo_type，带验证
+     * @param string $type Logo类型
+     * @return bool 是否成功
+     */
+    public function setSiteLogoType($type) {
+        if (!$this->isValidSiteLogoType($type)) {
+            throw new Exception("无效的site_logo_type值: {$type}");
+        }
+        return $this->set('site_logo_type', $type);
+    }
+    
+    /**
+     * 设置site_logo_iconfont
+     * @param string $iconfont Iconfont图标标签
+     * @return bool 是否成功
+     */
+    public function setSiteLogoIconfont($iconfont) {
+        return $this->set('site_logo_iconfont', $iconfont);
+    }
+    
+    /**
+     * 获取site_logo_iconfont
+     * @param string $default 默认值
+     * @return string Iconfont图标标签
+     */
+    public function getSiteLogoIconfont($default = '') {
+        return $this->get('site_logo_iconfont', $default);
+    }
 }
