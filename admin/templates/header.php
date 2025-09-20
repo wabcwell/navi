@@ -51,6 +51,18 @@
             height: auto;
             border-radius: 0.375rem;
         }
+        /* 页面操作按钮样式 */
+        .page-header {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-right: 1.5rem;
+        }
+        .page-actions {
+            margin-left: auto;
+            padding-left: 1rem;
+        }
     </style>
 </head>
 <body>

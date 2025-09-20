@@ -254,16 +254,6 @@ include '../templates/header.php';
                     <option value="文件" <?php echo (isset($_GET['operation_module']) && $_GET['operation_module'] === '文件') ? 'selected' : ''; ?>>文件</option>
                 </select>
             </div>
-            
-            <div class="col-md-2">
-                <label class="form-label">操作类型</label>
-                <select class="form-select" name="operation_type">
-                    <option value="">全部</option>
-                    <option value="新增" <?php echo (isset($_GET['operation_type']) && $_GET['operation_type'] === '新增') ? 'selected' : ''; ?>>新增</option>
-                    <option value="删除" <?php echo (isset($_GET['operation_type']) && $_GET['operation_type'] === '删除') ? 'selected' : ''; ?>>删除</option>
-                    <option value="编辑" <?php echo (isset($_GET['operation_type']) && $_GET['operation_type'] === '编辑') ? 'selected' : ''; ?>>编辑</option>
-                </select>
-            </div>
             <?php endif; ?>
             
             <div class="col-md-2">
@@ -282,18 +272,23 @@ include '../templates/header.php';
                 </select>
             </div>
             
-            <div class="col-md-3">
-                <div class="d-flex gap-1">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-search"></i> 搜索
-                    </button>
-                    <a href="?type=<?php echo $log_type; ?>" class="btn btn-secondary">
-                        <i class="bi bi-arrow-clockwise"></i> 重置
-                    </a>
-                    <button type="button" class="btn btn-danger" onclick="clearAllLogs()">
-                        <i class="bi bi-trash"></i> 清空
-                    </button>
-                </div>
+            <div class="col-md-auto">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> 搜索
+                </button>
+            </div>
+            <div class="col-md-auto">
+                <a href="?type=<?php echo $log_type; ?>" class="btn btn-secondary">
+                    <i class="bi bi-arrow-clockwise"></i> 重置
+                </a>
+            </div>
+            <div class="col-md">
+                <!-- 空白填充列 -->
+            </div>
+            <div class="col-md-auto">
+                <button type="button" class="btn btn-danger" onclick="clearAllLogs()">
+                    <i class="bi bi-trash"></i> 清空
+                </button>
             </div>
         </form>
     </div>

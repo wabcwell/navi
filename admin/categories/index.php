@@ -107,26 +107,20 @@ try {
         );
         $category['link_count'] = $stmt->fetchColumn();
     }
-} catch (Exception $e) {
+}
+
+catch (Exception $e) {
     $categories = [];
     $total = 0;
     $total_pages = 1;
     $_SESSION['error'] = '获取分类列表失败：' . $e->getMessage();
 }
 
+// 设置页面标题
 $page_title = '分类管理';
 include '../templates/header.php';
-?>
 
-
-
-<div class="mb-4">
-    <a href="add.php" class="btn btn-primary">
-        <i class="bi bi-plus"></i> 添加分类
-    </a>
-</div>
-
-<?php if (isset($_SESSION['success'])): ?>
+if (isset($_SESSION['success'])): ?>
     <div class="alert alert-success alert-dismissible fade show">
         <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -144,19 +138,29 @@ include '../templates/header.php';
 <div class="card mb-4">
     <div class="card-body">
         <form method="GET" class="row g-3">
-            <div class="col-md-8">
+            <div class="col-md-4">
                 <input type="text" class="form-control" name="search" 
                        placeholder="搜索分类..." value="<?php echo htmlspecialchars($search); ?>">
             </div>
-            <div class="col-md-4">
+            <div class="col-md-auto">
                 <button type="submit" class="btn btn-outline-primary">
                     <i class="bi bi-search"></i> 搜索
                 </button>
+            </div>
+            <div class="col-md-auto">
                 <?php if ($search): ?>
                     <a href="index.php" class="btn btn-outline-secondary">
                         <i class="bi bi-x"></i> 清除
                     </a>
                 <?php endif; ?>
+            </div>
+            <div class="col-md">
+                <!-- 空白填充列 -->
+            </div>
+            <div class="col-md-2">
+                <a href="add.php" class="btn btn-success w-100">
+                    <i class="bi bi-plus"></i> 添加分类
+                </a>
             </div>
         </form>
     </div>
