@@ -80,9 +80,9 @@ class FrontendData {
         return [
             'site_name' => $this->settingsManager->get('site_name', '导航'),
             'site_description' => $this->settingsManager->get('site_description', '我的导航网站'),
-            'site_logo_type' => $this->settingsManager->get('site_logo_type', 'icon'),
-            'site_logo' => $this->settingsManager->get('site_logo', 'fas fa-compass'),
+            'site_logo_type' => $this->settingsManager->get('site_logo_type', 'image'),
             'site_logo_color' => $this->settingsManager->get('site_logo_color', '#007bff'),
+            'site_logo_image' => $this->settingsManager->get('site_logo_image', ''),
             'site_logo_iconfont' => $this->settingsManager->get('site_logo_iconfont', ''),
             'site_icon' => $this->settingsManager->get('site_icon', ''),
             'background_type' => $this->settingsManager->get('background_type', 'color'),
@@ -110,9 +110,9 @@ class FrontendData {
         return [
             'site_name' => '导航',
             'site_description' => '我的导航网站',
-            'site_logo_type' => 'icon',
-            'site_logo' => 'fas fa-compass',
+            'site_logo_type' => 'image',
             'site_logo_color' => '#007bff',
+            'site_logo_image' => '',
             'site_logo_iconfont' => '',
             'site_icon' => '',
             'background_type' => 'color',

@@ -17,7 +17,7 @@ $settings = $pageData['settings'];
 $site_name = $settings['site_name'];
 $site_description = $settings['site_description'];
 $site_logo_type = $settings['site_logo_type'];
-$site_logo = $settings['site_logo'];
+$site_logo_image = $settings['site_logo_image'] ?? '';
 $site_logo_color = $settings['site_logo_color'];
 $site_logo_iconfont = $settings['site_logo_iconfont'] ?? '';
 $background_type = $settings['background_type'];
@@ -64,12 +64,12 @@ $overlay = $settings['bg-overlay'] ?? 0.2;
         <div class="container">
             <div>
                 <h1>
-                    <?php if ($site_logo_type === 'image' && $site_logo): ?>
-                        <img src="<?php echo htmlspecialchars($site_logo); ?>" 
+                    <?php if ($site_logo_type === 'image' && $site_logo_image): ?>
+                        <img src="<?php echo htmlspecialchars($site_logo_image); ?>" 
                              alt="<?php echo htmlspecialchars($site_name); ?>" 
                              style="max-height: 40px; max-width: 200px; vertical-align: middle; margin-right: 10px;">
-                    <?php elseif ($site_logo_type === 'icon' && $site_logo): ?>
-                        <i class="<?php echo htmlspecialchars($site_logo); ?>" 
+                    <?php elseif ($site_logo_type === 'icon'): ?>
+                        <i class="fas fa-compass" 
                            style="color: <?php echo htmlspecialchars($site_logo_color); ?>; margin-right: 10px;"></i>
                     <?php elseif ($site_logo_type === 'iconfont' && $site_logo_iconfont): ?>
                         <svg class="icon" aria-hidden="true" style="width: 40px; height: 40px; margin-right: 10px; fill: <?php echo htmlspecialchars($site_logo_color); ?>">
