@@ -40,6 +40,18 @@ if (isset($_POST['delete_id'])) {
         // 使用 NavigationLink 类删除链接
         $result = $linkManager->deleteLink($id);
         if ($result) {
+            // 记录操作日志
+            $logsManager = get_logs_manager();
+            $logsManager->addLinkOperationLog(
+                $_SESSION['user_id'] ?? 0,
+                '删除',
+                $id,
+                $link['title'] ?? '未知链接',
+                [
+                    'deleted_link' => $link
+                ]
+            );
+            
             $_SESSION['success'] = '链接删除成功';
         } else {
             $_SESSION['error'] = '链接删除失败';

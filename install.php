@@ -210,18 +210,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             UNIQUE INDEX `email`(`email` ASC) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-        CREATE TABLE IF NOT EXISTS admin_logs (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            user_id INT NOT NULL,
-            action VARCHAR(100) NOT NULL,
-            details TEXT,
-            ip_address VARCHAR(45),
-            user_agent TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            INDEX `user_id`(`user_id` ASC) USING BTREE,
-            CONSTRAINT `admin_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
         CREATE TABLE IF NOT EXISTS error_logs (
             id INT NOT NULL AUTO_INCREMENT,
             level VARCHAR(20) NOT NULL,
@@ -250,16 +238,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
 
         CREATE TABLE IF NOT EXISTS operation_logs (
             id INT NOT NULL AUTO_INCREMENT,
-            user_id INT,
-            username VARCHAR(50),
-            action VARCHAR(100) NOT NULL,
-            target_type VARCHAR(50),
-            target_id INT,
-            old_values TEXT,
-            new_values TEXT,
-            ip_address VARCHAR(45),
+            userid INT NOT NULL,
+            operation_module ENUM('分类', '链接', '用户', '文件') NOT NULL,
+            operation_type ENUM('新增', '删除', '编辑') NOT NULL,
+            categorie_id INT DEFAULT NULL,
+            categorie_name VARCHAR(255) DEFAULT NULL,
+            link_id INT DEFAULT NULL,
+            link_name VARCHAR(255) DEFAULT NULL,
+            files TEXT DEFAULT NULL,
+            operated_id INT DEFAULT NULL,
+            operated_name VARCHAR(255) DEFAULT NULL,
+            operation_time TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP(3),
+            ip_address VARCHAR(45) DEFAULT NULL,
+            operation_details JSON DEFAULT NULL,
+            status ENUM('成功', '失败') DEFAULT '成功',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (`id`) USING BTREE
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`) USING BTREE,
+            INDEX `idx_userid`(`userid` ASC) USING BTREE,
+            INDEX `idx_operation_module`(`operation_module` ASC) USING BTREE,
+            INDEX `idx_operation_type`(`operation_type` ASC) USING BTREE,
+            INDEX `idx_operation_time`(`operation_time` ASC) USING BTREE,
+            INDEX `idx_categorie_id`(`categorie_id` ASC) USING BTREE,
+            INDEX `idx_link_id`(`link_id` ASC) USING BTREE,
+            INDEX `idx_operated_id`(`operated_id` ASC) USING BTREE,
+            CONSTRAINT `operation_logs_ibfk_1` FOREIGN KEY (`userid`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
         CREATE TABLE IF NOT EXISTS user_preferences (

@@ -44,6 +44,21 @@ function admin_login() {
  * 管理员登出
  */
 function admin_logout() {
+    // 记录操作日志
+        $logsManager = get_logs_manager();
+        $logsManager->addOperationLog([
+                    'userid' => $_SESSION['user_id'] ?? 0,
+                    'operation_module' => '用户',
+                    'operation_type' => '登出',
+                    'operated_name' => '管理员',
+                    'operation_details' => [
+                        'username' => $_SESSION['username'] ?? '未知用户',
+                        'ip_address' => $_SERVER['REMOTE_ADDR'] ?? '未知IP',
+                        'logout_time' => date('Y-m-d H:i:s')
+                    ],
+                    'status' => '成功'
+                ]);
+    
     $_SESSION = [];
     if (ini_get("session.use_cookies")) {
         $params = session_get_cookie_params();

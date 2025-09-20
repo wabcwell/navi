@@ -86,9 +86,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // 更新链接
     if ($navigationLinkManager->updateLink($id, $data)) {
-        // 记录日志
+        // 记录操作日志
         $logsManager = get_logs_manager();
-        $logsManager->addAdminLog($_SESSION['user_id'] ?? 0, '更新链接', '更新链接: ' . $data['title']);
+        $logsManager->addLinkOperationLog(
+            $_SESSION['user_id'] ?? 0,
+            '编辑',
+            $id,
+            $data['title'],
+            [
+                'before' => $link,
+                'after' => $data
+            ]
+        );
         header('Location: index.php?success=1');
         exit;
     } else {

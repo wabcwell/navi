@@ -1,7 +1,7 @@
 <?php
 /**
  * 日志管理类
- * 专门处理admin_logs, error_logs, login_logs, operation_logs表的增删改查操作
+ * 专门处理error_logs, login_logs, operation_logs表的增删改查操作
  */
 
 require_once 'Database.php';
@@ -17,83 +17,6 @@ class Logs {
 public function __construct($database = null) {
     $this->database = $database ?: new Database();
 }
-    
-    // ==================== 管理员操作日志 (admin_logs) ====================
-    
-    /**
-     * 添加管理员操作日志
-     * 
-     * @param int $user_id 用户ID
-     * @param string $action 操作类型
-     * @param string $details 操作详情
-     * @param string $ip_address IP地址
-     * @param string $user_agent 用户代理
-     * @return int 插入记录的ID
-     */
-    public function addAdminLog($user_id, $action, $details = '', $ip_address = null, $user_agent = null) {
-        $data = [
-            'user_id' => $user_id,
-            'action' => $action,
-            'details' => $details,
-            'ip_address' => $ip_address ?: ($_SERVER['REMOTE_ADDR'] ?? null),
-            'user_agent' => $user_agent ?: ($_SERVER['HTTP_USER_AGENT'] ?? null)
-        ];
-        
-        return $this->database->insert('admin_logs', $data);
-    }
-    
-    /**
-     * 获取管理员操作日志列表
-     * 
-     * @param int $limit 限制数量
-     * @param int $offset 偏移量
-     * @param string $order_by 排序字段
-     * @param string $order_direction 排序方向
-     * @return array 日志列表
-     */
-    public function getAdminLogs($limit = 50, $offset = 0, $order_by = 'created_at', $order_direction = 'DESC') {
-        $sql = "SELECT * FROM admin_logs ORDER BY {$order_by} {$order_direction} LIMIT :limit OFFSET :offset";
-        $stmt = $this->database->getConnection()->prepare($sql);
-        $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
-        $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-    
-    /**
-     * 根据ID获取管理员操作日志
-     * 
-     * @param int $id 日志ID
-     * @return array|null 日志信息
-     */
-    public function getAdminLogById($id) {
-        $stmt = $this->database->query("SELECT * FROM admin_logs WHERE id = ?", [$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
-    
-    /**
-     * 删除管理员操作日志
-     * 
-     * @param int $id 日志ID
-     * @return int 受影响的行数
-     */
-    public function deleteAdminLog($id) {
-        return $this->database->delete('admin_logs', 'id = ?', [$id]);
-    }
-    
-    /**
-     * 清空管理员操作日志
-     * 
-     * @return bool 是否成功
-     */
-    public function clearAdminLogs() {
-        try {
-            $this->database->getConnection()->exec("TRUNCATE TABLE admin_logs");
-            return true;
-        } catch (Exception $e) {
-            return false;
-        }
-    }
     
     // ==================== 错误日志 (error_logs) ====================
     
@@ -260,47 +183,193 @@ public function __construct($database = null) {
     // ==================== 操作日志 (operation_logs) ====================
     
     /**
-     * 添加操作日志
+     * 添加操作日志（新规范）
      * 
-     * @param int $user_id 用户ID
-     * @param string $username 用户名
-     * @param string $action 操作类型
-     * @param string $target_type 目标类型
-     * @param int $target_id 目标ID
-     * @param string $old_values 旧值
-     * @param string $new_values 新值
-     * @param string $ip_address IP地址
+     * @param array $logData 日志数据数组
      * @return int 插入记录的ID
      */
-    public function addOperationLog($user_id = null, $username = null, $action = '', $target_type = null, $target_id = null, $old_values = null, $new_values = null, $ip_address = null) {
-        $data = [
-            'user_id' => $user_id,
-            'username' => $username,
-            'action' => $action,
-            'target_type' => $target_type,
-            'target_id' => $target_id,
-            'old_values' => $old_values,
-            'new_values' => $new_values,
-            'ip_address' => $ip_address ?: ($_SERVER['REMOTE_ADDR'] ?? null)
+    public function addOperationLog($logData) {
+        // 设置默认值
+        $defaults = [
+            'operation_time' => date('Y-m-d H:i:s.u'),
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
+            'status' => '成功',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
         ];
+        
+        // 合并数据
+        $data = array_merge($defaults, $logData);
+        
+        // 确保operation_details是JSON格式
+        if (isset($data['operation_details']) && is_array($data['operation_details'])) {
+            $data['operation_details'] = json_encode($data['operation_details'], JSON_UNESCAPED_UNICODE);
+        }
         
         return $this->database->insert('operation_logs', $data);
     }
     
     /**
-     * 获取操作日志列表
+     * 快速添加操作日志（分类操作）
+     * 
+     * @param int $userid 用户ID
+     * @param string $operation_type 操作类型：新增、删除、编辑
+     * @param int $categorie_id 分类ID
+     * @param string $categorie_name 分类名称
+     * @param array $operation_details 操作详情
+     * @param string $status 操作状态
+     * @return int 插入记录的ID
+     */
+    public function addCategoryOperationLog($userid, $operation_type, $categorie_id, $categorie_name, $operation_details = [], $status = '成功') {
+        return $this->addOperationLog([
+            'userid' => $userid,
+            'operation_module' => '分类',
+            'operation_type' => $operation_type,
+            'categorie_id' => $categorie_id,
+            'categorie_name' => $categorie_name,
+            'operation_details' => $operation_details,
+            'status' => $status
+        ]);
+    }
+    
+    /**
+     * 快速添加操作日志（链接操作）
+     * 
+     * @param int $userid 用户ID
+     * @param string $operation_type 操作类型：新增、删除、编辑
+     * @param int $link_id 链接ID
+     * @param string $link_name 链接名称
+     * @param array $operation_details 操作详情
+     * @param string $status 操作状态
+     * @return int 插入记录的ID
+     */
+    public function addLinkOperationLog($userid, $operation_type, $link_id, $link_name, $operation_details = [], $status = '成功') {
+        return $this->addOperationLog([
+            'userid' => $userid,
+            'operation_module' => '链接',
+            'operation_type' => $operation_type,
+            'link_id' => $link_id,
+            'link_name' => $link_name,
+            'operation_details' => $operation_details,
+            'status' => $status
+        ]);
+    }
+    
+    /**
+     * 快速添加操作日志（用户操作）
+     * 
+     * @param int $userid 用户ID
+     * @param string $operation_type 操作类型：新增、删除、编辑
+     * @param int $operated_id 被操作用户ID
+     * @param string $operated_name 被操作用户名称
+     * @param array $operation_details 操作详情
+     * @param string $status 操作状态
+     * @return int 插入记录的ID
+     */
+    public function addUserOperationLog($userid, $operation_type, $operated_id, $operated_name, $operation_details = [], $status = '成功') {
+        return $this->addOperationLog([
+            'userid' => $userid,
+            'operation_module' => '用户',
+            'operation_type' => $operation_type,
+            'operated_id' => $operated_id,
+            'operated_name' => $operated_name,
+            'operation_details' => $operation_details,
+            'status' => $status
+        ]);
+    }
+    
+    /**
+     * 快速添加操作日志（文件操作）
+     * 
+     * @param int $userid 用户ID
+     * @param string $operation_desc 操作描述
+     * @param string $files 文件路径
+     * @param array $operation_details 操作详情
+     * @param string $status 操作状态
+     * @return int 插入记录的ID
+     */
+    public function addFileOperationLog($userid, $operation_desc, $files, $operation_details = [], $status = '成功') {
+        // 根据操作描述确定操作类型（新增、删除、编辑）
+        if (strpos($operation_desc, '新增') !== false || strpos($operation_desc, '添加') !== false) {
+            $operation_type = '新增';
+        } elseif (strpos($operation_desc, '删除') !== false) {
+            $operation_type = '删除';
+        } elseif (strpos($operation_desc, '编辑') !== false || strpos($operation_desc, '修改') !== false) {
+            $operation_type = '编辑';
+        } else {
+            $operation_type = '编辑'; // 默认
+        }
+        
+        return $this->addOperationLog([
+            'userid' => $userid,
+            'operation_module' => '文件',
+            'operation_type' => $operation_type,
+            'files' => $files,
+            'operation_details' => array_merge($operation_details, ['operation_description' => $operation_desc]),
+            'status' => $status
+        ]);
+    }
+    
+    /**
+     * 获取操作日志列表（支持搜索和筛选）
      * 
      * @param int $limit 限制数量
      * @param int $offset 偏移量
      * @param string $order_by 排序字段
      * @param string $order_direction 排序方向
+     * @param string $search 搜索关键词
+     * @param string $operation_module 操作模块筛选
+     * @param string $operation_type 操作类型筛选
+     * @param string $date_from 开始日期
+     * @param string $date_to 结束日期
      * @return array 日志列表
      */
-    public function getOperationLogs($limit = 50, $offset = 0, $order_by = 'created_at', $order_direction = 'DESC') {
-        $sql = "SELECT * FROM operation_logs ORDER BY {$order_by} {$order_direction} LIMIT :limit OFFSET :offset";
+    public function getOperationLogs($limit = 50, $offset = 0, $order_by = 'created_at', $order_direction = 'DESC', $search = '', $operation_module = '', $operation_type = '', $date_from = '', $date_to = '') {
+        $where_conditions = [];
+        $params = [];
+        
+        // 搜索条件
+        if (!empty($search)) {
+            $where_conditions[] = "(operation_details LIKE :search OR userid LIKE :search_userid)";
+            $params[':search'] = '%' . $search . '%';
+            $params[':search_userid'] = '%' . $search . '%';
+        }
+        
+        // 操作模块筛选
+        if (!empty($operation_module)) {
+            $where_conditions[] = "operation_module = :operation_module";
+            $params[':operation_module'] = $operation_module;
+        }
+        
+        // 操作类型筛选
+        if (!empty($operation_type)) {
+            $where_conditions[] = "operation_type = :operation_type";
+            $params[':operation_type'] = $operation_type;
+        }
+        
+        // 日期范围筛选
+        if (!empty($date_from)) {
+            $where_conditions[] = "DATE(operation_time) >= :date_from";
+            $params[':date_from'] = $date_from;
+        }
+        
+        if (!empty($date_to)) {
+            $where_conditions[] = "DATE(operation_time) <= :date_to";
+            $params[':date_to'] = $date_to;
+        }
+        
+        $where_sql = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
+        
+        $sql = "SELECT * FROM operation_logs {$where_sql} ORDER BY {$order_by} {$order_direction} LIMIT :limit OFFSET :offset";
         $stmt = $this->database->getConnection()->prepare($sql);
+        
+        // 绑定参数
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
         $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', (int)$offset, PDO::PARAM_INT);
+        
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -367,17 +436,70 @@ public function __construct($database = null) {
         $where_sql = $where_conditions ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
         
         // 总记录数
-        $count_sql = "SELECT COUNT(*) FROM {$table} {$where_sql}";
+        $count_sql = "SELECT COUNT(*) as total FROM {$table} {$where_sql}";
         $stmt = $this->database->getConnection()->prepare($count_sql);
         foreach ($params as $key => $value) {
             $stmt->bindValue(":{$key}", $value);
         }
         $stmt->execute();
-        $total = $stmt->fetchColumn();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    
+    /**
+     * 获取操作日志统计信息
+     * 
+     * @param string $search 搜索关键词
+     * @param string $operation_module 操作模块筛选
+     * @param string $operation_type 操作类型筛选
+     * @param string $date_from 开始日期
+     * @param string $date_to 结束日期
+     * @return array 统计信息
+     */
+    public function getOperationLogStats($search = '', $operation_module = '', $operation_type = '', $date_from = '', $date_to = '') {
+        $where_conditions = [];
+        $params = [];
         
-        return [
-            'total' => $total
-        ];
+        // 搜索条件
+        if (!empty($search)) {
+            $where_conditions[] = "(operation_details LIKE :search OR userid LIKE :search_userid)";
+            $params[':search'] = '%' . $search . '%';
+            $params[':search_userid'] = '%' . $search . '%';
+        }
+        
+        // 操作模块筛选
+        if (!empty($operation_module)) {
+            $where_conditions[] = "operation_module = :operation_module";
+            $params[':operation_module'] = $operation_module;
+        }
+        
+        // 操作类型筛选
+        if (!empty($operation_type)) {
+            $where_conditions[] = "operation_type = :operation_type";
+            $params[':operation_type'] = $operation_type;
+        }
+        
+        // 日期范围筛选
+        if (!empty($date_from)) {
+            $where_conditions[] = "DATE(operation_time) >= :date_from";
+            $params[':date_from'] = $date_from;
+        }
+        
+        if (!empty($date_to)) {
+            $where_conditions[] = "DATE(operation_time) <= :date_to";
+            $params[':date_to'] = $date_to;
+        }
+        
+        $where_sql = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
+        
+        $sql = "SELECT COUNT(*) as total FROM operation_logs {$where_sql}";
+        $stmt = $this->database->getConnection()->prepare($sql);
+        
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
     
     /**

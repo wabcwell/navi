@@ -120,6 +120,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 创建新分类
         $categoryId = $categoryManager->create($categoryData);
         
+        // 记录操作日志
+        $logsManager = get_logs_manager();
+        $logsManager->addCategoryOperationLog(
+            $_SESSION['user_id'] ?? 0,
+            '新增',
+            $categoryId,
+            $name,
+            [
+                'before' => null,
+                'after' => $categoryData
+            ]
+        );
+        
         $_SESSION['success'] = '分类添加成功！';
         header('Location: index.php');
         exit;

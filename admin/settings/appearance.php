@@ -63,6 +63,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 保存iconfont设置
         $settingsManager->set('iconfont', trim($_POST['iconfont'] ?? ''));
         
+        // 记录操作日志
+        $logsManager = get_logs_manager();
+        $settings_data = [
+            'background_type' => $_POST['background_type'] ?? 'color',
+            'background_color' => $_POST['background_color_value'] ?? '',
+            'background_api' => $_POST['background_api_url'] ?? '',
+            'bg_overlay' => $_POST['bg_overlay'] ?? 0.2,
+            'header_bg_transparency' => $_POST['header_bg_transparency'] ?? 0.85,
+            'category_bg_transparency' => $_POST['category_bg_transparency'] ?? 0.85,
+            'links_area_transparency' => $_POST['links_area_transparency'] ?? 0.85,
+            'link_card_transparency' => $_POST['link_card_transparency'] ?? 0.85,
+            'iconfont' => $_POST['iconfont'] ?? '',
+            'updated_at' => date('Y-m-d H:i:s')
+        ];
+        $logsManager->addOperationLog([
+            'userid' => $_SESSION['user_id'] ?? 0,
+            'operation_module' => '设置',
+            'operation_type' => '编辑',
+            'operation_details' => array_merge($settings_data, ['target' => '外观设置']),
+            'status' => '成功'
+        ]);
+        
         $_SESSION['success'] = '外观设置更新成功';
         header('Location: appearance.php');
         exit();

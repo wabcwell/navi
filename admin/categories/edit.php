@@ -152,6 +152,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result = $categoryManager->update($category_id, $categoryData);
         
         if ($result) {
+            // 记录操作日志
+            $logsManager = get_logs_manager();
+            $logsManager->addCategoryOperationLog(
+                $_SESSION['user_id'] ?? 0,
+                '编辑',
+                $category_id,
+                $name,
+                [
+                    'before' => $category,
+                    'after' => $categoryData
+                ]
+            );
+            
             $_SESSION['success'] = '分类更新成功！';
         } else {
             $_SESSION['error'] = '分类更新失败：未找到该分类。';

@@ -253,6 +253,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         error_log("设置保存结果: site_icon=" . ($result8 ? '成功' : '失败'));
         
+        // 记录操作日志
+        $logsManager = get_logs_manager();
+        $logsManager->addOperationLog([
+            'userid' => $_SESSION['user_id'] ?? 0,
+            'operation_module' => '设置',
+            'operation_type' => '编辑',
+            'operation_details' => [
+                'site_name' => $_POST['site_name'] ?? '',
+                'site_description' => $_POST['site_description'] ?? '',
+                'site_keywords' => $_POST['site_keywords'] ?? '',
+                'items_per_page' => $_POST['items_per_page'] ?? 20,
+                'maintenance_mode' => isset($_POST['maintenance_mode']) ? 1 : 0,
+                'target' => '基本设置',
+                'updated_at' => date('Y-m-d H:i:s')
+            ],
+            'status' => '成功'
+        ]);
+        
         $_SESSION['success'] = '网站设置更新成功';
         header('Location: general.php');
         exit();

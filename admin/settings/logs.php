@@ -10,7 +10,7 @@ if (!User::checkLogin()) {
 $logsManager = get_logs_manager();
 
 // 获取日志类型
-$log_type = $_GET['type'] ?? 'admin';
+$log_type = $_GET['type'] ?? 'operation';
 
 // 获取分页参数
 $page = max(1, intval($_GET['page'] ?? 1));
@@ -21,6 +21,8 @@ $offset = ($page - 1) * $per_page;
 $search = $_GET['search'] ?? '';
 $date_from = $_GET['date_from'] ?? '';
 $date_to = $_GET['date_to'] ?? '';
+$operation_module = $_GET['operation_module'] ?? '';
+$operation_type = $_GET['operation_type'] ?? '';
 
 // 构建查询条件
 $where_conditions = [];
@@ -37,7 +39,7 @@ switch ($log_type) {
         $table = 'operation_logs';
         break;
     default:
-        $table = 'admin_logs';
+        $table = 'operation_logs';
         break;
 }
 
@@ -62,7 +64,11 @@ $where_sql = $where_conditions ? 'WHERE ' . implode(' AND ', $where_conditions) 
 // 获取总记录数
 try {
     $logsManager = get_logs_manager();
-    $total_records = $logsManager->getLogStats($table, $date_from, $date_to)['total'];
+    if ($log_type === 'operation') {
+        $total_records = $logsManager->getOperationLogStats($search, $operation_module, $operation_type, $date_from, $date_to)['total'];
+    } else {
+        $total_records = $logsManager->getLogStats($table, $date_from, $date_to)['total'];
+    }
     $total_pages = max(1, ceil($total_records / $per_page));
 } catch (Exception $e) {
     $total_records = 0;
@@ -73,9 +79,6 @@ try {
 try {
     $logsManager = get_logs_manager();
     switch ($log_type) {
-        case 'admin':
-            $logs = $logsManager->getAdminLogs($per_page, $offset, 'created_at', 'DESC');
-            break;
         case 'login':
             $logs = $logsManager->getLoginLogs($per_page, $offset, 'created_at', 'DESC');
             break;
@@ -83,10 +86,10 @@ try {
             $logs = $logsManager->getErrorLogs($per_page, $offset, 'created_at', 'DESC');
             break;
         case 'operation':
-            $logs = $logsManager->getOperationLogs($per_page, $offset, 'created_at', 'DESC');
+            $logs = $logsManager->getOperationLogs($per_page, $offset, 'operation_time', 'DESC', $search, $operation_module, $operation_type, $date_from, $date_to);
             break;
         default:
-            $logs = [];
+            $logs = $logsManager->getOperationLogs($per_page, $offset, 'operation_time', 'DESC', $search, $operation_module, $operation_type, $date_from, $date_to);
     }
 } catch (Exception $e) {
     $logs = [];
@@ -102,6 +105,22 @@ if (isset($_POST['batch_delete'])) {
             $deleted_count = $logsManager->batchDeleteLogs($table, $ids);
             
             $_SESSION['success'] = '已删除 ' . $deleted_count . ' 条日志';
+            
+            // 记录操作日志
+            $logsManager = get_logs_manager();
+            $logsManager->addOperationLog([
+                'userid' => $_SESSION['user_id'] ?? 0,
+                'operation_module' => '日志',
+                'operation_type' => '删除',
+                'operation_details' => [
+                    'log_type' => $log_type,
+                    'deleted_count' => $deleted_count,
+                    'deleted_ids' => $ids,
+                    'deleted_at' => date('Y-m-d H:i:s'),
+                    'target' => '批量删除'
+                ],
+                'status' => '成功'
+            ]);
         } catch (Exception $e) {
             $_SESSION['error'] = '删除日志时出错: ' . $e->getMessage();
         }
@@ -118,9 +137,6 @@ if (isset($_POST['clear_logs'])) {
         $result = false;
         
         switch ($log_type) {
-            case 'admin':
-                $result = $logsManager->clearAdminLogs();
-                break;
             case 'login':
                 $result = $logsManager->clearLoginLogs();
                 break;
@@ -130,9 +146,26 @@ if (isset($_POST['clear_logs'])) {
             case 'operation':
                 $result = $logsManager->clearOperationLogs();
                 break;
+            default:
+                $result = $logsManager->clearOperationLogs();
+                break;
         }
         
         if ($result) {
+            // 记录操作日志
+            $logsManager = get_logs_manager();
+            $logsManager->addOperationLog([
+                'userid' => $_SESSION['user_id'] ?? 0,
+                'operation_module' => '日志',
+                'operation_type' => '清空',
+                'operation_details' => [
+                    'log_type' => $log_type,
+                    'cleared_at' => date('Y-m-d H:i:s'),
+                    'target' => $log_type
+                ],
+                'status' => '成功'
+            ]);
+            
             $_SESSION['success'] = '日志已清空';
         } else {
             $_SESSION['error'] = '清空日志失败';
@@ -156,17 +189,22 @@ $stats = [
 try {
     $logsManager = get_logs_manager();
     
-    // 获取今日记录数
-    $today_stats = $logsManager->getLogStats($table, date('Y-m-d'), date('Y-m-d'));
-    $stats['today'] = $today_stats['total'];
-    
-    // 获取本周记录数
-    $week_stats = $logsManager->getLogStats($table, date('Y-m-d', strtotime('-7 days')), date('Y-m-d'));
-    $stats['week'] = $week_stats['total'];
-    
-    // 获取本月记录数
-    $month_stats = $logsManager->getLogStats($table, date('Y-m-d', strtotime('-30 days')), date('Y-m-d'));
-    $stats['month'] = $month_stats['total'];
+    if ($log_type === 'operation') {
+        // 操作日志使用新的统计方法
+        $stats['today'] = $logsManager->getOperationLogStats($search, $operation_module, $operation_type, date('Y-m-d'), date('Y-m-d'))['total'];
+        $stats['week'] = $logsManager->getOperationLogStats($search, $operation_module, $operation_type, date('Y-m-d', strtotime('-7 days')), date('Y-m-d'))['total'];
+        $stats['month'] = $logsManager->getOperationLogStats($search, $operation_module, $operation_type, date('Y-m-d', strtotime('-30 days')), date('Y-m-d'))['total'];
+    } else {
+        // 其他日志使用原有方法
+        $today_stats = $logsManager->getLogStats($table, date('Y-m-d'), date('Y-m-d'));
+        $stats['today'] = $today_stats['total'];
+        
+        $week_stats = $logsManager->getLogStats($table, date('Y-m-d', strtotime('-7 days')), date('Y-m-d'));
+        $stats['week'] = $week_stats['total'];
+        
+        $month_stats = $logsManager->getLogStats($table, date('Y-m-d', strtotime('-30 days')), date('Y-m-d'));
+        $stats['month'] = $month_stats['total'];
+    }
 } catch (Exception $e) {
     // 如果获取统计信息失败，保持默认值为0
     $stats['today'] = 0;
@@ -211,10 +249,6 @@ include '../templates/header.php';
 
 <!-- 日志类型切换 -->
 <ul class="nav nav-tabs mb-4">
-    <li class="nav-item">
-        <a class="nav-link <?php echo $log_type === 'admin' ? 'active' : ''; ?>" 
-           href="?type=admin">管理员操作日志</a>
-    </li>
     <li class="nav-item">
         <a class="nav-link <?php echo $log_type === 'login' ? 'active' : ''; ?>" 
            href="?type=login">登录日志</a>
@@ -275,8 +309,31 @@ include '../templates/header.php';
                 <label class="form-label">搜索内容</label>
                 <input type="text" class="form-control" name="search" 
                        value="<?php echo htmlspecialchars($search); ?>" 
-                       placeholder="搜索日志内容或用户名">
+                       placeholder="<?php echo $log_type === 'operation' ? '搜索操作详情或用户ID' : '搜索日志内容或用户名'; ?>">
             </div>
+            
+            <?php if ($log_type === 'operation'): ?>
+            <div class="col-md-2">
+                <label class="form-label">操作模块</label>
+                <select class="form-select" name="operation_module">
+                    <option value="">全部模块</option>
+                    <option value="分类" <?php echo (isset($_GET['operation_module']) && $_GET['operation_module'] === '分类') ? 'selected' : ''; ?>>分类</option>
+                    <option value="链接" <?php echo (isset($_GET['operation_module']) && $_GET['operation_module'] === '链接') ? 'selected' : ''; ?>>链接</option>
+                    <option value="用户" <?php echo (isset($_GET['operation_module']) && $_GET['operation_module'] === '用户') ? 'selected' : ''; ?>>用户</option>
+                    <option value="文件" <?php echo (isset($_GET['operation_module']) && $_GET['operation_module'] === '文件') ? 'selected' : ''; ?>>文件</option>
+                </select>
+            </div>
+            
+            <div class="col-md-2">
+                <label class="form-label">操作类型</label>
+                <select class="form-select" name="operation_type">
+                    <option value="">全部类型</option>
+                    <option value="新增" <?php echo (isset($_GET['operation_type']) && $_GET['operation_type'] === '新增') ? 'selected' : ''; ?>>新增</option>
+                    <option value="删除" <?php echo (isset($_GET['operation_type']) && $_GET['operation_type'] === '删除') ? 'selected' : ''; ?>>删除</option>
+                    <option value="编辑" <?php echo (isset($_GET['operation_type']) && $_GET['operation_type'] === '编辑') ? 'selected' : ''; ?>>编辑</option>
+                </select>
+            </div>
+            <?php endif; ?>
             
             <div class="col-md-3">
                 <label class="form-label">开始日期</label>
@@ -339,11 +396,48 @@ include '../templates/header.php';
                                     <small><?php echo date('Y-m-d H:i:s', strtotime($log['created_at'])); ?></small>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary"><?php echo htmlspecialchars($log['username'] ?? '系统'); ?></span>
+                                    <span class="badge bg-secondary">
+                                        <?php 
+                                        if ($log_type === 'operation') {
+                                            // 新操作日志格式，需要通过userid获取用户名
+                                            echo htmlspecialchars($log['userid'] ? '用户' . $log['userid'] : '系统');
+                                        } else {
+                                            // 其他日志格式
+                                            echo htmlspecialchars($log['username'] ?? '系统');
+                                        }
+                                        ?>
+                                    </span>
                                 </td>
                                 <td>
                                     <div style="max-width: 400px; overflow: hidden; text-overflow: ellipsis;">
-                                        <?php echo htmlspecialchars($log['message'] ?? $log['action'] ?? ''); ?>
+                                        <?php 
+                                        if ($log_type === 'operation') {
+                                            // 新操作日志格式
+                                            $module = $log['operation_module'] ?? '';
+                                            $type = $log['operation_type'] ?? '';
+                                            $details = [];
+                                            
+                                            if ($module === '分类' && !empty($log['categorie_name'])) {
+                                                $details[] = "分类: " . htmlspecialchars($log['categorie_name']);
+                                            } elseif ($module === '链接' && !empty($log['link_name'])) {
+                                                $details[] = "链接: " . htmlspecialchars($log['link_name']);
+                                            } elseif ($module === '用户' && !empty($log['operated_name'])) {
+                                                $details[] = "用户: " . htmlspecialchars($log['operated_name']);
+                                            } elseif ($module === '文件' && !empty($log['files'])) {
+                                                $details[] = "文件: " . htmlspecialchars(basename($log['files']));
+                                            }
+                                            
+                                            $status_badge = ($log['status'] ?? '成功') === '成功' ? 'bg-success' : 'bg-danger';
+                                            echo htmlspecialchars($module) . ' - ' . htmlspecialchars($type);
+                                            if (!empty($details)) {
+                                                echo ' (' . implode(', ', $details) . ')';
+                                            }
+                                            echo ' <span class="badge ' . $status_badge . '">' . htmlspecialchars($log['status'] ?? '成功') . '</span>';
+                                        } else {
+                                            // 其他日志格式
+                                            echo htmlspecialchars($log['message'] ?? $log['action'] ?? '');
+                                        }
+                                        ?>
                                     </div>
                                 </td>
                                 <td>

@@ -15,10 +15,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     $delete_id = intval($_POST['delete_id']);
     
     try {
+        // 获取分类信息用于日志记录
+        $category_info = $categoryManager->getById($delete_id);
+        
         // 尝试删除分类
         $result = $categoryManager->delete($delete_id);
         
         if ($result) {
+            // 记录操作日志
+            $logsManager = get_logs_manager();
+            $logsManager->addCategoryOperationLog(
+                $_SESSION['user_id'] ?? 0,
+                '删除',
+                $delete_id,
+                $category_info['name'] ?? '未知分类',
+                [
+                    'deleted_category' => $category_info
+                ]
+            );
+            
             $_SESSION['success'] = '分类删除成功！';
         } else {
             $_SESSION['error'] = '分类删除失败：未找到该分类。';

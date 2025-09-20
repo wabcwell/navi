@@ -170,6 +170,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (!isset($_POST['action']) || $_POST
             $linkId = $linkManager->createLink($linkData);
             
             if ($linkId) {
+                // 记录操作日志
+                $logsManager = get_logs_manager();
+                $logsManager->addLinkOperationLog(
+                    $_SESSION['user_id'] ?? 0,
+                    '新增',
+                    $linkId,
+                    $title,
+                    [
+                        'link_data' => $linkData
+                    ]
+                );
+                
                 // 重定向到成功页面
                 header('Location: index.php?message=' . urlencode('链接添加成功'));
                 exit();

@@ -41,6 +41,19 @@ if (isset($_POST['change_password'])) {
             // 使用 User 类更新管理员密码（假设管理员用户ID为1）
             $userManager->updateUser(1, ['password' => $new_password]);
             
+            // 记录操作日志
+            $logsManager = get_logs_manager();
+            $logsManager->addUserOperationLog(
+                $_SESSION['user_id'] ?? 0,
+                '修改密码',
+                1,
+                '管理员',
+                [
+                    'action' => 'password_change',
+                    'timestamp' => date('Y-m-d H:i:s')
+                ]
+            );
+            
             $_SESSION['success'] = '密码修改成功';
             header('Location: security.php');
             exit();
@@ -78,6 +91,24 @@ if (isset($_POST['update_security'])) {
         $settingsManager->set('session_timeout', $session_timeout);
         $settingsManager->set('ip_whitelist', $ip_whitelist);
         $settingsManager->set('ip_blacklist', $ip_blacklist);
+        
+        // 记录操作日志
+        $logsManager = get_logs_manager();
+        $logsManager->addOperationLog([
+            'userid' => $_SESSION['user_id'] ?? 0,
+            'operation_module' => '设置',
+            'operation_type' => '编辑',
+            'operation_details' => [
+                'max_login_attempts' => $max_login_attempts,
+                'lockout_duration' => $lockout_duration,
+                'session_timeout' => $session_timeout,
+                'ip_whitelist' => $ip_whitelist,
+                'ip_blacklist' => $ip_blacklist,
+                'updated_at' => date('Y-m-d H:i:s'),
+                'target' => '安全设置'
+            ],
+            'status' => '成功'
+        ]);
         
         $_SESSION['success'] = '安全设置更新成功';
         header('Location: security.php');

@@ -19,13 +19,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_file'])) {
     // 安全检查：确保文件在uploads目录内
     if ($full_path && strpos($full_path, realpath($base_upload_dir)) === 0) {
         if (is_file($full_path)) {
+            // 获取文件信息（在删除前）
+            $file_info = [
+                'file_name' => basename($file_path),
+                'file_size' => file_exists($full_path) ? format_size(filesize($full_path)) : '未知',
+                'deleted_at' => date('Y-m-d H:i:s')
+            ];
+            
             if (unlink($full_path)) {
+                // 记录操作日志
+                $logsManager = get_logs_manager();
+                $logsManager->addFileOperationLog(
+                    $_SESSION['user_id'] ?? 0,
+                    '删除文件',
+                    $file_path,
+                    $file_info
+                );
+                
                 $_SESSION['success'] = '文件删除成功';
             } else {
                 $_SESSION['error'] = '文件删除失败';
             }
         } elseif (is_dir($full_path)) {
             if (rmdir($full_path)) {
+                // 记录操作日志
+                $logsManager = get_logs_manager();
+                $logsManager->addFileOperationLog(
+                    $_SESSION['user_id'] ?? 0,
+                    '删除目录',
+                    $file_path,
+                    [
+                        'dir_name' => basename($file_path),
+                        'deleted_at' => date('Y-m-d H:i:s')
+                    ]
+                );
+                
                 $_SESSION['success'] = '目录删除成功';
             } else {
                 $_SESSION['error'] = '目录删除失败（请确保目录为空）';
