@@ -272,7 +272,7 @@ include '../templates/header.php'; ?>
                                 <label for="iconfont" class="form-label">阿里iconfont地址</label>
                                 <input type="text" class="form-control" id="iconfont" name="iconfont" 
                                        value="<?php echo htmlspecialchars($settings['iconfont'] ?? ''); ?>"
-                                       placeholder="//at.alicdn.com/t/font_1234567_abcd1234.css">
+                                       placeholder="//at.alicdn.com/t/font_1234567_abcd1234.js">
                                 <div class="form-text">
                                     请输入自定义阿里云图标Symbol地址，例如：//at.alicdn.com/t/font_1234567_abcd1234.js
                                 </div>
