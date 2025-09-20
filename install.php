@@ -149,12 +149,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             icon_fontawesome_color VARCHAR(7) DEFAULT NULL,
             icon_upload VARCHAR(500) DEFAULT NULL,
             icon_url VARCHAR(500) DEFAULT NULL,
-            icon_type VARCHAR(20) DEFAULT 'fontawesome',
+            icon_type ENUM('fontawesome','upload','url','none','iconfont') DEFAULT 'fontawesome',
+            icon_iconfont VARCHAR(100) DEFAULT NULL,
             order_index INT DEFAULT 0,
             is_active TINYINT(1) DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             UNIQUE KEY name (name),
+            UNIQUE KEY unique_name (name),
             UNIQUE KEY slug (slug)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -164,20 +166,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             url VARCHAR(500) NOT NULL,
             description TEXT,
             category_id INT NOT NULL,
-            icon_fontawesome VARCHAR(500) DEFAULT NULL,
+            icon_url VARCHAR(500) DEFAULT NULL,
             icon_type ENUM('fontawesome','upload','url','none','iconfont') DEFAULT 'none',
+            icon_iconfont VARCHAR(100) DEFAULT NULL,
             icon_upload VARCHAR(500) DEFAULT NULL,
             icon_fontawesome_color VARCHAR(20) DEFAULT NULL,
-            icon_iconfont VARCHAR(100) DEFAULT NULL,
-            icon_iconfont_color VARCHAR(20) DEFAULT NULL,
             icon_fontawesome VARCHAR(100) DEFAULT NULL,
             order_index INT DEFAULT 0,
             is_active TINYINT(1) DEFAULT 1,
             click_count INT DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            KEY category_id (category_id),
-            CONSTRAINT navigation_links_ibfk_1 FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+            INDEX `category_id`(`category_id` ASC) USING BTREE,
+            CONSTRAINT `navigation_links_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
         CREATE TABLE IF NOT EXISTS settings (
@@ -188,22 +189,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             description VARCHAR(255) DEFAULT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            UNIQUE KEY setting_key (setting_key)
+            PRIMARY KEY (`id`) USING BTREE,
+            UNIQUE INDEX `setting_key`(`setting_key` ASC) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
         CREATE TABLE IF NOT EXISTS users (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            username VARCHAR(50) NOT NULL UNIQUE,
-            email VARCHAR(100) NOT NULL UNIQUE,
+            username VARCHAR(50) NOT NULL,
+            email VARCHAR(100) NOT NULL,
             password VARCHAR(255) NOT NULL,
             real_name VARCHAR(50),
             role ENUM('user','editor','admin') DEFAULT 'user',
-            status BOOLEAN DEFAULT TRUE,
-            login_count INT DEFAULT 0,
+            status TINYINT(1) NULL DEFAULT 1,
+            login_count INT NULL DEFAULT 0,
             last_login DATETIME,
             last_ip VARCHAR(45),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE INDEX `username`(`username` ASC) USING BTREE,
+            UNIQUE INDEX `email`(`email` ASC) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
         CREATE TABLE IF NOT EXISTS admin_logs (
@@ -214,12 +218,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             ip_address VARCHAR(45),
             user_agent TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-            INDEX idx_user_id (user_id)
+            INDEX `user_id`(`user_id` ASC) USING BTREE,
+            CONSTRAINT `admin_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
         CREATE TABLE IF NOT EXISTS error_logs (
-            id INT AUTO_INCREMENT PRIMARY KEY,
+            id INT NOT NULL AUTO_INCREMENT,
             level VARCHAR(20) NOT NULL,
             message TEXT NOT NULL,
             file VARCHAR(255),
@@ -228,22 +232,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             user_id INT,
             ip_address VARCHAR(45),
             user_agent TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
         CREATE TABLE IF NOT EXISTS login_logs (
-            id INT AUTO_INCREMENT PRIMARY KEY,
+            id INT NOT NULL AUTO_INCREMENT,
             user_id INT,
             username VARCHAR(50),
             ip_address VARCHAR(45),
             user_agent TEXT,
             login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            success BOOLEAN DEFAULT FALSE,
-            failure_reason VARCHAR(255)
+            success TINYINT(1) NULL DEFAULT 0,
+            failure_reason VARCHAR(255),
+            PRIMARY KEY (`id`) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
         CREATE TABLE IF NOT EXISTS operation_logs (
-            id INT AUTO_INCREMENT PRIMARY KEY,
+            id INT NOT NULL AUTO_INCREMENT,
             user_id INT,
             username VARCHAR(50),
             action VARCHAR(100) NOT NULL,
@@ -252,18 +258,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             old_values TEXT,
             new_values TEXT,
             ip_address VARCHAR(45),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (`id`) USING BTREE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
         CREATE TABLE IF NOT EXISTS user_preferences (
             id INT NOT NULL AUTO_INCREMENT,
-            user_id VARCHAR(100) NOT NULL,
+            user_id INT NOT NULL,
             preference_key VARCHAR(100) NOT NULL,
             preference_value TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            UNIQUE KEY unique_user_preference (user_id, preference_key)
+            PRIMARY KEY (`id`) USING BTREE,
+            UNIQUE INDEX `unique_user_preference`(`user_id` ASC, `preference_key` ASC) USING BTREE,
+            INDEX `user_id`(`user_id` ASC) USING BTREE,
+            CONSTRAINT `user_preferences_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ";
 
@@ -285,11 +294,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             
             // Logo和图标设置
             'site_icon' => '',
-            'site_logo' => '',
             'site_logo_type' => 'image',
             'site_logo_image' => '',
             'site_logo_icon' => 'fa-home',
             'site_logo_color' => '#007bff',
+            'site_logo_iconfont' => '',
+            'iconfont' => '', // Iconfont图标库地址
             
             // 背景设置
             'background_type' => 'color',
@@ -307,10 +317,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             
             // 透明度设置
             'bg-overlay' => 0.25,
-            'header_bg_opacity' => 0.85,
-            'category_bg_opacity' => 0.85,
-            'links_area_opacity' => 0.85,
-            'link_card_opacity' => 0.85,
+            'header_bg_transparency' => 0.85,
+            'category_bg_transparency' => 0.85,
+            'links_area_transparency' => 0.85,
+            'link_card_transparency' => 0.85,
             
             // 系统设置
             'timezone' => 'Asia/Shanghai',
@@ -408,7 +418,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             ]
         ];
 
-        $stmt = $pdo->prepare("INSERT IGNORE INTO categories (name, description, icon_type, icon_fontawesome, icon_fontawesome_color, color, order_index, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT IGNORE INTO categories (name, description, icon_type, icon_fontawesome, icon_fontawesome_color, color, order_index, is_active, icon_iconfont) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         foreach ($categories as $category) {
             $stmt->execute([
                 $category['name'],
@@ -418,7 +428,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
                 $category['icon_fontawesome_color'],
                 $category['color'],
                 $category['order_index'],
-                $category['is_active']
+                $category['is_active'],
+                $category['icon_iconfont'] ?? null
             ]);
         }
 
@@ -528,7 +539,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             $categoryMap[$row['name']] = $row['id'];
         }
 
-        $stmt = $pdo->prepare("INSERT IGNORE INTO navigation_links (title, url, description, icon_type, icon_fontawesome_color, icon_fontawesome, category_id, order_index, is_active, click_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 0)");
+        $stmt = $pdo->prepare("INSERT IGNORE INTO navigation_links (title, url, description, icon_type, icon_fontawesome_color, icon_fontawesome, category_id, order_index, is_active, click_count, icon_iconfont) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?)");
         foreach ($links as $index => $link) {
             $categoryId = $categoryMap[$link['category']] ?? null;
             $stmt->execute([
@@ -539,7 +550,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
                 $link['icon_fontawesome_color'], 
                 $link['icon_fontawesome'] ?? 'fa-link',
                 $categoryId, 
-                $index + 1
+                $index + 1,
+                $link['icon_iconfont'] ?? null
             ]);
         }
 
