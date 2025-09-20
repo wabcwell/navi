@@ -213,6 +213,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 更新图标和颜色
         $site_logo_icon = trim($_POST['site_logo_icon'] ?? '');
         $site_logo_color = trim($_POST['site_logo_color'] ?? '#007bff');
+    } elseif ($site_logo_type === 'iconfont') {
+        // 更新Iconfont图标
+        $site_logo_iconfont = trim($_POST['site_logo_iconfont'] ?? '');
+        if (empty($site_logo_iconfont)) {
+            $errors[] = '请输入Iconfont图标名称';
+        }
     }
     
     // 如果没有错误，保存设置
@@ -234,6 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $result10 = $settingsManager->set('site_logo_color', $site_logo_color);
         $result11 = $settingsManager->set('site_logo_image', $site_logo_image); // 保存最后一次上传的图片
         $result12 = $settingsManager->set('site_logo_icon', $site_logo_icon); // 保存最后一次设置的图标
+        $result13 = $settingsManager->set('site_logo_iconfont', $site_logo_iconfont ?? ''); // 保存Iconfont图标
         
         // 页脚设置
         $result14 = $settingsManager->set('footer_content', trim($_POST['footer_content'] ?? ''));
@@ -266,6 +273,7 @@ $settings = [
     'site_logo_type' => $settingsManager->get('site_logo_type', 'image'),
     'site_logo_image' => $settingsManager->get('site_logo_image', ''),
     'site_logo_icon' => $settingsManager->get('site_logo_icon', 'fas fa-home'),
+    'site_logo_iconfont' => $settingsManager->get('site_logo_iconfont', ''),
     'site_logo_color' => $settingsManager->get('site_logo_color', '#007bff'),
     'background_type' => $settingsManager->get('background_type', 'color'),
     'background_image' => $settingsManager->get('background_image', ''),
@@ -430,6 +438,9 @@ include '../templates/header.php'; ?>
                                 <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_icon" value="icon" <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'icon') ? 'checked' : ''; ?>>
                                 <label class="btn btn-outline-primary" for="logo_type_icon">Font Awesome</label>
                                 
+                                <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_iconfont" value="iconfont" <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'iconfont') ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary" for="logo_type_iconfont">Iconfont</label>
+                                
                                 <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_none" value="none" <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'none') ? 'checked' : ''; ?>>
                                 <label class="btn btn-outline-primary" for="logo_type_none">无Logo</label>
                             </div>
@@ -475,6 +486,15 @@ include '../templates/header.php'; ?>
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Iconfont 图标输入 -->
+                            <div id="logo_iconfont_section" class="logo-section" style="display: none;">
+                                <label for="site_logo_iconfont" class="form-label">Iconfont 图标</label>
+                                <input type="text" class="form-control" id="site_logo_iconfont" name="site_logo_iconfont" 
+                                       placeholder="输入图标名称，如: icon-a-appround51"
+                                       value="<?php echo htmlspecialchars($settings['site_logo_iconfont'] ?? ''); ?>">
+                                <small class="form-text text-muted">输入iconfont图标类名，如: icon-a-appround51</small>
+                            </div>
                         </div>
 
                         <!-- Logo预览 -->
@@ -484,6 +504,10 @@ include '../templates/header.php'; ?>
                                 <div id="logoPreview" class="mb-2">
                                     <?php if (!empty($settings['site_logo_icon']) && $settings['site_logo_type'] === 'icon'): ?>
                                         <i class="<?php echo htmlspecialchars($settings['site_logo_icon']); ?>" style="font-size: 3rem; color: <?php echo htmlspecialchars($settings['site_logo_color'] ?? '#007bff'); ?>"></i>
+                                    <?php elseif (!empty($settings['site_logo_iconfont']) && $settings['site_logo_type'] === 'iconfont'): ?>
+                                        <svg class="icon" aria-hidden="true" style="font-size: 3em;">
+                                            <use xlink:href="#<?php echo htmlspecialchars($settings['site_logo_iconfont']); ?>"></use>
+                                        </svg>
                                     <?php elseif (!empty($settings['site_logo_image']) && $settings['site_logo_type'] === 'image'): 
                                         $logo_path = $settings['site_logo_image'];
                                         // 如果路径已经是绝对路径，直接使用；否则进行转换
@@ -717,15 +741,20 @@ function toggleLogoType() {
         function toggleLogoType() {
             const imageRadio = document.getElementById('logo_type_image');
             const iconRadio = document.getElementById('logo_type_icon');
+            const iconfontRadio = document.getElementById('logo_type_iconfont');
             const noneRadio = document.getElementById('logo_type_none');
             const imageSection = document.getElementById('logo_image_section');
             const iconSection = document.getElementById('logo_icon_section');
+            const iconfontSection = document.getElementById('logo_iconfont_section');
 
             if (imageSection) {
                 imageSection.style.display = imageRadio && imageRadio.checked ? 'block' : 'none';
             }
             if (iconSection) {
                 iconSection.style.display = iconRadio && iconRadio.checked ? 'block' : 'none';
+            }
+            if (iconfontSection) {
+                iconfontSection.style.display = iconfontRadio && iconfontRadio.checked ? 'block' : 'none';
             }
             
             // 切换类型时更新预览
@@ -739,6 +768,7 @@ function toggleLogoType() {
 
             const imageRadio = document.getElementById('logo_type_image');
             const iconRadio = document.getElementById('logo_type_icon');
+            const iconfontRadio = document.getElementById('logo_type_iconfont');
             const noneRadio = document.getElementById('logo_type_none');
 
             let html = '';
@@ -756,6 +786,13 @@ function toggleLogoType() {
                 const iconClass = document.getElementById('site_logo_icon').value;
                 const iconColor = document.getElementById('site_logo_color').value;
                 html = `<i class="${iconClass}" style="font-size: 3rem; color: ${iconColor};"></i>`;
+            } else if (iconfontRadio && iconfontRadio.checked) {
+                const iconfontValue = document.getElementById('site_logo_iconfont').value;
+                if (iconfontValue) {
+                    html = `<svg class="icon" aria-hidden="true" style="font-size: 3em;"><use xlink:href="#${iconfontValue}"></use></svg>`;
+                } else {
+                    html = '<div class="text-muted"><i class="fas fa-icons" style="font-size: 2rem;"></i><p class="mt-2 mb-0">请输入Iconfont类名</p></div>';
+                }
             } else if (noneRadio && noneRadio.checked) {
                 html = '<div class="text-muted"><i class="fas fa-image" style="font-size: 2rem;"></i><p class="mt-2 mb-0">暂无Logo</p></div>';
             }
@@ -975,8 +1012,10 @@ function toggleLogoType() {
             // 监听图标和颜色变化
             const iconInput = document.getElementById('site_logo_icon');
             const colorInput = document.getElementById('site_logo_color');
+            const iconfontInput = document.getElementById('site_logo_iconfont');
             if (iconInput) iconInput.addEventListener('input', updateLogoPreview);
             if (colorInput) colorInput.addEventListener('input', updateLogoPreview);
+            if (iconfontInput) iconfontInput.addEventListener('input', updateLogoPreview);
             
             // 绑定图标选择器按钮
             const iconPickerBtn = document.getElementById('openLogoIconPicker');
@@ -1007,6 +1046,13 @@ function toggleLogoType() {
                         if (!uploadedPath) {
                             e.preventDefault();
                             alert('请先上传Logo图片');
+                            return false;
+                        }
+                    } else if (logoType === 'iconfont') {
+                        const iconfontValue = document.getElementById('site_logo_iconfont').value;
+                        if (!iconfontValue) {
+                            e.preventDefault();
+                            alert('请输入Iconfont图标名称');
                             return false;
                         }
                     }
