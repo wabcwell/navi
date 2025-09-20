@@ -1,8 +1,22 @@
 <?php
 // PHP版本的导航网站主入口文件
 
+// 检查网站是否已初始化
+if (!file_exists(__DIR__ . '/admin/config.php')) {
+    // 配置文件不存在，跳转到安装页面
+    header('Location: install.php');
+    exit();
+}
+
 // 加载配置文件
 require_once __DIR__ . '/admin/config.php';
+
+// 检查安装状态
+if (!defined('SITE_INSTALLED') || !SITE_INSTALLED) {
+    // 网站未安装，跳转到安装页面
+    header('Location: install.php');
+    exit();
+}
 
 // 引入后台数据库连接函数
 require_once 'admin/includes/load.php';
