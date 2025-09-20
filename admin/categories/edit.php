@@ -178,6 +178,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// 设置页面标题
+$page_title = '编辑分类';
+
 include '../templates/header.php';
 ?>
 

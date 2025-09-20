@@ -125,7 +125,47 @@
     <!-- 主内容区域 -->
     <div class="main-content">
         <div class="page-header">
-            <h1 class="page-title"><?php echo isset($page_title) ? $page_title : '管理后台'; ?></h1>
+            <h1 class="page-title">
+                <?php 
+                // 根据当前页面添加对应的图标
+                $current_page = basename($_SERVER['PHP_SELF']);
+                $request_uri = $_SERVER['REQUEST_URI'];
+                $page_icon = '';
+                
+                if ($current_page == 'dashboard.php') {
+                    $page_icon = 'bi-house';
+                } elseif (strpos($request_uri, '/categories/') !== false) {
+                    // 为添加和编辑分类页面设置特殊图标
+                    if ($current_page == 'add.php') {
+                        $page_icon = 'bi-folder-plus';
+                    } elseif ($current_page == 'edit.php') {
+                        $page_icon = 'bi-folder-check';
+                    } else {
+                        $page_icon = 'bi-folder';
+                    }
+                } elseif (strpos($request_uri, '/links/') !== false) {
+                    // 为添加和编辑链接页面设置特殊图标
+                    if ($current_page == 'add.php') {
+                        $page_icon = 'bi-plus-circle';
+                    } elseif ($current_page == 'edit.php') {
+                        $page_icon = 'bi-pencil-square';
+                    } else {
+                        $page_icon = 'bi-link-45deg';
+                    }
+                } elseif (strpos($request_uri, '/files/') !== false) {
+                    $page_icon = 'bi-image';
+                } elseif (strpos($request_uri, '/settings/logs.php') !== false) {
+                    $page_icon = 'bi-journal-text';
+                } elseif (strpos($request_uri, '/settings/') !== false) {
+                    $page_icon = 'bi-gear';
+                }
+                
+                if ($page_icon && isset($page_title)) {
+                    echo '<i class="bi ' . $page_icon . '"></i> ';
+                }
+                ?>
+                <?php echo isset($page_title) ? $page_title : '管理后台'; ?>
+            </h1>
             <?php if (isset($breadcrumb)): ?>
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">

@@ -150,6 +150,9 @@ require_once '../includes/fontawesome-icons.php';
 // 将PHP中的图标列表转换为JavaScript变量
 $fontAwesomeIcons = getFontAwesomeIcons();
 
+// 设置页面标题
+$page_title = '添加分类';
+
 include '../templates/header.php';
 ?>
 

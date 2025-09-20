@@ -199,6 +199,8 @@ function generate_breadcrumbs($path) {
 // 获取数据
 $directory_tree = get_directory_tree($base_upload_dir);
 
+$page_title = '文件管理';
+
 if ($search) {
     $all_files = [];
     search_files_recursive($base_upload_dir, '', $search, $all_files);

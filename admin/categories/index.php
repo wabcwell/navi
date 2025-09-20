@@ -114,6 +114,7 @@ try {
     $_SESSION['error'] = '获取分类列表失败：' . $e->getMessage();
 }
 
+$page_title = '分类管理';
 include '../templates/header.php';
 ?>
 
