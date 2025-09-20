@@ -276,50 +276,67 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
         // 插入默认数据 - 与后台设置页面保持一致
         $stmt = $pdo->prepare("INSERT IGNORE INTO settings (setting_key, setting_value) VALUES (?, ?)");
         $settings = [
-            // 基本网站信息
-            'site_name' => $site_name,
-            'site_description' => $site_description,
-            'site_keywords' => '导航,工具,网站',
-            'site_url' => '',
-            
-            // 显示设置
-            'items_per_page' => 20,
-            'maintenance_mode' => 0,
-            'maintenance_message' => '网站正在维护中，请稍后再访问',
-            
-            // Logo和图标设置
-            'site_icon' => '',
-            'site_logo_type' => 'image',
-            'site_logo_image' => '',
-            'site_logo_icon' => 'fa-home',
-            'site_logo_color' => '#007bff',
-            'site_logo_iconfont' => '',
-            'iconfont' => '', // Iconfont图标库地址
-            
-            // 背景设置
-            'background_type' => 'color',
-            'background_image' => '',
-            'background_color' => '#f8f9fa',
-            'background_api' => 'https://www.dmoe.cc/random.php',
-            
-            // 页脚设置
-            'footer_content' => '© ' . date('Y') . ' ' . $site_name . '. All rights reserved.',
-            'show_footer' => 1,
-            
-            // 上传设置
-            'upload_max_size' => 10,
-            'upload_allowed_types' => 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar',
-            
-            // 透明度设置
-            'bg-overlay' => 0.25,
-            'header_bg_transparency' => 0.85,
-            'category_bg_transparency' => 0.85,
-            'links_area_transparency' => 0.85,
-            'link_card_transparency' => 0.85,
+            // 安全设置
+            'enable_registration' => '0',
+            'enable_comments' => '1',
+            'max_login_attempts' => '5',
+            'lockout_duration' => '30',
+            'session_timeout' => '1800',
+            'enable_captcha' => '1',
+            'enable_2fa' => '0',
+            'ip_whitelist' => '',
+            'ip_blacklist' => '',
             
             // 系统设置
             'timezone' => 'Asia/Shanghai',
             'date_format' => 'Y-m-d H:i:s',
+            'footer_style' => 'centered',
+            
+            // 基本网站信息
+            'site_name' => '我的导航网站',
+            'site_description' => '一个简洁美观的导航网站',
+            'site_keywords' => '',
+            'site_url' => '',
+            
+            // 显示设置
+            'items_per_page' => '20',
+            'maintenance_mode' => '0',
+            'maintenance_message' => '网站正在维护中，请稍后再访问。',
+            
+            // Logo和图标设置
+            'site_icon' => '',
+            'site_logo_type' => 'icon',
+            'site_logo_image' => '',
+            'site_logo_icon' => 'fas fa-compass',
+            'site_logo_color' => '#000000',
+            'site_logo_iconfont' => '',
+            'iconfont' => '',
+            
+            // 背景设置
+            'background_type' => 'api',
+            'background_image' => 'https://www.dmoe.cc/random.php',
+            'background_color' => '#ffffff',
+            'background_api' => 'https://www.dmoe.cc/random.php',
+            
+            // 页脚设置
+            'footer_content' => '<p>© 2025 导航站. All rights reserved.</p>\r\n<p><small>备案号：京ICP备12345678号</small></p>',
+            'show_footer' => '1',
+            
+            // 上传设置
+            'upload_max_size' => '10',
+            'upload_allowed_types' => 'jpg,jpeg,png,gif,svg,webp,pdf,doc,docx,xls,xlsx,txt,zip,rar',
+            
+            // 透明度设置
+            'header_bg_transparency' => '0.65',
+            'category_bg_transparency' => '0.65',
+            'links_area_transparency' => '0.65',
+            'link_card_transparency' => '0.65',
+            'bg-overlay' => '0.35',
+            
+            // Logo类型设置
+            'logo_type' => '',
+            'logo_icon_class' => '',
+            'logo_icon_color' => '',
             
             // 其他设置
             'custom_css' => ''
