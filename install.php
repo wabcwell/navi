@@ -5,7 +5,7 @@
  */
 
 // 定义配置文件路径
-$configFile = __DIR__ . '/config.php';
+$configFile = __DIR__ . '/admin/config.php';
 $installed = false;
 $error = '';
 $success = '';

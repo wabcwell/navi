@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../admin/config.php';
 require_once __DIR__ . '/../admin/includes/load.php';
 
 // 获取前台数据管理实例

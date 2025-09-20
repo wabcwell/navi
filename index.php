@@ -2,7 +2,7 @@
 // PHP版本的导航网站主入口文件
 
 // 加载配置文件
-require_once 'config.php';
+require_once __DIR__ . '/admin/config.php';
 
 // 引入后台数据库连接函数
 require_once 'admin/includes/load.php';

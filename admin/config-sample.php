@@ -4,7 +4,7 @@
  * 复制此文件为 config.php 并填写您的实际配置信息
  * 
  * 重要说明：
- * 1. 复制此文件：copy config-sample.php config.php
+ * 1. 复制此文件：copy config-sample.php config.php（在同一admin目录下）
  * 2. 只需填写数据库连接信息
  * 3. 其他所有设置都可在安装后通过后台管理界面修改
  * 4. 无需编辑此文件即可使用所有功能
@@ -45,7 +45,7 @@ define('SITE_INSTALLED', false);
 
 /*
 快速开始：
-1. 复制此文件：copy config-sample.php config.php
+1. 复制此文件：copy config-sample.php config.php（在同一admin目录下）
 2. 编辑 config.php，填写数据库信息
 3. 访问网站，按提示完成安装
 4. 登录后台设置管理员密码并管理所有设置

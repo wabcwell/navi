@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 }
 
 // 加载配置文件
-require_once ABSPATH . 'config.php';
+require_once ABSPATH . 'admin/config.php';
 
 // 引入初始化文件（已重构，功能分散到各相关类中）
 //require_once __DIR__ . '/init.php';
