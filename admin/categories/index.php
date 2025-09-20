@@ -76,6 +76,7 @@ $per_page = 20;
 
 // 获取搜索参数
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$status_filter = isset($_GET['status']) ? $_GET['status'] : ''; // all, active, inactive
 
 // 获取所有分类（包含链接计数）
 try {
@@ -87,6 +88,18 @@ try {
         $allCategories = array_filter($allCategories, function($category) use ($search) {
             return stripos($category['name'], $search) !== false || 
                    stripos($category['description'], $search) !== false;
+       });
+    }
+    
+    // 状态筛选
+    if ($status_filter && $status_filter !== 'all') {
+        $allCategories = array_filter($allCategories, function($category) use ($status_filter) {
+            if ($status_filter === 'active') {
+                return !empty($category['is_active']);
+            } elseif ($status_filter === 'inactive') {
+                return empty($category['is_active']);
+            }
+            return true;
         });
     }
     
@@ -138,9 +151,16 @@ if (isset($_SESSION['success'])): ?>
 <div class="card mb-4">
     <div class="card-body">
         <form method="GET" class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <input type="text" class="form-control" name="search" 
                        placeholder="搜索分类..." value="<?php echo htmlspecialchars($search); ?>">
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" name="status">
+                    <option value="all" <?php echo $status_filter === 'all' ? 'selected' : ''; ?>>全部状态</option>
+                    <option value="active" <?php echo $status_filter === 'active' ? 'selected' : ''; ?>>启用</option>
+                    <option value="inactive" <?php echo $status_filter === 'inactive' ? 'selected' : ''; ?>>禁用</option>
+                </select>
             </div>
             <div class="col-md-auto">
                 <button type="submit" class="btn btn-outline-primary">
@@ -148,7 +168,7 @@ if (isset($_SESSION['success'])): ?>
                 </button>
             </div>
             <div class="col-md-auto">
-                <?php if ($search): ?>
+                <?php if ($search || $status_filter !== 'all'): ?>
                     <a href="index.php" class="btn btn-outline-secondary">
                         <i class="bi bi-x"></i> 清除
                     </a>
@@ -170,7 +190,7 @@ if (isset($_SESSION['success'])): ?>
 <form method="POST">
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">分类列表</h5>
+            <h5 class="mb-0">分类列表 (<?php echo $total; ?>)</h5>
             <button type="submit" name="update_order" class="btn btn-sm btn-outline-primary">
                 <i class="bi bi-arrow-down-up"></i> 更新排序
             </button>
@@ -353,7 +373,7 @@ if (isset($_SESSION['success'])): ?>
         <ul class="pagination justify-content-center mt-4">
             <?php if ($page > 1): ?>
                 <li class="page-item">
-                    <a class="page-link" href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>">
+                    <a class="page-link" href="?page=<?php echo $page - 1; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>">
                         <i class="bi bi-chevron-left"></i> 上一页
                     </a>
                 </li>
@@ -361,7 +381,7 @@ if (isset($_SESSION['success'])): ?>
             
             <?php for ($i = max(1, $page - 2); $i <= min($total_pages, $page + 2); $i++): ?>
                 <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
-                    <a class="page-link" href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>">
+                    <a class="page-link" href="?page=<?php echo $i; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>">
                         <?php echo $i; ?>
                     </a>
                 </li>
@@ -369,7 +389,7 @@ if (isset($_SESSION['success'])): ?>
             
             <?php if ($page < $total_pages): ?>
                 <li class="page-item">
-                    <a class="page-link" href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>">
+                    <a class="page-link" href="?page=<?php echo $page + 1; ?>&search=<?php echo urlencode($search); ?>&status=<?php echo urlencode($status_filter); ?>">
                         下一页 <i class="bi bi-chevron-right"></i>
                     </a>
                 </li>
