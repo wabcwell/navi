@@ -379,16 +379,16 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 绑定透明度滑块事件
     const transparencySliders = [
-        'bg-overlay',
-        'header_bg_transparency', 
-        'category_bg_transparency',
-        'links_area_transparency',
-        'link_card_transparency'
+        { sliderId: 'bg-overlay', valueId: 'bg-overlay_value' },
+        { sliderId: 'header_bg_transparency', valueId: 'header_transparency_value' },
+        { sliderId: 'category_bg_transparency', valueId: 'category_transparency_value' },
+        { sliderId: 'links_area_transparency', valueId: 'links_area_transparency_value' },
+        { sliderId: 'link_card_transparency', valueId: 'link_card_transparency_value' }
     ];
     
-    transparencySliders.forEach(sliderId => {
-        const slider = document.getElementById(sliderId);
-        const valueSpan = document.getElementById(sliderId + '_value');
+    transparencySliders.forEach(item => {
+        const slider = document.getElementById(item.sliderId);
+        const valueSpan = document.getElementById(item.valueId);
         
         if (slider && valueSpan) {
             slider.addEventListener('input', function() {
