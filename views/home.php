@@ -19,6 +19,7 @@ $site_description = $settings['site_description'];
 $site_logo_type = $settings['site_logo_type'];
 $site_logo_image = $settings['site_logo_image'] ?? '';
 $site_logo_color = $settings['site_logo_color'];
+$site_logo_icon = $settings['site_logo_icon'] ?? 'fas fa-home';
 $site_logo_iconfont = $settings['site_logo_iconfont'] ?? '';
 $background_type = $settings['background_type'];
 $background_color = $settings['background_color'];
@@ -69,7 +70,7 @@ $overlay = $settings['bg-overlay'] ?? 0.2;
                              alt="<?php echo htmlspecialchars($site_name); ?>" 
                              style="max-height: 40px; max-width: 200px; vertical-align: middle; margin-right: 10px;">
                     <?php elseif ($site_logo_type === 'fontawesome'): ?>
-                        <i class="fas fa-compass" 
+                        <i class="<?php echo htmlspecialchars($site_logo_icon); ?>" 
                            style="color: <?php echo htmlspecialchars($site_logo_color); ?>; margin-right: 10px;"></i>
                     <?php elseif ($site_logo_type === 'iconfont' && $site_logo_iconfont): ?>
                         <svg class="icon" aria-hidden="true" style="width: 40px; height: 40px; margin-right: 10px; fill: <?php echo htmlspecialchars($site_logo_color); ?>">

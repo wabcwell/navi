@@ -487,15 +487,16 @@ include '../templates/header.php'; ?>
                             <div id="logo_icon_section" class="logo-section" style="display: none;">
                                 <div class="row">
                                     <div class="col-md-8">
-                                        <label for="site_logo_icon" class="form-label">选择图标</label>
+                                        <label for="site_logo_icon" class="form-label">图标类名</label>
                                         <div class="input-group">
                                             <input type="text" class="form-control" id="site_logo_icon" name="site_logo_icon" 
-                                                   placeholder="点击选择图标" readonly
+                                                   placeholder="输入或选择图标，如: fas fa-home"
                                                    value="<?php echo htmlspecialchars($settings['site_logo_icon'] ?? 'fas fa-home'); ?>">
                                             <button type="button" class="btn btn-outline-secondary" id="openLogoIconPicker">
                                                 <i class="fas fa-icons"></i>
                                             </button>
                                         </div>
+                                        <small class="form-text text-muted">支持直接输入图标类名，或点击右侧按钮选择图标</small>
                                     </div>
                                     <div class="col-md-4">
                                         <label for="site_logo_color" class="form-label">图标颜色</label>
@@ -864,8 +865,8 @@ document.getElementById('site_logo').addEventListener('change', function() {
                                 $icons = getFontAwesomeIcons();
                                 foreach ($icons as $icon):
                                 ?>
-                                <div class="icon-item" data-icon="fas fa-<?php echo htmlspecialchars($icon); ?>" style="cursor: pointer; padding: 10px; text-align: center; display: inline-block; width: 80px;">
-                                    <i class="fas fa-<?php echo htmlspecialchars($icon); ?> fa-2x"></i><br><small><?php echo htmlspecialchars($icon); ?></small>
+                                <div class="icon-item" data-icon="<?php echo htmlspecialchars($icon); ?>" style="cursor: pointer; padding: 10px; text-align: center; display: inline-block; width: 80px;">
+                                    <i class="<?php echo htmlspecialchars($icon); ?> fa-2x"></i><br><small><?php echo htmlspecialchars($icon); ?></small>
                                 </div>
                                 <?php endforeach; ?>
                             </div>
@@ -884,8 +885,8 @@ document.getElementById('site_logo').addEventListener('change', function() {
             // 图标选择事件
             modal.querySelectorAll('.icon-item').forEach(item => {
                 item.addEventListener('click', function() {
-                    const icon = this.getAttribute('data-icon');
-                    document.getElementById('site_logo_icon').value = icon;
+                    const iconName = this.getAttribute('data-icon');
+                    document.getElementById('site_logo_icon').value = iconName;
                     updateLogoPreview();
                     bsModal.hide();
                     // 让Bootstrap的hidden事件处理清理工作，避免重复移除
@@ -917,9 +918,7 @@ document.getElementById('site_logo').addEventListener('change', function() {
 
         // 选择Logo图标
         function selectLogoIcon(iconName) {
-            // 添加完整的Font Awesome类名前缀
-            const fullIconClass = `fas fa-${iconName}`;
-            document.getElementById('site_logo_icon').value = fullIconClass;
+            document.getElementById('site_logo_icon').value = iconName;
             updateLogoPreview();
             
             // 这个函数用于处理静态模态框中的图标选择

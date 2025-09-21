@@ -95,6 +95,7 @@ $page_title = $category['name'] . ' - ' . $site_name;
 $site_logo_type = $settings['site_logo_type'];
 $site_logo_image = $settings['site_logo_image'] ?? '';
 $site_logo_color = $settings['site_logo_color'];
+$site_logo_icon = $settings['site_logo_icon'] ?? 'fas fa-home';
 $site_logo_iconfont = $settings['site_logo_iconfont'] ?? '';
 ?>
 <!DOCTYPE html>
@@ -132,14 +133,14 @@ $site_logo_iconfont = $settings['site_logo_iconfont'] ?? '';
                              alt="<?php echo htmlspecialchars($site_name); ?>" 
                              style="max-height: 40px; max-width: 200px; vertical-align: middle; margin-right: 10px;">
                     <?php elseif ($site_logo_type === 'fontawesome'): ?>
-                        <i class="fas fa-compass" 
+                        <i class="<?php echo htmlspecialchars($site_logo_icon); ?>" 
                            style="color: <?php echo htmlspecialchars($site_logo_color); ?>; margin-right: 10px;"></i>
                     <?php elseif ($site_logo_type === 'iconfont' && $site_logo_iconfont): ?>
                         <svg class="icon" aria-hidden="true" style="width: 40px; height: 40px; margin-right: 10px; fill: <?php echo htmlspecialchars($site_logo_color); ?>">
                             <use xlink:href="#<?php echo htmlspecialchars($site_logo_iconfont); ?>"></use>
                         </svg>
                     <?php else: ?>
-                        <i class="fas fa-compass" style="margin-right: 10px;"></i>
+                        <i class="<?php echo htmlspecialchars($site_logo_icon); ?>" style="margin-right: 10px;"></i>
                     <?php endif; ?>
                     <a href="index.php" style="color: inherit; text-decoration: none;"><?php echo htmlspecialchars($site_name); ?></a>
                 </h1>
