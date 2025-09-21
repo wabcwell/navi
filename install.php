@@ -319,7 +319,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             'background_api' => 'https://www.dmoe.cc/random.php',
             
             // 页脚设置
-            'footer_content' => '<p>© 2025 导航站. All rights reserved.</p>\r\n<p><small>备案号：京ICP备12345678号</small></p>',
+            'footer_content' => '<p>© 2025 导航站. All rights reserved.</p><p><small>备案号：京ICP备12345678号</small></p>',
             'show_footer' => '1',
             
             // 上传设置
