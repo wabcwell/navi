@@ -244,7 +244,7 @@ include '../templates/header.php';
                                     <label for="font_icon" class="form-label">选择图标</label>
                                     <div class="input-group">
                                         <input type="text" class="form-control" id="font_icon" name="font_icon" 
-                                               placeholder="输入图标名称，如: fa-folder" value="fa-folder">
+                                           placeholder="输入图标类名，如: fas fa-folder" value="fas fa-folder">
                                         <button type="button" class="btn btn-outline-secondary" onclick="openIconPicker()">
                                             <i class="bi bi-grid-3x3-gap"></i>
                                         </button>
@@ -348,7 +348,7 @@ const fontAwesomeIcons = <?php echo json_encode($fontAwesomeIcons); ?>;
 
 // 创建iconParams对象存储图标相关参数
 const iconParams = {
-    icon_fontawesome: document.getElementById('font_icon').value || 'fa-folder',
+    icon_fontawesome: document.getElementById('font_icon').value || 'fas fa-folder',
     icon_fontawesome_color: document.getElementById('icon_color').value || '#007bff',
     icon_iconfont: document.getElementById('iconfont_icon').value || 'icon-a-appround51',
     icon_upload: document.getElementById('uploaded_icon_path').value || '',
@@ -400,12 +400,11 @@ function updateIconPreview() {
     
     switch(iconType) {
         case 'fontawesome':
-            const iconValue = document.getElementById('font_icon').value || 'fa-folder';
-            // 使用完整的图标类名（带fa-前缀）
-            const iconName = iconValue.replace(/^fa-/, '');
+            const iconValue = document.getElementById('font_icon').value || 'fas fa-folder';
+            // 直接使用完整的图标类名，不再拼接前缀
             const iconColor = document.getElementById('icon_color').value;
-            previewContainer.innerHTML = `<i class="fas fa-${iconName} fa-3x" style="color: ${iconColor};"></i>`;
-            previewText.textContent = `Font Awesome: ${iconName}`;
+            previewContainer.innerHTML = `<i class="${iconValue} fa-3x" style="color: ${iconColor};"></i>`;
+            previewText.textContent = `Font Awesome: ${iconValue}`;
             document.getElementById('final_icon').value = iconValue;
             break;
             
@@ -462,14 +461,14 @@ function openIconPicker() {
     modalDiv.tabIndex = -1;
     modalDiv.setAttribute('aria-hidden', 'true');
     
-    // 构建图标网格HTML
+    // 构建图标网格HTML - 直接使用完整的图标类名
     let iconGridHTML = '';
     fontAwesomeIcons.forEach(icon => {
         iconGridHTML += `
             <div class="col-2">
                 <button type="button" class="btn btn-outline-secondary w-100 icon-btn" 
                         onclick="selectIcon('${icon}')" title="${icon}">
-                    <i class="fas fa-${icon} fa-lg"></i>
+                    <i class="${icon} fa-lg"></i>
                 </button>
             </div>`;
     });
@@ -523,9 +522,9 @@ function openIconPicker() {
 
 // 选择图标
 function selectIcon(iconName) {
-    // 保存完整的图标类名（包含fa-前缀）
-    document.getElementById('font_icon').value = 'fa-' + iconName;
-    iconParams.icon_fontawesome = 'fa-' + iconName;  // 同步更新iconParams
+    // 直接使用完整的图标类名，不再添加fa-前缀
+    document.getElementById('font_icon').value = iconName;
+    iconParams.icon_fontawesome = iconName;  // 同步更新iconParams
     updateIconPreview();
     
     // 正确隐藏模态框，确保背景遮罩层也被清除

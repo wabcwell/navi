@@ -258,7 +258,7 @@ include '../templates/header.php';
                             <div class="card-body icon-preview-container">
                                 <div id="iconPreview">
                                     <?php if (!empty($category['icon_fontawesome'])): ?>
-                                        <i class="fas <?php echo $category['icon_fontawesome']; ?>" style="font-size: 3rem; color: <?php echo htmlspecialchars($category['icon_fontawesome_color'] ?? $category['color'] ?? '#007bff'); ?>"></i>
+                                        <i class="<?php echo $category['icon_fontawesome']; ?>" style="font-size: 3rem; color: <?php echo htmlspecialchars($category['icon_fontawesome_color'] ?? $category['color'] ?? '#007bff'); ?>"></i>
                                     <?php elseif (!empty($category['icon_iconfont'])): ?>
                                         <svg class="icon" aria-hidden="true" style="font-size: 3em;">
                                             <use xlink:href="#<?php echo htmlspecialchars($category['icon_iconfont']); ?>"></use>
@@ -284,7 +284,7 @@ include '../templates/header.php';
                                     <label for="icon_fontawesome" class="form-label">选择图标</label>
                                     <div class="input-group">
                                         <input type="text" class="form-control" id="icon_fontawesome" name="icon_fontawesome" 
-                                               placeholder="点击选择图标"
+                                               placeholder="输入图标类名，如: fas fa-folder"
                                                value="<?php echo htmlspecialchars($category['icon_fontawesome'] ?? ''); ?>">
                                         <button type="button" class="btn btn-outline-secondary" id="openIconPicker">
                                             <i class="fas fa-icons"></i>
@@ -409,7 +409,7 @@ document.getElementById('name').addEventListener('input', function() {
 // 创建iconParams对象存储图标相关参数
 const iconParams = {
     icon_type: "<?php echo $category['icon_type'] ?? 'fontawesome'; ?>",
-    icon_fontawesome: document.getElementById('icon_fontawesome').value || "<?php echo $category['icon_fontawesome'] ?? ''; ?>",
+    icon_fontawesome: document.getElementById('icon_fontawesome').value || "<?php echo $category['icon_fontawesome'] ?? 'fas fa-folder'; ?>",
     icon_fontawesome_color: document.getElementById('icon_color').value || "<?php echo $category['icon_fontawesome_color'] ?? $category['color'] ?? '#007bff'; ?>",
     icon_iconfont: document.getElementById('iconfont_icon').value || "<?php echo $category['icon_iconfont'] ?? ''; ?>",
     icon_upload: document.getElementById('uploaded_icon_path').value || "<?php echo $category['icon_upload'] ?? ''; ?>",
@@ -605,14 +605,14 @@ function openIconPicker() {
     modalDiv.tabIndex = -1;
     modalDiv.setAttribute('aria-hidden', 'true');
     
-    // 构建图标网格HTML
+    // 构建图标网格HTML - 直接使用完整的图标类名
     let iconGridHTML = '';
     fontAwesomeIcons.forEach(icon => {
         iconGridHTML += `
             <div class="col-2">
                 <button type="button" class="btn btn-outline-secondary w-100 icon-btn" 
                         onclick="selectIcon('${icon}')" title="${icon}">
-                    <i class="fas fa-${icon} fa-lg"></i>
+                    <i class="${icon} fa-lg"></i>
                 </button>
             </div>`;
     });
@@ -664,12 +664,12 @@ function openIconPicker() {
     });
 }
 
-// 选择图标
+// 选择图标 - 直接使用完整的图标类名，不再添加fa-前缀
 function selectIcon(iconName) {
-    // 保存完整的图标类名（包含fa-前缀）
-    document.getElementById('icon_fontawesome').value = 'fa-' + iconName;
+    // 直接使用完整的图标类名
+    document.getElementById('icon_fontawesome').value = iconName;
     // 同步更新iconParams对象
-    iconParams.icon_fontawesome = 'fa-' + iconName;
+    iconParams.icon_fontawesome = iconName;
     updatePreview();
     
     // 正确隐藏模态框，确保背景遮罩层也被清除
@@ -699,11 +699,10 @@ function updatePreview() {
     
     switch(iconType) {
         case 'fontawesome':
-            const iconValue = document.getElementById('icon_fontawesome').value || 'fa-folder';
-            // 使用完整的图标类名（带fa-前缀）
-            const iconName = iconValue.replace(/^fa-/, '');
+            const iconValue = document.getElementById('icon_fontawesome').value || 'fas fa-folder';
+            // 直接使用完整的图标类名，不再拼接前缀
             const iconColor = document.getElementById('icon_color').value;
-            previewContainer.innerHTML = `<i class="fas fa-${iconName} fa-3x" style="color: ${iconColor};"></i>`;
+            previewContainer.innerHTML = `<i class="${iconValue} fa-3x" style="color: ${iconColor};"></i>`;
             break;
             
         case 'iconfont':

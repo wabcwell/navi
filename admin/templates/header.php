@@ -10,7 +10,7 @@
 <!-- Bootstrap Icons -->
 <link href="/admin/assets/bootstrap/icons/bootstrap-icons.css" rel="stylesheet">
 <!-- Font Awesome -->
-<link href="/admin/assets/fontawesome/css/all.min.css" rel="stylesheet">
+<link href="/admin/assets/fontawesome/css/all.css" rel="stylesheet">
     <!-- Iconfont -->
     <script src="<?php echo Settings::getIconfontUrl(); ?>"></script>
     <!-- 网站图标 -->

@@ -311,8 +311,8 @@ include '../templates/header.php';
                                 <label for="icon_fontawesome_input" class="form-label">Font Awesome 图标</label>
                                 <div class="input-group mb-2">
                                     <input type="text" class="form-control" id="icon_fontawesome_input" 
-                                           value="<?php echo htmlspecialchars($default_icon ?? 'fas fa-link'); ?>" 
-                                           placeholder="例如: fas fa-home">
+                                       value="<?php echo htmlspecialchars($default_icon ?? 'fas fa-link'); ?>" 
+                                       placeholder="输入图标类名，如: fas fa-home">
                                     <button type="button" class="btn btn-outline-primary" onclick="openIconPicker()">
                                         <i class="fas fa-icons"></i> 选择图标
                                     </button>
@@ -425,7 +425,7 @@ let iconParams = {
     icon_url: ''
 };
 
-// Font Awesome 图标列表
+// Font Awesome 图标列表（已包含完整类名）
 const fontAwesomeIcons = <?php echo json_encode($fontAwesomeIcons); ?>;
 
 // 更新图标预览
@@ -528,7 +528,7 @@ function openIconPicker() {
             <div class="col-2">
                 <button type="button" class="btn btn-outline-secondary w-100 icon-btn" 
                         onclick="selectIcon('${icon}')" title="${icon}">
-                    <i class="fas fa-${icon} fa-lg"></i>
+                    <i class="${icon} fa-lg"></i>
                 </button>
             </div>`;
     });
@@ -571,12 +571,12 @@ function openIconPicker() {
     });
 }
 
-// 选择图标
+// 选择图标 - 直接使用完整的图标类名，不再添加fa-前缀
 function selectIcon(iconName) {
-    const iconValue = 'fas fa-' + iconName;
-    document.getElementById('icon_fontawesome_input').value = iconValue;
-    // 更新iconParams对象
-    iconParams.icon_fontawesome = iconValue;
+    // 直接使用完整的图标类名
+    document.getElementById('icon_fontawesome_input').value = iconName;
+    // 同步更新iconParams对象
+    iconParams.icon_fontawesome = iconName;
     updatePreview();
     
     const modalElement = document.querySelector('.modal');

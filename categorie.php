@@ -104,7 +104,7 @@ $site_logo_iconfont = $settings['site_logo_iconfont'] ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($page_title); ?></title>
     <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="admin/assets/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="admin/assets/fontawesome/css/all.css">
     <!-- 网站图标 -->
     <?php if (!empty($settings['site_icon'])): ?>
     <link rel="icon" type="image/x-icon" href="<?php echo htmlspecialchars($settings['site_icon']); ?>">
