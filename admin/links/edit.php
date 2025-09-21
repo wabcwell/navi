@@ -271,7 +271,7 @@ include '../templates/header.php';
                                             <label for="icon_fontawesome" class="form-label">选择图标</label>
                                             <div class="input-group">
                                                 <input type="text" class="form-control" id="icon_fontawesome" name="icon_fontawesome" 
-                                                       placeholder="点击选择图标" readonly
+                                                       placeholder="点击选择图标"
                                                        value="<?php echo htmlspecialchars($link['icon_fontawesome'] ?? ''); ?>">
                                                 <button type="button" class="btn btn-outline-secondary" id="openIconPicker">
                                                     <i class="fas fa-icons"></i>
