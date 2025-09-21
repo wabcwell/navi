@@ -41,42 +41,54 @@ if (isset($_GET['ajax_upload_background']) && $_GET['ajax_upload_background'] ==
 }
 
 // 处理表单提交
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_GET['ajax_upload_background'])) {
     $errors = [];
     
-    // 处理背景图片设置
-    $background_type = $_POST['background_type'] ?? 'none';
+    // 获取表单数据
+    $background_type = $_POST['background_type'] ?? 'color';
     $background_image = $settingsManager->get('background_image');
     $background_color = $settingsManager->get('background_color');
     $background_api = $settingsManager->get('background_api');
     
-    // 处理背景设置（移除了文件上传处理，改为通过AJAX上传）
-    if ($background_type === 'api') {
-        $background_image = trim($_POST['background_api_url'] ?? '');
-    } elseif ($background_type === 'color') {
-        $background_color = trim($_POST['background_color_value'] ?? '#ffffff');
-        $background_image = '';
-    } elseif ($background_type === 'none') {
-        $background_image = '';
-        $background_color = '';
-    } elseif ($background_type === 'image') {
-        // 从隐藏字段获取上传的图片文件名
-        $uploaded_image = trim($_POST['background_image_uploaded'] ?? '');
-        if ($uploaded_image) {
-            // 删除旧背景图片
-            if ($background_image && strpos($background_image, 'http') !== 0) {
-                $old_bg_path = '../uploads/backgrounds/' . $background_image;
-                if (file_exists($old_bg_path)) {
-                    unlink($old_bg_path);
-                }
+    // 始终检测并更新所有有值的字段，不管当前选中什么类型
+    // 检测上传图片（如果隐藏字段有值）
+    $uploaded_image = trim($_POST['background_image_uploaded'] ?? '');
+    if (!empty($uploaded_image)) {
+        // 删除旧背景图片
+        if ($background_image && strpos($background_image, 'http') !== 0) {
+            $old_bg_path = '../uploads/backgrounds/' . $background_image;
+            if (file_exists($old_bg_path)) {
+                unlink($old_bg_path);
             }
-            $background_image = $uploaded_image;
         }
+        $background_image = $uploaded_image;
+    }
+    
+    // 检测颜色值更新
+    $color_value = trim($_POST['background_color_value'] ?? '');
+    if (!empty($color_value)) {
+        $background_color = $color_value;
+    }
+    
+    // 检测API地址更新
+    $api_url = trim($_POST['background_api_url'] ?? '');
+    if (!empty($api_url)) {
+        $background_api = $api_url;
+    }
+    
+    // 根据背景类型进行验证（只验证当前选中类型是否必填项已填写）
+    if ($background_type === 'api' && empty($background_api)) {
+        $errors[] = '请填写第三方API地址';
+    } elseif ($background_type === 'image' && empty($background_image)) {
+        $errors[] = '请先上传背景图片';
     }
     
     // 如果没有错误，保存设置
     if (empty($errors)) {
+        // 保存背景类型
         $settingsManager->set('background_type', $background_type);
+        
+        // 保存所有背景参数，不清空其他类型的参数
         $settingsManager->set('background_image', $background_image);
         $settingsManager->set('background_color', $background_color);
         $settingsManager->set('background_api', $background_api);
@@ -88,26 +100,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $settingsManager->set('links_area_transparency', max(0, min(1, floatval($_POST['links_area_transparency'] ?? 0.85))));
         $settingsManager->set('link_card_transparency', max(0, min(1, floatval($_POST['link_card_transparency'] ?? 0.85))));
         
-        // 保存上传的图片路径（如果有）
-        if (isset($_POST['background_image_uploaded']) && !empty($_POST['background_image_uploaded'])) {
-            // 保存完整路径，确保包含 /uploads/backgrounds/ 路径
-            $image_path = $_POST['background_image_uploaded'];
-            if (strpos($image_path, '/uploads/backgrounds/') !== 0 && strpos($image_path, 'http') !== 0) {
-                $image_path = '/uploads/backgrounds/' . $image_path;
-            }
-            $settingsManager->set('background_image', $image_path);
-        }
-        
         // 保存iconfont设置
         $settingsManager->set('iconfont', trim($_POST['iconfont'] ?? ''));
         
         // 记录操作日志
         $logsManager = get_logs_manager();
         $settings_data = [
-            'background_type' => $_POST['background_type'] ?? 'color',
-            'background_color' => $_POST['background_color_value'] ?? '',
-            'background_api' => $_POST['background_api_url'] ?? '',
-            'background_image_uploaded' => $_POST['background_image_uploaded'] ?? '',
+            'background_type' => $background_type,
+            'background_color' => $background_color,
+            'background_api' => $background_api,
+            'background_image' => $background_image,
             'bg_overlay' => $_POST['bg_overlay'] ?? 0.2,
             'header_bg_transparency' => $_POST['header_bg_transparency'] ?? 0.85,
             'category_bg_transparency' => $_POST['category_bg_transparency'] ?? 0.85,
@@ -134,7 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $settings = [
     'background_type' => $settingsManager->get('background_type', 'color'),
     'background_image' => $settingsManager->get('background_image', ''),
-    'background_color' => $settingsManager->get('background_color', '#f8f9fa'),
+    'background_color' => $settingsManager->get('background_color', '#ffffff'),
     'background_api' => $settingsManager->get('background_api', ''),
     'bg-overlay' => $settingsManager->get('bg-overlay', 0.2),
     'header_bg_transparency' => $settingsManager->get('header_bg_transparency', 0.85),
@@ -309,7 +311,7 @@ include '../templates/header.php'; ?>
                             <div id="bg_api_section" class="mb-3" style="display: <?php echo $settings['background_type'] === 'api' ? 'block' : 'none'; ?>">
                                 <label for="background_api_url" class="form-label">API地址</label>
                                 <input type="url" class="form-control" id="background_api_url" name="background_api_url" 
-                                       value="<?php echo $settings['background_type'] === 'api' ? htmlspecialchars($settings['background_image']) : ''; ?>"
+                                       value="<?php echo htmlspecialchars($settings['background_api'] ?? ''); ?>"
                                        placeholder="https://source.unsplash.com/1920x1080/?nature">
                                 <div class="form-text">
                                     支持 Unsplash、Lorem Picsum 等图片API<br>
@@ -329,6 +331,12 @@ include '../templates/header.php'; ?>
                                             <i class="bi bi-image" style="font-size: 48px;"></i>
                                             <p class="mt-2 mb-0">背景预览</p>
                                         </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="bi bi-info-circle"></i> 
+                                            <span id="current_bg_type_info">当前类型：<?php echo $settings['background_type'] === 'none' ? '无背景' : ($settings['background_type'] === 'image' ? '上传图片' : ($settings['background_type'] === 'color' ? '纯色背景' : '第三方API')); ?></span>
+                                        </small>
                                     </div>
                                 </div>
                             </div>
@@ -458,8 +466,8 @@ function initBackgroundUpload() {
                 // 显示成功消息
                 uploadResult.style.display = 'block';
                 
-                // 更新隐藏字段
-                uploadedImageField.value = data.file_name;
+                // 更新隐藏字段 - 保存完整路径
+                uploadedImageField.value = data.file_url;
                 
                 // 重置文件输入控件
                 fileInput.value = '';
@@ -563,6 +571,30 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+    
+    // 表单提交前的验证
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const bgType = document.querySelector('input[name="background_type"]:checked').value;
+            
+            if (bgType === 'image') {
+                const uploadedImage = document.getElementById('background_image_uploaded').value;
+                if (!uploadedImage) {
+                    e.preventDefault();
+                    alert('请先上传背景图片');
+                    return false;
+                }
+            } else if (bgType === 'api') {
+                const apiUrl = document.getElementById('background_api_url').value;
+                if (!apiUrl) {
+                    e.preventDefault();
+                    alert('请填写第三方API地址');
+                    return false;
+                }
+            }
+        });
+    }
 });
 
 function toggleBackgroundSections() {
@@ -584,64 +616,81 @@ function toggleBackgroundSections() {
 }
 
 function updateBackgroundPreview() {
-    const bgType = document.querySelector('input[name="background_type"]:checked').value;
-    const preview = document.getElementById('background_preview');
-    const placeholder = document.getElementById('preview_placeholder');
-    
-    if (bgType === 'image') {
-        // 优先检查新上传的图片
-        const uploadedImage = document.getElementById('background_image_uploaded');
-        const existingImage = document.getElementById('background_image_existing');
-        
-        let imagePath = '';
-        if (uploadedImage && uploadedImage.value) {
-            imagePath = uploadedImage.value;
-        } else if (existingImage && existingImage.value) {
-            imagePath = existingImage.value;
-        }
-        
-        if (imagePath) {
-            // 如果路径不包含 /uploads/backgrounds/，添加相对路径前缀
-            let fullPath = imagePath;
-            if (imagePath.indexOf('/uploads/backgrounds/') !== 0 && imagePath.indexOf('http') !== 0) {
-                fullPath = '../../uploads/backgrounds/' + imagePath;
+            const bgType = document.querySelector('input[name="background_type"]:checked').value;
+            const preview = document.getElementById('background_preview');
+            const placeholder = document.getElementById('preview_placeholder');
+            const typeInfo = document.getElementById('current_bg_type_info');
+            
+            // 更新类型信息显示
+            let typeText = '';
+            if (bgType === 'none') {
+                typeText = '无背景';
+            } else if (bgType === 'image') {
+                typeText = '上传图片';
+            } else if (bgType === 'color') {
+                typeText = '纯色背景';
+            } else if (bgType === 'api') {
+                typeText = '第三方API';
             }
-            preview.style.backgroundImage = 'url(' + fullPath + ')';
-            preview.style.backgroundSize = 'cover';
-            preview.style.backgroundPosition = 'center';
-            preview.style.backgroundRepeat = 'no-repeat';
-            preview.style.backgroundColor = '';
-            placeholder.style.display = 'none';
-        } else {
-            preview.style.backgroundImage = '';
-            preview.style.backgroundColor = '#f8f9fa';
-            placeholder.style.display = 'block';
+            typeInfo.textContent = '当前类型：' + typeText;
+            
+            if (bgType === 'image') {
+                // 基于background_image参数的值实现预览功能
+                const uploadedImage = document.getElementById('background_image_uploaded');
+                const existingImage = document.getElementById('background_image_existing');
+                
+                let imagePath = '';
+                if (uploadedImage && uploadedImage.value) {
+                    imagePath = uploadedImage.value;
+                } else if (existingImage && existingImage.value) {
+                    imagePath = existingImage.value;
+                }
+                
+                if (imagePath) {
+                    // 如果路径不包含 /uploads/backgrounds/，添加相对路径前缀
+                    let fullPath = imagePath;
+                    if (imagePath.indexOf('/uploads/backgrounds/') !== 0 && imagePath.indexOf('http') !== 0) {
+                        fullPath = '../../uploads/backgrounds/' + imagePath;
+                    }
+                    preview.style.backgroundImage = 'url(' + fullPath + ')';
+                    preview.style.backgroundSize = 'cover';
+                    preview.style.backgroundPosition = 'center';
+                    preview.style.backgroundRepeat = 'no-repeat';
+                    preview.style.backgroundColor = '';
+                    placeholder.style.display = 'none';
+                } else {
+                    preview.style.backgroundImage = '';
+                    preview.style.backgroundColor = '#f8f9fa';
+                    placeholder.style.display = 'block';
+                }
+            } else if (bgType === 'color') {
+                // 基于background_color参数的值实现预览功能，预设颜色为白色
+                const color = document.getElementById('background_color_value').value;
+                preview.style.backgroundImage = '';
+                preview.style.backgroundColor = color;
+                placeholder.style.display = 'none';
+            } else if (bgType === 'api') {
+                // 基于background_api参数的值实现预览功能
+                const apiUrl = document.getElementById('background_api_url').value;
+                if (apiUrl) {
+                    preview.style.backgroundImage = 'url(' + apiUrl + ')';
+                    preview.style.backgroundSize = 'cover';
+                    preview.style.backgroundPosition = 'center';
+                    preview.style.backgroundRepeat = 'no-repeat';
+                    preview.style.backgroundColor = '';
+                    placeholder.style.display = 'none';
+                } else {
+                    preview.style.backgroundImage = '';
+                    preview.style.backgroundColor = '#f8f9fa';
+                    placeholder.style.display = 'block';
+                }
+            } else {
+                // 无背景类型
+                preview.style.backgroundImage = '';
+                preview.style.backgroundColor = '#f8f9fa';
+                placeholder.style.display = 'block';
+            }
         }
-    } else if (bgType === 'color') {
-        const color = document.getElementById('background_color_value').value;
-        preview.style.backgroundImage = '';
-        preview.style.backgroundColor = color;
-        placeholder.style.display = 'none';
-    } else if (bgType === 'api') {
-        const apiUrl = document.getElementById('background_api_url').value;
-        if (apiUrl) {
-            preview.style.backgroundImage = 'url(' + apiUrl + ')';
-            preview.style.backgroundSize = 'cover';
-            preview.style.backgroundPosition = 'center';
-            preview.style.backgroundRepeat = 'no-repeat';
-            preview.style.backgroundColor = '';
-            placeholder.style.display = 'none';
-        } else {
-            preview.style.backgroundImage = '';
-            preview.style.backgroundColor = '#f8f9fa';
-            placeholder.style.display = 'block';
-        }
-    } else {
-        preview.style.backgroundImage = '';
-        preview.style.backgroundColor = '#f8f9fa';
-        placeholder.style.display = 'block';
-    }
-}
 </script>
 
 <?php include '../templates/footer.php'; ?>
