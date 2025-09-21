@@ -305,7 +305,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             
             // Logo和图标设置
             'site_icon' => '',
-            'site_logo_type' => 'icon',
+            'site_logo_type' => 'fontawesome',
             'site_logo_image' => '',
             'site_logo_icon' => 'fas fa-compass',
             'site_logo_color' => '#000000',
@@ -314,7 +314,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             
             // 背景设置
             'background_type' => 'api',
-            'background_image' => 'https://www.dmoe.cc/random.php',
+            'background_image' => '',
             'background_color' => '#ffffff',
             'background_api' => 'https://www.dmoe.cc/random.php',
             
@@ -329,7 +329,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             // 透明度设置
             'header_bg_transparency' => '0.65',
             'category_bg_transparency' => '0.65',
-            'links_area_transparency' => '0.65',
+            'links_area_transparency' => '0.45',
             'link_card_transparency' => '0.65',
             'bg-overlay' => '0.35',
             
@@ -363,8 +363,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
                 'description' => '主流社交平台',
 				'icon_type' => 'fontawesome', 
                 'icon_fontawesome' => 'fas fa-users',
-                'icon_fontawesome_color' => '#1877f2',
-                'color' => '#1877f2',
+                'icon_fontawesome_color' => '#f27a18',
+                'color' => '#f27a18',
                 'order_index' => 2,
                 'is_active' => 1
             ],

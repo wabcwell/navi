@@ -32,12 +32,16 @@ class Settings {
      * @return string
      */
     public static function getSiteUrl() {
-        if (!defined('SITE_URL')) {
-            $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
-            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-            return $protocol . '://' . $host;
+        // 首先尝试从设置中获取site_url
+        $siteUrlSetting = self::getSiteSetting('site_url', '');
+        if (!empty($siteUrlSetting)) {
+            return $siteUrlSetting;
         }
-        return SITE_URL;
+        
+        // 如果没有设置，则自动生成
+        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        return $protocol . '://' . $host;
     }
     
     /**
@@ -255,7 +259,7 @@ class Settings {
      * @return bool 是否有效
      */
     public function isValidSiteLogoType($type) {
-        $validTypes = ['image', 'icon', 'iconfont'];
+        $validTypes = ['upload', 'fontawesome', 'iconfont'];
         return in_array($type, $validTypes);
     }
     
@@ -264,7 +268,7 @@ class Settings {
      * @return array 有效选项列表
      */
     public function getValidSiteLogoTypes() {
-        return ['image', 'icon', 'iconfont'];
+        return ['upload', 'fontawesome', 'iconfont'];
     }
     
     /**

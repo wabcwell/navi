@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // 处理网站Logo设置
-    $site_logo_type = $_POST['site_logo_type'] ?? 'image';
+    $site_logo_type = $_POST['site_logo_type'] ?? 'upload';
     $site_logo_image = $settingsManager->get('site_logo_image', ''); // 最后一次上传的图片
     $site_logo_icon = $settingsManager->get('site_logo_icon', 'fas fa-home'); // 最后一次设置的图标
     $site_logo_color = $settingsManager->get('site_logo_color', '#007bff');
@@ -193,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // 根据Logo类型处理数据
-    if ($site_logo_type === 'image') {
+    if ($site_logo_type === 'upload') {
         // 处理图片上传
         if (isset($_FILES['site_logo']) && $_FILES['site_logo']['error'] === UPLOAD_ERR_OK) {
             $fileUpload = get_file_upload_manager('settings');
@@ -209,7 +209,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($site_logo_image)) {
             $errors[] = '请上传Logo图片';
         }
-    } elseif ($site_logo_type === 'icon') {
+    } elseif ($site_logo_type === 'fontawesome') {
         // 更新图标和颜色
         $site_logo_icon = trim($_POST['site_logo_icon'] ?? '');
         $site_logo_color = trim($_POST['site_logo_color'] ?? '#007bff');
@@ -450,11 +450,11 @@ include '../templates/header.php'; ?>
                         <div class="col-md-7">
                             <!-- 图标类型选择 -->
                             <div class="btn-group w-100 mb-3" role="group">
-                                <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_image" value="image" <?php echo (!isset($settings['site_logo_type']) || empty($settings['site_logo_type']) || $settings['site_logo_type'] === 'image') ? 'checked' : ''; ?>>
-                                <label class="btn btn-outline-primary" for="logo_type_image">上传图片</label>
+                                <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_upload" value="upload" <?php echo (!isset($settings['site_logo_type']) || empty($settings['site_logo_type']) || $settings['site_logo_type'] === 'upload') ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary" for="logo_type_upload">上传图片</label>
                                 
-                                <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_icon" value="icon" <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'icon') ? 'checked' : ''; ?>>
-                                <label class="btn btn-outline-primary" for="logo_type_icon">Font Awesome</label>
+                                <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_fontawesome" value="fontawesome" <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'fontawesome') ? 'checked' : ''; ?>>
+                                <label class="btn btn-outline-primary" for="logo_type_fontawesome">Font Awesome</label>
                                 
                                 <input type="radio" class="btn-check" name="site_logo_type" id="logo_type_iconfont" value="iconfont" <?php echo (isset($settings['site_logo_type']) && $settings['site_logo_type'] === 'iconfont') ? 'checked' : ''; ?>>
                                 <label class="btn btn-outline-primary" for="logo_type_iconfont">Iconfont</label>
@@ -520,13 +520,13 @@ include '../templates/header.php'; ?>
                             <label class="form-label">Logo预览</label>
                             <div class="logo-preview-container text-center">
                                 <div id="logoPreview" class="mb-2">
-                                    <?php if (!empty($settings['site_logo_icon']) && $settings['site_logo_type'] === 'icon'): ?>
-                                        <i class="<?php echo htmlspecialchars($settings['site_logo_icon']); ?>" style="font-size: 3rem; color: <?php echo htmlspecialchars($settings['site_logo_color'] ?? '#007bff'); ?>"></i>
-                                    <?php elseif (!empty($settings['site_logo_iconfont']) && $settings['site_logo_type'] === 'iconfont'): ?>
-                                        <svg class="icon" aria-hidden="true" style="font-size: 3em;">
-                                            <use xlink:href="#<?php echo htmlspecialchars($settings['site_logo_iconfont']); ?>"></use>
-                                        </svg>
-                                    <?php elseif (!empty($settings['site_logo_image']) && $settings['site_logo_type'] === 'image'): 
+                                    <?php if (!empty($settings['site_logo_icon']) && $settings['site_logo_type'] === 'fontawesome'): ?>
+                                    <i class="<?php echo htmlspecialchars($settings['site_logo_icon']); ?>" style="font-size: 3rem; color: <?php echo htmlspecialchars($settings['site_logo_color'] ?? '#007bff'); ?>"></i>
+                                <?php elseif (!empty($settings['site_logo_iconfont']) && $settings['site_logo_type'] === 'iconfont'): ?>
+                                    <svg class="icon" aria-hidden="true" style="font-size: 3em;">
+                                        <use xlink:href="#<?php echo htmlspecialchars($settings['site_logo_iconfont']); ?>"></use>
+                                    </svg>
+                                <?php elseif (!empty($settings['site_logo_image']) && $settings['site_logo_type'] === 'upload'): 
                                         $logo_path = $settings['site_logo_image'];
                                         // 如果路径已经是绝对路径，直接使用；否则进行转换
                                         if (!str_starts_with($logo_path, '/')) {
@@ -708,19 +708,7 @@ document.getElementById('site_logo').addEventListener('change', function() {
     previewImage(this, 'logoPreview');
 });
 
-// Logo类型切换
-function toggleLogoType() {
-    const imageRadio = document.getElementById('logo_type_image');
-    const iconRadio = document.getElementById('logo_type_icon');
-    const noneRadio = document.getElementById('logo_type_none');
-    const imageSection = document.getElementById('logo_image_section');
-    const iconSection = document.getElementById('logo_icon_section');
 
-    if (imageSection) imageSection.style.display = imageRadio.checked ? 'block' : 'none';
-    if (iconSection) iconSection.style.display = iconRadio.checked ? 'block' : 'none';
-
-    updateLogoPreview();
-}
 
 
 
@@ -748,7 +736,7 @@ function toggleLogoType() {
 
         // Logo图标参数对象
         let logoIconParams = {
-            type: '<?php echo $settings['site_logo_type'] ?? 'image'; ?>',
+            type: '<?php echo $settings['site_logo_type'] ?? 'upload'; ?>',
             icon: '<?php echo htmlspecialchars($settings['site_logo_icon'] ?? 'fas fa-home'); ?>',
             color: '<?php echo htmlspecialchars($settings['site_logo_color'] ?? '#007bff'); ?>',
             image: '<?php echo htmlspecialchars($settings['site_logo_image'] ?? ''); ?>',
@@ -757,8 +745,8 @@ function toggleLogoType() {
 
         // Logo类型切换功能
         function toggleLogoType() {
-            const imageRadio = document.getElementById('logo_type_image');
-            const iconRadio = document.getElementById('logo_type_icon');
+            const imageRadio = document.getElementById('logo_type_upload');
+            const iconRadio = document.getElementById('logo_type_fontawesome');
             const iconfontRadio = document.getElementById('logo_type_iconfont');
             const noneRadio = document.getElementById('logo_type_none');
             const imageSection = document.getElementById('logo_image_section');
@@ -784,8 +772,8 @@ function toggleLogoType() {
             const container = document.getElementById('logoPreview');
             if (!container) return;
 
-            const imageRadio = document.getElementById('logo_type_image');
-            const iconRadio = document.getElementById('logo_type_icon');
+            const imageRadio = document.getElementById('logo_type_upload');
+            const iconRadio = document.getElementById('logo_type_fontawesome');
             const iconfontRadio = document.getElementById('logo_type_iconfont');
             const noneRadio = document.getElementById('logo_type_none');
 

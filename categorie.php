@@ -127,11 +127,11 @@ $site_logo_iconfont = $settings['site_logo_iconfont'] ?? '';
         <div class="container">
             <div>
                 <h1>
-                    <?php if ($site_logo_type === 'image' && $site_logo_image): ?>
+                    <?php if ($site_logo_type === 'upload' && $site_logo_image): ?>
                         <img src="<?php echo htmlspecialchars($site_logo_image); ?>" 
                              alt="<?php echo htmlspecialchars($site_name); ?>" 
                              style="max-height: 40px; max-width: 200px; vertical-align: middle; margin-right: 10px;">
-                    <?php elseif ($site_logo_type === 'icon'): ?>
+                    <?php elseif ($site_logo_type === 'fontawesome'): ?>
                         <i class="fas fa-compass" 
                            style="color: <?php echo htmlspecialchars($site_logo_color); ?>; margin-right: 10px;"></i>
                     <?php elseif ($site_logo_type === 'iconfont' && $site_logo_iconfont): ?>
