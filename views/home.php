@@ -280,7 +280,9 @@ $overlay = $settings['bg-overlay'] ?? 0.2;
             
             if (backgroundType === 'image' && backgroundImage) {
                 document.body.classList.add('has-bg-image');
-                document.body.style.backgroundImage = `url('uploads/backgrounds/${backgroundImage}')`;
+                // 处理背景图片路径，确保正确使用相对路径
+                const imagePath = backgroundImage.startsWith('/') ? backgroundImage.substring(1) : backgroundImage;
+                document.body.style.backgroundImage = `url('${imagePath}')`;
                 document.body.style.backgroundSize = 'cover';
                 document.body.style.backgroundPosition = 'center';
                 document.body.style.backgroundRepeat = 'no-repeat';

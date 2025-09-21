@@ -580,7 +580,9 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (bgType === 'image') {
                 const uploadedImage = document.getElementById('background_image_uploaded').value;
-                if (!uploadedImage) {
+                const existingImage = document.getElementById('background_image_existing').value;
+                // 检查是否有图片：新上传的 或 数据库中已有的
+                if (!uploadedImage && !existingImage) {
                     e.preventDefault();
                     alert('请先上传背景图片');
                     return false;
