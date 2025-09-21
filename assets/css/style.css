@@ -4,12 +4,13 @@
     --card-bg: #ffffff;
     --card-border: #e2e8f0;
     --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --accent-color: #3b82f6;
+    --text-secondary: #64748b; 
+
+    /* 图标背景颜色模式 */
+    --accent-color: #ffffff;
     --hover-color: #2563eb;
     --shadow-color: rgba(0, 0, 0, 0.1);
     --shadow-hover: rgba(0, 0, 0, 0.15);
-    --bg-overlay: rgba(255, 255, 255, 0.2);
     --header-overlay: rgba(255, 255, 255, 0.95);
     /* 透明度变量由PHP动态设置，不在此处定义默认值 */
 }
