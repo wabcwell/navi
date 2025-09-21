@@ -89,12 +89,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         switch ($icon_type) {
             case 'fontawesome':
-                // 解析Font Awesome图标数据
-                $icon_info = json_decode($final_icon, true);
-                if ($icon_info && isset($icon_info['type']) && $icon_info['type'] === 'font') {
-                    $icon_data['icon_fontawesome'] = $icon_info['name'] ?? '';
-                    $icon_data['icon_fontawesome_color'] = $icon_info['color'] ?? $color;
-                }
+                // 直接使用Font Awesome图标类名（必须包含fas/far/fab前缀）
+                $icon_data['icon_fontawesome'] = $final_icon;
+                $icon_data['icon_fontawesome_color'] = $_POST['icon_fontawesome_color'] ?? $color;
                 // 清除其他图标类型的数据
                 $icon_data['icon_iconfont'] = null;
                 $icon_data['icon_upload'] = null;
@@ -442,12 +439,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
     switch(iconType) {
         case 'fontawesome':
             const iconValue = iconParams.icon_fontawesome;
-            const iconColor = iconParams.icon_fontawesome_color;
-            document.getElementById('final_icon').value = JSON.stringify({
-                type: 'font',
-                name: iconValue,
-                color: iconColor
-            });
+            document.getElementById('final_icon').value = iconValue;
             break;
         case 'iconfont':
             document.getElementById('final_icon').value = iconParams.icon_iconfont;
@@ -700,7 +692,6 @@ function updatePreview() {
     switch(iconType) {
         case 'fontawesome':
             const iconValue = document.getElementById('icon_fontawesome').value || 'fas fa-folder';
-            // 直接使用完整的图标类名，不再拼接前缀
             const iconColor = document.getElementById('icon_color').value;
             previewContainer.innerHTML = `<i class="${iconValue} fa-3x" style="color: ${iconColor};"></i>`;
             break;

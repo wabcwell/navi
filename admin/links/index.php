@@ -278,10 +278,6 @@ if (isset($_SESSION['success'])): ?>
                                             $iconColor = $link['icon_fontawesome_color'] ?? '#007bff';
                                             
                                             if ($iconClass) {
-                                                // 如果没有前缀，添加fas前缀
-                                                if (!preg_match('/^(fas|far|fab)\s/i', $iconClass)) {
-                                                    $iconClass = 'fas ' . $iconClass;
-                                                }
                                                 ?>
                                                 <i class="<?php echo htmlspecialchars($iconClass); ?>" 
                                                    style="font-size: 1.5rem; color: <?php echo htmlspecialchars($iconColor); ?>;"></i>

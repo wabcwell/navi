@@ -162,11 +162,6 @@ $site_logo_iconfont = $settings['site_logo_iconfont'] ?? '';
                     if ($iconType === 'fontawesome' && !empty($category['icon_fontawesome'])): 
                         $iconColor = $category['icon_fontawesome_color'] ?? $category['color'];
                         $iconClass = $category['icon_fontawesome'];
-                        
-                        // 确保有正确的前缀
-                        if (!preg_match('/^(fas|far|fab)\s/i', $iconClass)) {
-                            $iconClass = 'fas ' . $iconClass;
-                        }
                     ?>
                         <i class="<?php echo htmlspecialchars($iconClass); ?>" style="color: <?php echo htmlspecialchars($iconColor); ?>"></i>
                     <?php elseif ($iconType === 'upload' && !empty($category['icon_upload'])): ?>
@@ -215,10 +210,6 @@ $site_logo_iconfont = $settings['site_logo_iconfont'] ?? '';
                                         $iconColor = $link['icon_fontawesome_color'] ?? '#007bff';
                                         
                                         if ($iconClass) {
-                                            // 确保有正确的前缀
-                                            if (!preg_match('/^(fas|far|fab)\s/i', $iconClass)) {
-                                                $iconClass = 'fas ' . $iconClass;
-                                            }
                                             ?>
                                             <i class="<?php echo htmlspecialchars($iconClass); ?>" style="color: <?php echo htmlspecialchars($iconColor); ?>"></i>
                                             <?php

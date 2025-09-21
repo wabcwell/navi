@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         switch ($icon_type) {
             case 'fontawesome':
-                // 保存完整的图标类名（带fa-前缀）
+                // 保存完整的图标类名（必须包含fas/far/fab前缀）
                 $icon_name = trim($_POST['font_icon']);
                 $icon_data['icon_fontawesome'] = $icon_name;
                 $icon_data['icon_fontawesome_color'] = trim($_POST['icon_color']);
@@ -401,7 +401,6 @@ function updateIconPreview() {
     switch(iconType) {
         case 'fontawesome':
             const iconValue = document.getElementById('font_icon').value || 'fas fa-folder';
-            // 直接使用完整的图标类名，不再拼接前缀
             const iconColor = document.getElementById('icon_color').value;
             previewContainer.innerHTML = `<i class="${iconValue} fa-3x" style="color: ${iconColor};"></i>`;
             previewText.textContent = `Font Awesome: ${iconValue}`;

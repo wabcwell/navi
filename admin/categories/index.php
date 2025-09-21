@@ -229,10 +229,6 @@ if (isset($_SESSION['success'])): ?>
                                             // 显示Font Awesome图标
                                             if (!empty($category['icon_fontawesome'])):
                                                 $iconClass = trim($category['icon_fontawesome']);
-                                                // 确保有正确的前缀
-                                                if (!preg_match('/^(fas|far|fab)\s/i', $iconClass)) {
-                                                    $iconClass = 'fas ' . $iconClass;
-                                                }
                                                 $iconColor = $category['icon_fontawesome_color'] ?? $category['color'] ?? '#007bff';
                                                 ?>
                                                 <i class="<?php echo htmlspecialchars($iconClass); ?>" 
@@ -300,10 +296,6 @@ if (isset($_SESSION['success'])): ?>
                                             // 默认显示Font Awesome图标
                                             if (!empty($category['icon_fontawesome'])):
                                                 $iconClass = trim($category['icon_fontawesome']);
-                                                // 确保有正确的前缀
-                                                if (!preg_match('/^(fas|far|fab)\s/i', $iconClass)) {
-                                                    $iconClass = 'fas ' . $iconClass;
-                                                }
                                                 $iconColor = $category['icon_fontawesome_color'] ?? $category['color'] ?? '#007bff';
                                                 ?>
                                                 <i class="<?php echo htmlspecialchars($iconClass); ?>" 

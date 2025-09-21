@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (!isset($_POST['action']) || $_POST
             $icon_class = trim($_POST['icon_fontawesome'] ?? '');
             $icon_color = trim($_POST['icon_fontawesome_color'] ?? '#000000');
             if ($icon_class) {
-                // 验证Font Awesome图标类名格式
+                // 验证Font Awesome图标类名格式（必须包含fas/far/fab前缀）
                 if (!preg_match('/^fa[bsrlt]? [a-z0-9-]+$/', $icon_class)) {
                     $errors[] = '请输入有效的Font Awesome图标类名（例如：fas fa-home）';
                 } else {

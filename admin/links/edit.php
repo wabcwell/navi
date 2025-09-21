@@ -475,9 +475,8 @@ function openIconPicker() {
     });
 }
 
-// 选择图标 - 直接使用完整的图标类名，不再添加fa-前缀
+// 选择图标
 function selectIcon(iconName) {
-    // 直接使用完整的图标类名
     document.getElementById('icon_fontawesome').value = iconName;
     // 同步更新iconParams对象
     iconParams.icon_fontawesome = iconName;
@@ -696,11 +695,23 @@ if (linkForm) {
             alert('请输入Iconfont图标类名');
             return false;
         }
-        
+
         // 同步所有图标参数到表单字段（确保后端能接收到所有值）
         const finalIcon = document.getElementById('final_icon');
         if (finalIcon) {
             finalIcon.value = JSON.stringify(iconParams);
+        }
+        
+        // 验证Font Awesome图标
+        if (selectedIconType === 'fontawesome' && iconParams.icon_fontawesome) {
+            // 验证Font Awesome图标类名格式（必须包含fas/far/fab前缀）
+            const iconClass = iconParams.icon_fontawesome.trim();
+            const iconClassRegex = /^(fas|far|fab)\s+[\w-]+$/;
+            
+            if (!iconClassRegex.test(iconClass)) {
+                alert('Font Awesome图标类名格式不正确，必须包含fas/far/fab前缀，例如：fas fa-home');
+                return false;
+            }
         }
     });
 }
