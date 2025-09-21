@@ -9,6 +9,37 @@ if (!User::checkLogin()) {
 
 $settingsManager = get_settings_manager();
 
+// 处理AJAX背景图片上传
+if (isset($_GET['ajax_upload_background']) && $_GET['ajax_upload_background'] == '1') {
+    header('Content-Type: application/json');
+    
+    if (!isset($_FILES['background_image'])) {
+        echo json_encode(['success' => false, 'message' => '没有上传文件']);
+        exit();
+    }
+    
+    try {
+        // 使用统一的文件上传管理器
+        $fileUpload = get_file_upload_manager('backgrounds');
+        $fileUpload->setAllowedTypes(['jpg', 'jpeg', 'png', 'gif', 'webp']);
+        
+        $result = $fileUpload->upload($_FILES['background_image']);
+        
+        if ($result['success']) {
+            echo json_encode([
+                'success' => true, 
+                'file_name' => $result['file_name'],
+                'file_url' => $result['file_url']
+            ]);
+        } else {
+            echo json_encode(['success' => false, 'message' => $result['error']]);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => '上传失败: ' . $e->getMessage()]);
+    }
+    exit();
+}
+
 // 处理表单提交
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $errors = [];
@@ -19,24 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $background_color = $settingsManager->get('background_color');
     $background_api = $settingsManager->get('background_api');
     
-    // 处理背景图片上传
-    if ($background_type === 'image' && isset($_FILES['background_image_file']) && $_FILES['background_image_file']['error'] === UPLOAD_ERR_OK) {
-        $fileUpload = get_file_upload_manager('backgrounds');
-        $fileUpload->setAllowedTypes(['jpg', 'jpeg', 'png', 'gif', 'webp']);
-        $upload_result = $fileUpload->upload($_FILES['background_image_file']);
-        if ($upload_result['success']) {
-            // 删除旧背景图片
-            if ($background_image && strpos($background_image, 'http') !== 0) {
-                $old_bg_path = '../uploads/backgrounds/' . $background_image;
-                if (file_exists($old_bg_path)) {
-                    unlink($old_bg_path);
-                }
-            }
-            $background_image = $upload_result['file_name'];
-        } else {
-            $errors[] = $upload_result['error'];
-        }
-    } elseif ($background_type === 'api') {
+    // 处理背景设置（移除了文件上传处理，改为通过AJAX上传）
+    if ($background_type === 'api') {
         $background_image = trim($_POST['background_api_url'] ?? '');
     } elseif ($background_type === 'color') {
         $background_color = trim($_POST['background_color_value'] ?? '#ffffff');
@@ -44,6 +59,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($background_type === 'none') {
         $background_image = '';
         $background_color = '';
+    } elseif ($background_type === 'image') {
+        // 从隐藏字段获取上传的图片文件名
+        $uploaded_image = trim($_POST['background_image_uploaded'] ?? '');
+        if ($uploaded_image) {
+            // 删除旧背景图片
+            if ($background_image && strpos($background_image, 'http') !== 0) {
+                $old_bg_path = '../uploads/backgrounds/' . $background_image;
+                if (file_exists($old_bg_path)) {
+                    unlink($old_bg_path);
+                }
+            }
+            $background_image = $uploaded_image;
+        }
     }
     
     // 如果没有错误，保存设置
@@ -60,6 +88,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $settingsManager->set('links_area_transparency', max(0, min(1, floatval($_POST['links_area_transparency'] ?? 0.85))));
         $settingsManager->set('link_card_transparency', max(0, min(1, floatval($_POST['link_card_transparency'] ?? 0.85))));
         
+        // 保存上传的图片路径（如果有）
+        if (isset($_POST['background_image_uploaded']) && !empty($_POST['background_image_uploaded'])) {
+            // 保存完整路径，确保包含 /uploads/backgrounds/ 路径
+            $image_path = $_POST['background_image_uploaded'];
+            if (strpos($image_path, '/uploads/backgrounds/') !== 0 && strpos($image_path, 'http') !== 0) {
+                $image_path = '/uploads/backgrounds/' . $image_path;
+            }
+            $settingsManager->set('background_image', $image_path);
+        }
+        
         // 保存iconfont设置
         $settingsManager->set('iconfont', trim($_POST['iconfont'] ?? ''));
         
@@ -69,6 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'background_type' => $_POST['background_type'] ?? 'color',
             'background_color' => $_POST['background_color_value'] ?? '',
             'background_api' => $_POST['background_api_url'] ?? '',
+            'background_image_uploaded' => $_POST['background_image_uploaded'] ?? '',
             'bg_overlay' => $_POST['bg_overlay'] ?? 0.2,
             'header_bg_transparency' => $_POST['header_bg_transparency'] ?? 0.85,
             'category_bg_transparency' => $_POST['category_bg_transparency'] ?? 0.85,
@@ -130,6 +169,26 @@ include '../templates/header.php'; ?>
     text-align: center;
     color: #6c757d;
     font-size: 14px;
+}
+
+/* 背景预览区域样式优化 */
+#background_preview {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    width: 100%;
+    height: 200px;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    position: relative;
+    overflow: hidden;
+}
+
+#background_preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
 }
 </style>
 
@@ -215,16 +274,28 @@ include '../templates/header.php'; ?>
 
                             <div id="bg_image_section" class="mb-3" style="display: <?php echo $settings['background_type'] === 'image' ? 'block' : 'none'; ?>">
                                 <label for="background_image_file" class="form-label">选择背景图片</label>
-                                <input type="file" class="form-control" id="background_image_file" name="background_image_file" 
-                                       accept=".jpg,.jpeg,.png,.gif,.webp">
-                                <?php if ($settings['background_type'] === 'image' && $settings['background_image'] && strpos($settings['background_image'], 'http') !== 0): ?>
-                                    <div class="mt-2">
-                                        <img src="../../uploads/backgrounds/<?php echo $settings['background_image']; ?>" 
-                                             alt="当前背景" style="max-height: 150px;" class="img-thumbnail">
-                                        <input type="hidden" name="background_image_existing" value="<?php echo $settings['background_image']; ?>">
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="background_image_file" name="background_image_file" 
+                                           accept=".jpg,.jpeg,.png,.gif,.webp">
+                                    <button type="button" class="btn btn-outline-secondary" id="upload_background_btn" disabled>
+                                        <i class="bi bi-upload"></i> 上传
+                                    </button>
+                                </div>
+                                <div id="upload_status" class="mt-2" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle"></i> 正在上传图片...
                                     </div>
-                                <?php endif; ?>
+                                </div>
+                                <div id="upload_result" class="mt-2" style="display: none;">
+                                    <div class="alert alert-success">
+                                        <i class="bi bi-check-circle"></i> 图片上传成功！
+                                    </div>
+                                </div>
                                 <div class="form-text">支持 JPG、PNG、GIF、WebP 格式</div>
+                                <!-- 隐藏字段用于存储上传的图片文件名 -->
+                                <input type="hidden" id="background_image_uploaded" name="background_image_uploaded" value="">
+                                <!-- 隐藏字段用于存储现有的背景图片 -->
+                                <input type="hidden" id="background_image_existing" name="background_image_existing" value="<?php echo htmlspecialchars($settings['background_image'] ?? ''); ?>">
                             </div>
 
                             <div id="bg_color_section" class="mb-3" style="display: <?php echo $settings['background_type'] === 'color' ? 'block' : 'none'; ?>">
@@ -343,10 +414,106 @@ include '../templates/header.php'; ?>
 </div>
 
 <script>
+// 背景图片上传功能
+function initBackgroundUpload() {
+    const fileInput = document.getElementById('background_image_file');
+    const uploadBtn = document.getElementById('upload_background_btn');
+    const uploadStatus = document.getElementById('upload_status');
+    const uploadResult = document.getElementById('upload_result');
+    // 移除了current_background_preview区域，使用右侧主要预览区域代替
+    const uploadedImageField = document.getElementById('background_image_uploaded');
+    
+    // 文件选择变化时启用/禁用上传按钮
+    fileInput.addEventListener('change', function() {
+        uploadBtn.disabled = !this.files.length;
+    });
+    
+    // 上传按钮点击事件
+    uploadBtn.addEventListener('click', function() {
+        const file = fileInput.files[0];
+        if (!file) {
+            alert('请先选择图片文件');
+            return;
+        }
+        
+        // 显示上传状态
+        uploadStatus.style.display = 'block';
+        uploadResult.style.display = 'none';
+        uploadBtn.disabled = true;
+        
+        // 创建FormData对象
+        const formData = new FormData();
+        formData.append('background_image', file);
+        
+        // 发送AJAX请求 - 使用统一的文件上传接口
+        fetch('appearance.php?ajax_upload_background=1', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            uploadStatus.style.display = 'none';
+            
+            if (data.success) {
+                // 显示成功消息
+                uploadResult.style.display = 'block';
+                
+                // 更新隐藏字段
+                uploadedImageField.value = data.file_name;
+                
+                // 重置文件输入控件
+                fileInput.value = '';
+                uploadBtn.disabled = true;
+                
+                // 立即更新右侧主要预览区域
+                const mainPreview = document.getElementById('background_preview');
+                const placeholder = document.getElementById('preview_placeholder');
+                if (mainPreview && placeholder) {
+                    // 创建图片对象来预加载，确保图片能正常加载
+                    const img = new Image();
+                    img.onload = function() {
+                        mainPreview.style.backgroundImage = `url(${data.file_url})`;
+                        mainPreview.style.backgroundColor = '';
+                        placeholder.style.display = 'none';
+                    };
+                    img.onerror = function() {
+                        console.error('图片加载失败:', data.file_url);
+                        // 即使加载失败，也尝试设置背景
+                        mainPreview.style.backgroundImage = `url(${data.file_url})`;
+                        mainPreview.style.backgroundColor = '';
+                        placeholder.style.display = 'none';
+                    };
+                    img.src = data.file_url;
+                }
+                
+                // 3秒后隐藏成功消息
+                setTimeout(() => {
+                    uploadResult.style.display = 'none';
+                }, 3000);
+            } else {
+                // 显示错误消息
+                uploadResult.innerHTML = `<div class="alert alert-danger"><i class="bi bi-exclamation-circle"></i> ${data.error}</div>`;
+                uploadResult.style.display = 'block';
+                uploadBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            uploadStatus.style.display = 'none';
+            uploadResult.innerHTML = '<div class="alert alert-danger"><i class="bi bi-exclamation-circle"></i> 上传失败，请重试</div>';
+            uploadResult.style.display = 'block';
+            uploadBtn.disabled = false;
+            console.error('Upload error:', error);
+        });
+    });
+}
+
 // 背景设置相关函数
 document.addEventListener('DOMContentLoaded', function() {
     // 初始化背景预览
     updateBackgroundPreview();
+    
+    // 初始化背景图片上传功能
+    initBackgroundUpload();
     
     // 绑定背景类型切换事件
     document.querySelectorAll('input[name="background_type"]').forEach(radio => {
@@ -422,9 +589,27 @@ function updateBackgroundPreview() {
     const placeholder = document.getElementById('preview_placeholder');
     
     if (bgType === 'image') {
-        const existingImage = document.querySelector('input[name="background_image_existing"]');
-        if (existingImage && existingImage.value) {
-            preview.style.backgroundImage = 'url(../../uploads/backgrounds/' + existingImage.value + ')';
+        // 优先检查新上传的图片
+        const uploadedImage = document.getElementById('background_image_uploaded');
+        const existingImage = document.getElementById('background_image_existing');
+        
+        let imagePath = '';
+        if (uploadedImage && uploadedImage.value) {
+            imagePath = uploadedImage.value;
+        } else if (existingImage && existingImage.value) {
+            imagePath = existingImage.value;
+        }
+        
+        if (imagePath) {
+            // 如果路径不包含 /uploads/backgrounds/，添加相对路径前缀
+            let fullPath = imagePath;
+            if (imagePath.indexOf('/uploads/backgrounds/') !== 0 && imagePath.indexOf('http') !== 0) {
+                fullPath = '../../uploads/backgrounds/' + imagePath;
+            }
+            preview.style.backgroundImage = 'url(' + fullPath + ')';
+            preview.style.backgroundSize = 'cover';
+            preview.style.backgroundPosition = 'center';
+            preview.style.backgroundRepeat = 'no-repeat';
             preview.style.backgroundColor = '';
             placeholder.style.display = 'none';
         } else {
@@ -441,6 +626,9 @@ function updateBackgroundPreview() {
         const apiUrl = document.getElementById('background_api_url').value;
         if (apiUrl) {
             preview.style.backgroundImage = 'url(' + apiUrl + ')';
+            preview.style.backgroundSize = 'cover';
+            preview.style.backgroundPosition = 'center';
+            preview.style.backgroundRepeat = 'no-repeat';
             preview.style.backgroundColor = '';
             placeholder.style.display = 'none';
         } else {
