@@ -5,9 +5,9 @@ require_once '../includes/fontawesome-icons.php';
 // 获取Font Awesome图标列表
 $fontAwesomeIcons = getFontAwesomeIcons();
 
-// 检查登录状态
+// 检查是否登录
 if (!User::checkLogin()) {
-    header('Location: login.php');
+    header('Location: ../login.php');
     exit();
 }
 
