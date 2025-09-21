@@ -1,5 +1,5 @@
 <?php
-require_once '../includes/load.php';
+require_once __DIR__ . '../includes/load.php';
 
 // 检查是否登录
 if (!User::checkLogin()) {
@@ -113,12 +113,12 @@ try {
     
     // 为每个分类添加链接计数
     $database = get_database();
-    foreach ($categories as &$category) {
+    foreach ($categories as $key => $category) {
         $stmt = $database->query(
             "SELECT COUNT(*) FROM navigation_links WHERE category_id = ?", 
             [$category['id']]
         );
-        $category['link_count'] = $stmt->fetchColumn();
+        $categories[$key]['link_count'] = $stmt->fetchColumn();
     }
 }
 
