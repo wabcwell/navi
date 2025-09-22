@@ -492,8 +492,8 @@ include '../templates/header.php'; ?>
                                             <input type="text" class="form-control" id="site_logo_icon" name="site_logo_icon" 
                                                    placeholder="输入或选择图标，如: fas fa-home"
                                                    value="<?php echo htmlspecialchars($settings['site_logo_icon'] ?? 'fas fa-home'); ?>">
-                                            <button type="button" class="btn btn-outline-secondary" id="openLogoIconPicker">
-                                                <i class="fas fa-icons"></i>
+                                            <button type="button" class="btn btn-outline-secondary" onclick="openLogoIconPicker()">
+                                                <i class="bi bi-grid-3x3-gap"></i>
                                             </button>
                                         </div>
                                         <small class="form-text text-muted">支持直接输入图标类名，或点击右侧按钮选择图标</small>
@@ -845,10 +845,39 @@ document.getElementById('site_logo').addEventListener('change', function() {
             });
         }
 
+        // 选择Logo图标
+        function selectLogoIcon(iconName) {
+            document.getElementById('site_logo_icon').value = iconName;
+            updateLogoPreview();
+            const modal = document.querySelector('.modal.show');
+            if (modal) {
+                bootstrap.Modal.getInstance(modal).hide();
+            }
+        }
+        
         // 打开Logo图标选择器
         function openLogoIconPicker() {
             const modal = document.createElement('div');
             modal.className = 'modal fade';
+            
+            // 构建图标网格HTML - 使用与分类页面一致的样式
+            let iconGridHTML = '';
+            const icons = <?php echo json_encode(getFontAwesomeIcons()); ?>;
+            icons.forEach(icon => {
+                iconGridHTML += `
+                    <div class="col-2">
+                        <button type="button" class="btn btn-outline-secondary icon-btn p-1" 
+                                onclick="selectLogoIcon('${icon}')" title="${icon}" style="width: 120px; height: 100px;">
+                            <div class="d-flex flex-column h-100">
+                                <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                                    <i class="${icon} fa-lg"></i>
+                                </div>
+                                <div class="text-muted small text-center" style="font-size: 0.8rem; line-height: 1.2; max-width: 100%; margin-top: auto; word-break: keep-all; overflow-wrap: break-word; padding: 0 2px;">${icon}</div>
+                            </div>
+                        </button>
+                    </div>`;
+            });
+            
             modal.innerHTML = `
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
@@ -858,21 +887,11 @@ document.getElementById('site_logo').addEventListener('change', function() {
                         </div>
                         <div class="modal-body">
                             <div class="mb-3">
-                                <input type="text" class="form-control" id="iconSearch" placeholder="搜索图标...">
+                                <input type="text" class="form-control" id="iconSearch" placeholder="搜索图标... (使用英文单词搜索)">
                             </div>
-                            <div class="icon-grid" id="iconGrid" style="max-height: 400px; overflow-y: auto;">
-                                <?php
-                                $icons = getFontAwesomeIcons();
-                                foreach ($icons as $icon):
-                                ?>
-                                <div class="icon-item" data-icon="<?php echo htmlspecialchars($icon); ?>" style="cursor: pointer; padding: 10px; text-align: center; display: inline-block; width: 80px;">
-                                    <i class="<?php echo htmlspecialchars($icon); ?> fa-2x"></i><br><small><?php echo htmlspecialchars($icon); ?></small>
-                                </div>
-                                <?php endforeach; ?>
+                            <div class="row g-2" id="iconGrid" style="max-height: 400px; overflow-y: auto;">
+                                ${iconGridHTML}
                             </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                         </div>
                     </div>
                 </div>
@@ -882,28 +901,13 @@ document.getElementById('site_logo').addEventListener('change', function() {
             const bsModal = new bootstrap.Modal(modal);
             bsModal.show();
             
-            // 图标选择事件
-            modal.querySelectorAll('.icon-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const iconName = this.getAttribute('data-icon');
-                    document.getElementById('site_logo_icon').value = iconName;
-                    updateLogoPreview();
-                    bsModal.hide();
-                    // 让Bootstrap的hidden事件处理清理工作，避免重复移除
-                });
-            });
-            
             // 搜索功能
             modal.querySelector('#iconSearch').addEventListener('input', function() {
-                const search = this.value.toLowerCase();
-                modal.querySelectorAll('.icon-item').forEach(item => {
-                    const iconName = item.getAttribute('data-icon').toLowerCase();
-                    const smallText = item.querySelector('small').textContent.toLowerCase();
-                    if (iconName.includes(search) || smallText.includes(search)) {
-                        item.style.display = 'inline-block';
-                    } else {
-                        item.style.display = 'none';
-                    }
+                const searchTerm = this.value.toLowerCase();
+                const buttons = modal.querySelectorAll('.icon-btn');
+                buttons.forEach(btn => {
+                    const iconName = btn.getAttribute('title');
+                    btn.parentElement.style.display = iconName.includes(searchTerm) ? 'block' : 'none';
                 });
             });
             

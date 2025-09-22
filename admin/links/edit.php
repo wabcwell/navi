@@ -273,8 +273,8 @@ include '../templates/header.php';
                                                 <input type="text" class="form-control" id="icon_fontawesome" name="icon_fontawesome" 
                                                    placeholder="输入图标类名，如: fas fa-home"
                                                    value="<?php echo htmlspecialchars($link['icon_fontawesome'] ?? ''); ?>">
-                                                <button type="button" class="btn btn-outline-secondary" id="openIconPicker">
-                                                    <i class="fas fa-icons"></i>
+                                                <button type="button" class="btn btn-outline-secondary" onclick="openIconPicker()">
+                                                    <i class="bi bi-grid-3x3-gap"></i>
                                                 </button>
                                             </div>
                                         </div>
@@ -421,9 +421,14 @@ function openIconPicker() {
     fontAwesomeIcons.forEach(icon => {
         iconGridHTML += `
             <div class="col-2">
-                <button type="button" class="btn btn-outline-secondary w-100 icon-btn" 
-                        onclick="selectIcon('${icon}')" title="${icon}">
-                    <i class="${icon} fa-lg"></i>
+                <button type="button" class="btn btn-outline-secondary icon-btn p-1" 
+                        onclick="selectIcon('${icon}')" title="${icon}" style="width: 120px; height: 100px;">
+                    <div class="d-flex flex-column h-100">
+                        <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                            <i class="${icon} fa-lg"></i>
+                        </div>
+                        <div class="text-muted small text-center" style="font-size: 0.8rem; line-height: 1.2; max-width: 100%; margin-top: auto; word-break: keep-all; overflow-wrap: break-word; padding: 0 2px;">${icon}</div>
+                    </div>
                 </button>
             </div>`;
     });
@@ -495,9 +500,7 @@ function selectIcon(iconName) {
     }
 }
 
-document.getElementById('openIconPicker').addEventListener('click', function() {
-    openIconPicker();
-});
+
 
 // 更新图标预览
 function updatePreview() {

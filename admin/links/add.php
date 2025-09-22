@@ -314,7 +314,7 @@ include '../templates/header.php';
                                        value="<?php echo htmlspecialchars($default_icon ?? 'fas fa-link'); ?>" 
                                        placeholder="输入图标类名，如: fas fa-home">
                                     <button type="button" class="btn btn-outline-primary" onclick="openIconPicker()">
-                                        <i class="fas fa-icons"></i> 选择图标
+                                        <i class="bi bi-grid-3x3-gap"></i>
                                     </button>
                                 </div>
                                 
@@ -526,9 +526,14 @@ function openIconPicker() {
     fontAwesomeIcons.forEach(icon => {
         iconGridHTML += `
             <div class="col-2">
-                <button type="button" class="btn btn-outline-secondary w-100 icon-btn" 
-                        onclick="selectIcon('${icon}')" title="${icon}">
-                    <i class="${icon} fa-lg"></i>
+                <button type="button" class="btn btn-outline-secondary icon-btn p-1" 
+                        onclick="selectIcon('${icon}')" title="${icon}" style="width: 120px; height: 100px;">
+                    <div class="d-flex flex-column h-100">
+                        <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                            <i class="${icon} fa-lg"></i>
+                        </div>
+                        <div class="text-muted small text-center" style="font-size: 0.8rem; line-height: 1.2; max-width: 100%; margin-top: auto; word-break: keep-all; overflow-wrap: break-word; padding: 0 2px;">${icon}</div>
+                    </div>
                 </button>
             </div>`;
     });

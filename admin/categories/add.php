@@ -460,14 +460,19 @@ function openIconPicker() {
     modalDiv.tabIndex = -1;
     modalDiv.setAttribute('aria-hidden', 'true');
     
-    // 构建图标网格HTML - 直接使用完整的图标类名
+    // 构建图标网格HTML - 直接使用完整的图标类名，同时显示图标和代码
     let iconGridHTML = '';
     fontAwesomeIcons.forEach(icon => {
         iconGridHTML += `
             <div class="col-2">
-                <button type="button" class="btn btn-outline-secondary w-100 icon-btn" 
-                        onclick="selectIcon('${icon}')" title="${icon}">
-                    <i class="${icon} fa-lg"></i>
+                <button type="button" class="btn btn-outline-secondary icon-btn p-1" 
+                        onclick="selectIcon('${icon}')" title="${icon}" style="width: 120px; height: 100px;">
+                    <div class="d-flex flex-column h-100">
+                        <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                            <i class="${icon} fa-lg"></i>
+                        </div>
+                        <div class="text-muted small text-center" style="font-size: 0.8rem; line-height: 1.2; max-width: 100%; margin-top: auto; word-break: keep-all; overflow-wrap: break-word; padding: 0 2px;">${icon}</div>
+                    </div>
                 </button>
             </div>`;
     });
