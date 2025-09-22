@@ -489,11 +489,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             ['title' => 'Figma', 'url' => 'https://figma.com', 'description' => '在线设计协作工具', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fab fa-figma'],
             ['title' => 'Adobe Creative Cloud', 'url' => 'https://creativecloud.com', 'description' => 'Adobe创意套件', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-magic'],
             ['title' => 'Canva', 'url' => 'https://www.canva.com', 'description' => '在线设计平台', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-palette'],
-            ['title' => 'Unsplash', 'url' => 'https://unsplash.com', 'description' => '免费高质量图片', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-camera'],
+            ['title' => 'Unsplash', 'url' => 'https://unsplash.com', 'description' => '免费高质量图片', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-image'],
             ['title' => 'Pexels', 'url' => 'https://www.pexels.com', 'description' => '免费图片和视频', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-camera'],
             ['title' => 'Freepik', 'url' => 'https://www.freepik.com', 'description' => '免费设计素材', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-paint-brush'],
             ['title' => 'Iconfont', 'url' => 'https://www.iconfont.cn', 'description' => '阿里巴巴矢量图标库', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-icons'],
-            ['title' => 'LottieFiles', 'url' => 'https://lottiefiles.com', 'description' => '动画设计资源', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-play-circle'],
+            ['title' => 'LottieFiles', 'url' => 'https://lottiefiles.com', 'description' => '动画设计资源', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-file-video'],
             
             // 学习平台 (10个)
             ['title' => 'Coursera', 'url' => 'https://www.coursera.org', 'description' => '在线课程平台', 'category' => '学习平台', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-graduation-cap'],
@@ -511,7 +511,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             ['title' => 'TechCrunch', 'url' => 'https://techcrunch.com', 'description' => '科技新闻网站', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-newspaper'],
             ['title' => 'The Verge', 'url' => 'https://www.theverge.com', 'description' => '科技新闻和评论', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-laptop'],
             ['title' => 'Ars Technica', 'url' => 'https://arstechnica.com', 'description' => '科技新闻和分析', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-microchip'],
-            ['title' => 'Engadget', 'url' => 'https://engadget.com', 'description' => '科技新闻和评测', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-mobile-alt'],
+            ['title' => 'Engadget', 'url' => 'https://engadget.com', 'description' => '科技新闻和评测', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-tablet-alt'],
             ['title' => '36氪', 'url' => 'https://36kr.com', 'description' => '科技创业资讯', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-rocket'],
             ['title' => '虎嗅', 'url' => 'https://www.huxiu.com', 'description' => '科技商业资讯', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-chart-line'],
             ['title' => '品玩', 'url' => 'https://www.pingwest.com', 'description' => '科技生活方式', 'category' => '新闻资讯', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-lightbulb'],
@@ -527,7 +527,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             ['title' => '腾讯云', 'url' => 'https://cloud.tencent.com', 'description' => '腾讯云服务', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-server'],
             ['title' => '华为云', 'url' => 'https://www.huaweicloud.com', 'description' => '华为云服务', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-network-wired'],
             ['title' => '百度云', 'url' => 'https://cloud.baidu.com', 'description' => '百度云服务', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-database'],
-            ['title' => 'DigitalOcean', 'url' => 'https://www.digitalocean.com', 'description' => '云服务器提供商', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-server'],
+            ['title' => 'DigitalOcean', 'url' => 'https://www.digitalocean.com', 'description' => '云服务器提供商', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-water'],
             ['title' => 'Vercel', 'url' => 'https://vercel.com', 'description' => '前端部署平台', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-rocket'],
             ['title' => 'Netlify', 'url' => 'https://www.netlify.com', 'description' => '静态网站托管', 'category' => '云服务', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-sitemap'],
             
@@ -540,8 +540,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             ['title' => 'Epic Games', 'url' => 'https://www.epicgames.com', 'description' => '游戏平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-gamepad'],
             ['title' => '网易云音乐', 'url' => 'https://music.163.com', 'description' => '音乐流媒体', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-music'],
             ['title' => 'QQ音乐', 'url' => 'https://y.qq.com', 'description' => '在线音乐平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-headphones'],
-            ['title' => '抖音', 'url' => 'https://www.douyin.com', 'description' => '短视频平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-video'],
-            ['title' => '快手', 'url' => 'https://www.kuaishou.com', 'description' => '短视频平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-play-circle']
+            ['title' => '抖音', 'url' => 'https://www.douyin.com', 'description' => '短视频平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-mobile-alt'],
+            ['title' => '快手', 'url' => 'https://www.kuaishou.com', 'description' => '短视频平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-video']
         ];
 
         // 获取分类ID映射
