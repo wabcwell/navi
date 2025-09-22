@@ -363,8 +363,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
                 'description' => '主流社交平台',
 				'icon_type' => 'fontawesome', 
                 'icon_fontawesome' => 'fas fa-users',
-                'icon_fontawesome_color' => '#f27a18',
-                'color' => '#f27a18',
+                'icon_fontawesome_color' => '#f2a218',
+                'color' => '#f2a218',
                 'order_index' => 2,
                 'is_active' => 1
             ],
