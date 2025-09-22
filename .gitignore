@@ -32,5 +32,6 @@ admin\includes\init.php
 settings.sql
 test_admin_display_final.php
 test_admin_display.php
+import_chinese.php
 # 忽略admin目录下的README.md
 admin/README.md
