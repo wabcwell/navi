@@ -140,7 +140,7 @@ $site_logo_iconfont = $settings['site_logo_iconfont'] ?? '';
                             <use xlink:href="#<?php echo htmlspecialchars($site_logo_iconfont); ?>"></use>
                         </svg>
                     <?php else: ?>
-                        <i class="<?php echo htmlspecialchars($site_logo_icon); ?>" style="margin-right: 10px;"></i>
+                        <i class="fas fa-compass" style="margin-right: 10px;"></i>
                     <?php endif; ?>
                     <a href="index.php" style="color: inherit; text-decoration: none;"><?php echo htmlspecialchars($site_name); ?></a>
                 </h1>
@@ -309,7 +309,6 @@ $site_logo_iconfont = $settings['site_logo_iconfont'] ?? '';
                 <?php echo $footer_content; ?>
             </div>
             <div class="footer-links">
-                <a href="index.php">首页</a>
                 <a href="?page=admin">管理</a>
             </div>
         </div>
@@ -330,11 +329,15 @@ $site_logo_iconfont = $settings['site_logo_iconfont'] ?? '';
             
             if (backgroundType === 'image' && backgroundImage) {
                 document.body.classList.add('has-bg-image');
-                document.body.style.backgroundImage = `url('uploads/backgrounds/${backgroundImage}')`;
+                // 处理背景图片路径，确保正确使用相对路径
+                const imagePath = backgroundImage.startsWith('/') ? backgroundImage.substring(1) : backgroundImage;
+                document.body.style.backgroundImage = `url('${imagePath}')`;
                 document.body.style.backgroundSize = 'cover';
                 document.body.style.backgroundPosition = 'center';
                 document.body.style.backgroundRepeat = 'no-repeat';
                 document.body.style.backgroundColor = backgroundColor;
+                // 移除body透明度设置，避免整个页面半透明
+                // document.body.style.opacity = backgroundOpacity;
             } else if (backgroundType === 'api' && backgroundApi) {
                 document.body.classList.add('has-bg-image');
                 document.body.style.backgroundImage = `url('${backgroundApi}')`;
@@ -342,10 +345,19 @@ $site_logo_iconfont = $settings['site_logo_iconfont'] ?? '';
                 document.body.style.backgroundPosition = 'center';
                 document.body.style.backgroundRepeat = 'no-repeat';
                 document.body.style.backgroundColor = backgroundColor;
+                // 移除body透明度设置，避免整个页面半透明
+                // document.body.style.opacity = backgroundOpacity;
             } else if (backgroundType === 'color') {
                 document.body.classList.add('bg-color');
                 document.body.style.backgroundColor = backgroundColor;
+                // 移除body透明度设置，避免整个页面半透明
+                // document.body.style.opacity = backgroundOpacity;
             }
+            
+            // 移除背景覆盖层透明度设置，避免蒙层效果
+            // if (backgroundOpacity && backgroundOpacity !== 1) {
+            //     document.documentElement.style.setProperty('--bg-overlay', 'rgba(255, 255, 255, ' + (1 - backgroundOpacity) + ')');
+            // }
         });
 
         // 搜索功能
