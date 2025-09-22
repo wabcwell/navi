@@ -253,6 +253,9 @@ $overlay = $settings['bg-overlay'] ?? 0.2;
             </div>
             <div class="footer-links">
                 <a href="?page=admin">管理</a>
+                <a href="https://github.com/wabcwell/navi" target="_blank" rel="noopener noreferrer">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
             </div>
         </div>
     </footer>

@@ -117,6 +117,12 @@
                     <span>系统设置</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="https://github.com/wabcwell/navi" target="_blank" rel="noopener noreferrer">
+                    <i class="bi bi-github"></i>
+                    <span>GitHub</span>
+                </a>
+            </li>
         </ul>
         
         <div class="sidebar-footer">
