@@ -329,7 +329,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             // 透明度设置
             'header_bg_transparency' => '0.65',
             'category_bg_transparency' => '0.65',
-            'links_area_transparency' => '0.45',
+            'links_area_transparency' => '0.85',
             'link_card_transparency' => '0.65',
             'bg-overlay' => '0.35',
             
@@ -487,7 +487,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             ['title' => 'Dribbble', 'url' => 'https://dribbble.com', 'description' => '设计师作品展示平台', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fab fa-dribbble'],
             ['title' => 'Behance', 'url' => 'https://behance.net', 'description' => '创意设计作品展示', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fab fa-behance'],
             ['title' => 'Figma', 'url' => 'https://figma.com', 'description' => '在线设计协作工具', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fab fa-figma'],
-            ['title' => 'Adobe Creative Cloud', 'url' => 'https://creativecloud.com', 'description' => 'Adobe创意套件', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fab fa-adobe'],
+            ['title' => 'Adobe Creative Cloud', 'url' => 'https://creativecloud.com', 'description' => 'Adobe创意套件', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-magic'],
             ['title' => 'Canva', 'url' => 'https://www.canva.com', 'description' => '在线设计平台', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-palette'],
             ['title' => 'Unsplash', 'url' => 'https://unsplash.com', 'description' => '免费高质量图片', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-camera'],
             ['title' => 'Pexels', 'url' => 'https://www.pexels.com', 'description' => '免费图片和视频', 'category' => '设计资源', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-camera'],
