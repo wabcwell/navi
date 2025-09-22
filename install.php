@@ -456,8 +456,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             ['title' => '搜狗', 'url' => 'https://www.sogou.com', 'description' => '搜狗搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-spider'],
             ['title' => '360搜索', 'url' => 'https://www.so.com', 'description' => '360搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-binoculars'],
             ['title' => 'Ecosia', 'url' => 'https://www.ecosia.org', 'description' => '环保搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-telescope'],
-            ['title' => 'Startpage', 'url' => 'https://www.startpage.com', 'description' => '隐私搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-radar'],
-            ['title' => 'Qwant', 'url' => 'https://www.qwant.com', 'description' => '欧洲隐私搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-radar-dish'],
+            ['title' => 'Startpage', 'url' => 'https://www.startpage.com', 'description' => '隐私搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-satellite-dish'],
+            ['title' => 'Qwant', 'url' => 'https://www.qwant.com', 'description' => '欧洲隐私搜索引擎', 'category' => '搜索引擎', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-satellite'],
             
             // 社交媒体 (10个)
             ['title' => '微博', 'url' => 'https://weibo.com', 'description' => '中国主流社交媒体平台', 'category' => '社交媒体', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-share-nodes'],
@@ -476,10 +476,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             ['title' => 'GitLab', 'url' => 'https://gitlab.com', 'description' => 'DevOps平台', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-bug-slash'],
             ['title' => 'VS Code', 'url' => 'https://code.visualstudio.com', 'description' => '微软代码编辑器', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-file-code'],
             ['title' => 'Stack Overflow', 'url' => 'https://stackoverflow.com', 'description' => '程序员问答社区', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-diagram-project'],
-            ['title' => 'MDN Web Docs', 'url' => 'https://developer.mozilla.org', 'description' => 'Web开发文档', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-chart-network'],
-            ['title' => 'npm', 'url' => 'https://www.npmjs.com', 'description' => 'Node.js包管理器', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-function'],
-            ['title' => 'Docker Hub', 'url' => 'https://hub.docker.com', 'description' => '容器镜像仓库', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-brackets-curly'],
-            ['title' => 'Postman', 'url' => 'https://www.postman.com', 'description' => 'API测试工具', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-brackets-square'],
+            ['title' => 'MDN Web Docs', 'url' => 'https://developer.mozilla.org', 'description' => 'Web开发文档', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-chart-line'],
+            ['title' => 'npm', 'url' => 'https://www.npmjs.com', 'description' => 'Node.js包管理器', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-code'],
+            ['title' => 'Docker Hub', 'url' => 'https://hub.docker.com', 'description' => '容器镜像仓库', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-code-branch'],
+            ['title' => 'Postman', 'url' => 'https://www.postman.com', 'description' => 'API测试工具', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-code-merge'],
             ['title' => 'CodePen', 'url' => 'https://codepen.io', 'description' => '前端代码在线编辑器', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-hashtag'],
             ['title' => 'JSFiddle', 'url' => 'https://jsfiddle.net', 'description' => '在线代码测试工具', 'category' => '开发工具', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-database'],
             
@@ -533,13 +533,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             
             // 娱乐休闲 (10个)
             ['title' => 'YouTube', 'url' => 'https://www.youtube.com', 'description' => '全球最大的视频网站', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-tv'],
-            ['title' => 'Bilibili', 'url' => 'https://www.bilibili.com', 'description' => '哔哩哔哩视频网站', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-tv-retro'],
+            ['title' => 'Bilibili', 'url' => 'https://www.bilibili.com', 'description' => '哔哩哔哩视频网站', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-tv'],
             ['title' => 'Netflix', 'url' => 'https://www.netflix.com', 'description' => '在线流媒体平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-display'],
             ['title' => 'Spotify', 'url' => 'https://www.spotify.com', 'description' => '音乐流媒体平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-compact-disc'],
-            ['title' => 'Steam', 'url' => 'https://store.steampowered.com', 'description' => '游戏购买平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-gamepad-modern'],
+            ['title' => 'Steam', 'url' => 'https://store.steampowered.com', 'description' => '游戏购买平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-gamepad'],
             ['title' => 'Epic Games', 'url' => 'https://www.epicgames.com', 'description' => '游戏平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-gamepad'],
             ['title' => '网易云音乐', 'url' => 'https://music.163.com', 'description' => '音乐流媒体', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-record-vinyl'],
-            ['title' => 'QQ音乐', 'url' => 'https://y.qq.com', 'description' => '在线音乐平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-cassette-tape'],
+            ['title' => 'QQ音乐', 'url' => 'https://y.qq.com', 'description' => '在线音乐平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-compact-disc'],
             ['title' => '抖音', 'url' => 'https://www.douyin.com', 'description' => '短视频平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-mobile-screen-button'],
             ['title' => '快手', 'url' => 'https://www.kuaishou.com', 'description' => '短视频平台', 'category' => '娱乐休闲', 'icon_type' => 'fontawesome', 'icon_fontawesome_color' => '#007bff', 'icon_fontawesome' => 'fas fa-photo-film']
         ];
