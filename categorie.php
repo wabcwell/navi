@@ -309,6 +309,7 @@ $site_logo_iconfont = $settings['site_logo_iconfont'] ?? '';
                 <?php echo $footer_content; ?>
             </div>
             <div class="footer-links">
+                <a href="./">首页</a>
                 <a href="?page=admin">管理</a>
                 <a href="https://github.com/wabcwell/navi" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-github"></i> GitHub

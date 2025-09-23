@@ -79,7 +79,7 @@ $overlay = $settings['bg-overlay'] ?? 0.2;
                     <?php else: ?>
                         <i class="fas fa-compass" style="margin-right: 10px;"></i>
                     <?php endif; ?>
-                    <?php echo htmlspecialchars($site_name); ?>
+                    <a href="./" style="color: inherit; text-decoration: none;"><?php echo htmlspecialchars($site_name); ?></a>
                 </h1>
                 <p class="subtitle"><?php echo htmlspecialchars($site_description); ?></p>
             </div>
@@ -252,6 +252,7 @@ $overlay = $settings['bg-overlay'] ?? 0.2;
                 <?php echo $footer_content; ?>
             </div>
             <div class="footer-links">
+                <a href="./">首页</a>
                 <a href="?page=admin">管理</a>
                 <a href="https://github.com/wabcwell/navi" target="_blank" rel="noopener noreferrer">
                     <i class="fab fa-github"></i> GitHub
