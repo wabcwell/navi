@@ -195,6 +195,78 @@ include '../templates/header.php'; ?>
     object-fit: cover;
     object-position: center;
 }
+
+/* 透明度设置区域样式 */
+.transparency-settings-container {
+    margin-bottom: 1.5rem;
+}
+
+.transparency-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.transparency-card {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.transparency-card:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.transparency-icon {
+    font-size: 1.5rem;
+    color: #0d6efd;
+    margin-bottom: 0.75rem;
+}
+
+.transparency-info {
+    margin-bottom: 1rem;
+}
+
+.transparency-info label {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: #212529;
+}
+
+.transparency-description {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+.transparency-control {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.transparency-value {
+    text-align: center;
+    font-weight: 600;
+    color: #0d6efd;
+    font-size: 0.875rem;
+    background: #e7f1ff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .transparency-grid {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
 
 <?php if (isset($_SESSION['success'])): ?>
@@ -370,58 +442,118 @@ include '../templates/header.php'; ?>
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="bg-overlay" class="form-label">整体背景透明度</label>
-                               <input type="range" class="form-range" id="bg-overlay" name="bg-overlay"
-                                      min="0" max="1" step="0.05" value="<?php echo $settings['bg-overlay']; ?>">
-                               <div class="form-text">整个网站背景的遮罩透明度: <span id="bg-overlay_value"><?php echo round($settings['bg-overlay'] * 100); ?>%</span></div>
+                        <div class="col-12">
+                            <div class="transparency-settings-container">
+                                <div class="transparency-grid">
+                                    <!-- 整体背景透明度 -->
+                                    <div class="transparency-card">
+                                        <div class="transparency-icon">
+                                            <i class="bi bi-layers"></i>
+                                        </div>
+                                        <div class="transparency-info">
+                                            <label for="bg-overlay" class="form-label">整体背景透明度</label>
+                                            <p class="transparency-description">整个网站背景的遮罩透明度</p>
+                                        </div>
+                                        <div class="transparency-control">
+                                            <input type="range" class="form-range" id="bg-overlay" name="bg-overlay"
+                                                   min="0" max="1" step="0.05" value="<?php echo $settings['bg-overlay']; ?>">
+                                            <div class="transparency-value">
+                                                <span id="bg-overlay_value"><?php echo round($settings['bg-overlay'] * 100); ?>%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 标题背景透明度 -->
+                                    <div class="transparency-card">
+                                        <div class="transparency-icon">
+                                            <i class="bi bi-type"></i>
+                                        </div>
+                                        <div class="transparency-info">
+                                            <label for="header_bg_transparency" class="form-label">标题背景透明度</label>
+                                            <p class="transparency-description">Logo和标题所在区域的透明度</p>
+                                        </div>
+                                        <div class="transparency-control">
+                                            <input type="range" class="form-range" id="header_bg_transparency" name="header_bg_transparency" 
+                                                   min="0" max="1" step="0.05" value="<?php echo $settings['header_bg_transparency']; ?>">
+                                            <div class="transparency-value">
+                                                <span id="header_transparency_value"><?php echo round($settings['header_bg_transparency'] * 100); ?>%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 分类背景透明度 -->
+                                    <div class="transparency-card">
+                                        <div class="transparency-icon">
+                                            <i class="bi bi-tags"></i>
+                                        </div>
+                                        <div class="transparency-info">
+                                            <label for="category_bg_transparency" class="form-label">分类背景透明度</label>
+                                            <p class="transparency-description">分类名称所在背景的透明度</p>
+                                        </div>
+                                        <div class="transparency-control">
+                                            <input type="range" class="form-range" id="category_bg_transparency" name="category_bg_transparency" 
+                                                   min="0" max="1" step="0.05" value="<?php echo $settings['category_bg_transparency']; ?>">
+                                            <div class="transparency-value">
+                                                <span id="category_transparency_value"><?php echo round($settings['category_bg_transparency'] * 100); ?>%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 链接区域背景透明度 -->
+                                    <div class="transparency-card">
+                                        <div class="transparency-icon">
+                                            <i class="bi bi-grid-3x3-gap"></i>
+                                        </div>
+                                        <div class="transparency-info">
+                                            <label for="links_area_transparency" class="form-label">链接区域背景透明度</label>
+                                            <p class="transparency-description">链接区域整体的背景透明度</p>
+                                        </div>
+                                        <div class="transparency-control">
+                                            <input type="range" class="form-range" id="links_area_transparency" name="links_area_transparency" 
+                                                   min="0" max="1" step="0.05" value="<?php echo $settings['links_area_transparency']; ?>">
+                                            <div class="transparency-value">
+                                                <span id="links_area_transparency_value"><?php echo round($settings['links_area_transparency'] * 100); ?>%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 链接卡片透明度 -->
+                                    <div class="transparency-card">
+                                        <div class="transparency-icon">
+                                            <i class="bi bi-card-text"></i>
+                                        </div>
+                                        <div class="transparency-info">
+                                            <label for="link_card_transparency" class="form-label">链接卡片透明度</label>
+                                            <p class="transparency-description">单个链接卡片的背景透明度</p>
+                                        </div>
+                                        <div class="transparency-control">
+                                            <input type="range" class="form-range" id="link_card_transparency" name="link_card_transparency" 
+                                                   min="0" max="1" step="0.05" value="<?php echo $settings['link_card_transparency']; ?>">
+                                            <div class="transparency-value">
+                                                <span id="link_card_transparency_value"><?php echo round($settings['link_card_transparency'] * 100); ?>%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 页脚背景透明度 -->
+                                    <div class="transparency-card">
+                                        <div class="transparency-icon">
+                                            <i class="bi bi-arrow-bar-down"></i>
+                                        </div>
+                                        <div class="transparency-info">
+                                            <label for="footer_bg_transparency" class="form-label">页脚背景透明度</label>
+                                            <p class="transparency-description">页面底部页脚区域的透明度</p>
+                                        </div>
+                                        <div class="transparency-control">
+                                            <input type="range" class="form-range" id="footer_bg_transparency" name="footer_bg_transparency" 
+                                                   min="0" max="1" step="0.05" value="<?php echo $settings['footer_bg_transparency']; ?>">
+                                            <div class="transparency-value">
+                                                <span id="footer_bg_transparency_value"><?php echo round($settings['footer_bg_transparency'] * 100); ?>%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-
-                            <div class="mb-3">
-                                <label for="header_bg_transparency" class="form-label">标题背景透明度</label>
-                                <input type="range" class="form-range" id="header_bg_transparency" name="header_bg_transparency" 
-                                       min="0" max="1" step="0.05" value="<?php echo $settings['header_bg_transparency']; ?>">
-                                <div class="form-text">Logo和标题所在区域的透明度: <span id="header_transparency_value"><?php echo round($settings['header_bg_transparency'] * 100); ?>%</span></div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="category_bg_transparency" class="form-label">分类背景透明度</label>
-                                <input type="range" class="form-range" id="category_bg_transparency" name="category_bg_transparency" 
-                                       min="0" max="1" step="0.05" value="<?php echo $settings['category_bg_transparency']; ?>">
-                                <div class="form-text">分类名称所在背景的透明度: <span id="category_transparency_value"><?php echo round($settings['category_bg_transparency'] * 100); ?>%</span></div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="links_area_transparency" class="form-label">链接区域背景透明度</label>
-                                <input type="range" class="form-range" id="links_area_transparency" name="links_area_transparency" 
-                                       min="0" max="1" step="0.05" value="<?php echo $settings['links_area_transparency']; ?>">
-                                <div class="form-text">链接区域整体的背景透明度: <span id="links_area_transparency_value"><?php echo round($settings['links_area_transparency'] * 100); ?>%</span></div>
-                            </div>
-
-                            <div class="mb-3">
-            <label for="link_card_transparency" class="form-label">链接卡片透明度</label>
-            <input type="range" class="form-range" id="link_card_transparency" name="link_card_transparency" 
-                   min="0" max="1" step="0.05" value="<?php echo $settings['link_card_transparency']; ?>">
-            <div class="d-flex justify-content-between">
-                <small>完全透明</small>
-                <small id="link_card_transparency_value"><?php echo round($settings['link_card_transparency'] * 100); ?>%</small>
-                <small>完全不透明</small>
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <label for="footer_bg_transparency" class="form-label">页脚背景透明度</label>
-            <input type="range" class="form-range" id="footer_bg_transparency" name="footer_bg_transparency" 
-                   min="0" max="1" step="0.05" value="<?php echo $settings['footer_bg_transparency']; ?>">
-            <div class="d-flex justify-content-between">
-                <small>完全透明</small>
-                <small id="footer_bg_transparency_value"><?php echo round($settings['footer_bg_transparency'] * 100); ?>%</small>
-                <small>完全不透明</small>
-            </div>
-        </div>
                         </div>
                     </div>
 
@@ -585,8 +717,21 @@ document.addEventListener('DOMContentLoaded', function() {
         const valueSpan = document.getElementById(item.valueId);
         
         if (slider && valueSpan) {
+            // 初始化显示值
+            valueSpan.textContent = Math.round(slider.value * 100) + '%';
+            
+            // 添加输入事件监听器
             slider.addEventListener('input', function() {
                 valueSpan.textContent = Math.round(this.value * 100) + '%';
+                
+                // 添加视觉反馈效果
+                const card = this.closest('.transparency-card');
+                if (card) {
+                    card.style.transform = 'scale(1.02)';
+                    setTimeout(() => {
+                        card.style.transform = '';
+                    }, 200);
+                }
             });
         }
     });
