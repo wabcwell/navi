@@ -300,4 +300,54 @@ class Settings {
     public function getSiteLogoIconfont($default = '') {
         return $this->get('site_logo_iconfont', $default);
     }
+    
+    /**
+     * 获取页脚背景透明度
+     * @param float $default 默认值
+     * @return float 页脚背景透明度值(0-1)
+     */
+    public function getFooterBgTransparency($default = 0.7) {
+        $value = $this->get('footer_bg_transparency', $default);
+        // 确保值在0-1范围内
+        return max(0, min(1, (float)$value));
+    }
+    
+    /**
+     * 设置页脚背景透明度
+     * @param float $transparency 透明度值(0-1)
+     * @return bool 是否成功
+     */
+    public function setFooterBgTransparency($transparency) {
+        // 验证值是否在0-1范围内
+        $transparency = max(0, min(1, (float)$transparency));
+        return $this->set('footer_bg_transparency', $transparency);
+    }
+    
+    /**
+     * 验证footer_bg_transparency的值是否有效
+     * @param float $transparency 透明度值
+     * @return bool 是否有效
+     */
+    public function isValidFooterBgTransparency($transparency) {
+        $transparency = (float)$transparency;
+        return $transparency >= 0 && $transparency <= 1;
+    }
+    
+    /**
+     * 获取页脚背景透明度（静态方法）
+     * @param float $default 默认值
+     * @return float 页脚背景透明度值(0-1)
+     */
+    public static function getFooterBgTransparencySetting($default = 0.7) {
+        return self::getInstance()->getFooterBgTransparency($default);
+    }
+    
+    /**
+     * 设置页脚背景透明度（静态方法）
+     * @param float $transparency 透明度值(0-1)
+     * @return bool 是否成功
+     */
+    public static function setFooterBgTransparencySetting($transparency) {
+        return self::getInstance()->setFooterBgTransparency($transparency);
+    }
 }

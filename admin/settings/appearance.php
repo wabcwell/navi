@@ -99,6 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_GET['ajax_upload_backgroun
         $settingsManager->set('category_bg_transparency', max(0, min(1, floatval($_POST['category_bg_transparency'] ?? 0.85))));
         $settingsManager->set('links_area_transparency', max(0, min(1, floatval($_POST['links_area_transparency'] ?? 0.85))));
         $settingsManager->set('link_card_transparency', max(0, min(1, floatval($_POST['link_card_transparency'] ?? 0.85))));
+        $settingsManager->set('footer_bg_transparency', max(0, min(1, floatval($_POST['footer_bg_transparency'] ?? 0.7))));
         
         // 保存iconfont设置
         $settingsManager->set('iconfont', trim($_POST['iconfont'] ?? ''));
@@ -115,6 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_GET['ajax_upload_backgroun
             'category_bg_transparency' => $_POST['category_bg_transparency'] ?? 0.85,
             'links_area_transparency' => $_POST['links_area_transparency'] ?? 0.85,
             'link_card_transparency' => $_POST['link_card_transparency'] ?? 0.85,
+            'footer_bg_transparency' => $_POST['footer_bg_transparency'] ?? 0.7,
             'iconfont' => $_POST['iconfont'] ?? '',
             'updated_at' => date('Y-m-d H:i:s')
         ];
@@ -143,6 +145,7 @@ $settings = [
     'category_bg_transparency' => $settingsManager->get('category_bg_transparency', 0.85),
     'links_area_transparency' => $settingsManager->get('links_area_transparency', 0.85),
     'link_card_transparency' => $settingsManager->get('link_card_transparency', 0.85),
+    'footer_bg_transparency' => $settingsManager->get('footer_bg_transparency', 0.7),
     'iconfont' => $settingsManager->get('iconfont', ''),
 ];
 
@@ -399,11 +402,26 @@ include '../templates/header.php'; ?>
                             </div>
 
                             <div class="mb-3">
-                                <label for="link_card_transparency" class="form-label">链接卡片透明度</label>
-                                <input type="range" class="form-range" id="link_card_transparency" name="link_card_transparency" 
-                                       min="0" max="1" step="0.05" value="<?php echo $settings['link_card_transparency']; ?>">
-                                <div class="form-text">单个链接卡片本身的透明度: <span id="link_card_transparency_value"><?php echo round($settings['link_card_transparency'] * 100); ?>%</span></div>
-                            </div>
+            <label for="link_card_transparency" class="form-label">链接卡片透明度</label>
+            <input type="range" class="form-range" id="link_card_transparency" name="link_card_transparency" 
+                   min="0" max="1" step="0.05" value="<?php echo $settings['link_card_transparency']; ?>">
+            <div class="d-flex justify-content-between">
+                <small>完全透明</small>
+                <small id="link_card_transparency_value"><?php echo round($settings['link_card_transparency'] * 100); ?>%</small>
+                <small>完全不透明</small>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="footer_bg_transparency" class="form-label">页脚背景透明度</label>
+            <input type="range" class="form-range" id="footer_bg_transparency" name="footer_bg_transparency" 
+                   min="0" max="1" step="0.05" value="<?php echo $settings['footer_bg_transparency']; ?>">
+            <div class="d-flex justify-content-between">
+                <small>完全透明</small>
+                <small id="footer_bg_transparency_value"><?php echo round($settings['footer_bg_transparency'] * 100); ?>%</small>
+                <small>完全不透明</small>
+            </div>
+        </div>
                         </div>
                     </div>
 
@@ -558,7 +576,8 @@ document.addEventListener('DOMContentLoaded', function() {
         { sliderId: 'header_bg_transparency', valueId: 'header_transparency_value' },
         { sliderId: 'category_bg_transparency', valueId: 'category_transparency_value' },
         { sliderId: 'links_area_transparency', valueId: 'links_area_transparency_value' },
-        { sliderId: 'link_card_transparency', valueId: 'link_card_transparency_value' }
+        { sliderId: 'link_card_transparency', valueId: 'link_card_transparency_value' },
+        { sliderId: 'footer_bg_transparency', valueId: 'footer_bg_transparency_value' }
     ];
     
     transparencySliders.forEach(item => {
