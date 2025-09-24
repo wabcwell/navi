@@ -463,13 +463,13 @@ body.has-bg-image .link-card:focus::before {
     text-align: center;
     color: var(--text-secondary);
     font-size: 0.875rem;
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, var(--footer-bg-opacity, 0.7));
     border-top: 1px solid var(--card-border);
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
 }
 
 body.has-bg-image .footer {
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, var(--footer-bg-opacity, 0.7));
     border-top: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 }
