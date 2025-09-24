@@ -332,6 +332,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed) {
             'links_area_transparency' => '0.85',
             'link_card_transparency' => '0.65',
             'bg-overlay' => '0.35',
+            'footer_bg_transparency' => '0.8',
             
             // Logo类型设置
             'logo_type' => '',
