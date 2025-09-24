@@ -96,7 +96,7 @@ class FrontendData {
             'links_area_transparency' => $this->settingsManager->get('links_area_transparency', '0.85'),
             'link_card_transparency' => $this->settingsManager->get('link_card_transparency', '0.85'),
             'footer_bg_transparency' => $this->settingsManager->get('footer_bg_transparency', '0.85'),
-            'bg-overlay' => $this->settingsManager->get('bg-overlay', '0.2'),
+            'bg_overlay' => $this->settingsManager->get('bg_overlay', '0.2'),
             'show_footer' => $this->settingsManager->get('show_footer', '1') == '1',
             'footer_content' => $this->settingsManager->get('footer_content', '&copy; 2024 导航网站. All rights reserved.'),
             'iconfont' => $this->settingsManager->get('iconfont', '')
@@ -128,7 +128,7 @@ class FrontendData {
             'links_area_transparency' => '0.85',
             'link_card_transparency' => '0.85',
             'footer_bg_transparency' => '0.85',
-            'bg-overlay' => '0.2',
+            'bg_overlay' => '0.2',
             'show_footer' => true,
             'footer_content' => '&copy; 2024 导航网站. All rights reserved.',
             'iconfont' => ''

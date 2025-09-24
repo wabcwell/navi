@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_GET['ajax_upload_backgroun
         $settingsManager->set('background_api', $background_api);
         
         // 保存透明度设置
-        $settingsManager->set('bg-overlay', max(0, min(1, floatval($_POST['bg-overlay'] ?? 0.2))));
+        $settingsManager->set('bg_overlay', max(0, min(1, floatval($_POST['bg_overlay'] ?? 0.2))));
         $settingsManager->set('header_bg_transparency', max(0, min(1, floatval($_POST['header_bg_transparency'] ?? 0.85))));
         $settingsManager->set('category_bg_transparency', max(0, min(1, floatval($_POST['category_bg_transparency'] ?? 0.85))));
         $settingsManager->set('links_area_transparency', max(0, min(1, floatval($_POST['links_area_transparency'] ?? 0.85))));
@@ -140,7 +140,7 @@ $settings = [
     'background_image' => $settingsManager->get('background_image', ''),
     'background_color' => $settingsManager->get('background_color', '#ffffff'),
     'background_api' => $settingsManager->get('background_api', ''),
-    'bg-overlay' => $settingsManager->get('bg-overlay', 0.2),
+    'bg_overlay' => $settingsManager->get('bg_overlay', 0.2),
     'header_bg_transparency' => $settingsManager->get('header_bg_transparency', 0.85),
     'category_bg_transparency' => $settingsManager->get('category_bg_transparency', 0.85),
     'links_area_transparency' => $settingsManager->get('links_area_transparency', 0.85),
@@ -455,10 +455,10 @@ include '../templates/header.php'; ?>
                                             <p class="transparency-description">整个网站背景的遮罩透明度</p>
                                         </div>
                                         <div class="transparency-control">
-                                            <input type="range" class="form-range" id="bg-overlay" name="bg-overlay"
-                                                   min="0" max="1" step="0.05" value="<?php echo $settings['bg-overlay']; ?>">
+                                            <input type="range" class="form-range" id="bg-overlay" name="bg_overlay"
+        min="0" max="1" step="0.05" value="<?php echo $settings['bg_overlay']; ?>">
                                             <div class="transparency-value">
-                                                <span id="bg-overlay_value"><?php echo round($settings['bg-overlay'] * 100); ?>%</span>
+                                                <span id="bg-overlay_value"><?php echo round($settings['bg_overlay'] * 100); ?>%</span>
                                             </div>
                                         </div>
                                     </div>

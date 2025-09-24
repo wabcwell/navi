@@ -45,7 +45,7 @@ try {
     $link_card_transparency = $settings['link_card_transparency'] ?? 0.85;
     $show_footer = $settings['show_footer'];
     $footer_content = $settings['footer_content'];
-    $overlay = $settings['bg-overlay'] ?? 0.2;
+    $overlay = $settings['bg_overlay'] ?? 0.2;
     
 } catch (PDOException $e) {
     // 如果数据库连接失败，使用默认设置

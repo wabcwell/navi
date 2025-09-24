@@ -33,7 +33,7 @@ $link_card_transparency = $settings['link_card_transparency'] ?? 0.85;
 $footer_bg_transparency = $settings['footer_bg_transparency'] ?? 0.85;
 $show_footer = $settings['show_footer'];
 $footer_content = $settings['footer_content'];
-$overlay = $settings['bg-overlay'] ?? 0.2;
+$overlay = $settings['bg_overlay'] ?? 0.2;
 
 ?>
 <!DOCTYPE html>
